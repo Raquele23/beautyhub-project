@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +22,18 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'profile_completed',
+    ];
+
+    /**
+     * Default attribute values for the model.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'role' => 'professional',
+        'profile_completed' => false,
     ];
 
     /**
@@ -44,5 +57,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function professional(): HasOne
+    {
+        return $this->hasOne(Professional::class);
+    }
+
+    public function isProfessional(): bool
+    {
+        return $this->role === 'professional';
+    }
+
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
     }
 }
