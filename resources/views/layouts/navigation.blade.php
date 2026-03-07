@@ -15,6 +15,15 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(Auth::user()->isProfessional() && Auth::user()->professional)
+                        <x-nav-link :href="route('professional.show')" :active="request()->routeIs('professional*')">
+                            {{ __('Meu Perfil') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('services.index')" :active="request()->routeIs('services*')">
+                            {{ __('Meus Serviços') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -70,6 +79,15 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @if(Auth::user()->isProfessional() && Auth::user()->professional)
+                <x-responsive-nav-link :href="route('professional.show')" :active="request()->routeIs('professional*')">
+                    {{ __('Meu Perfil') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services*')">
+                    {{ __('Meus Serviços') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->
