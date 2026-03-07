@@ -39,12 +39,19 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'professional', // for now every new user is a professional
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
+        // Se for profissional, redireciona para criar perfil
+        if ($user->role === 'professional') {
+            return redirect(route('professional.create', absolute: false));
+        }
+
+        // Se for cliente, vai para o dashboard
         return redirect(route('dashboard', absolute: false));
     }
 }
