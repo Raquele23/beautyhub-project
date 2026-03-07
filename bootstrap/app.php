@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'professional' => \App\Http\Middleware\EnsureProfessional::class,
+            // 'client' middleware left in place for future use but not aliased currently
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
