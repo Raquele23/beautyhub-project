@@ -32,8 +32,8 @@ class User extends Authenticatable
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'role' => 'professional',
-        'profile_completed' => false,
+    'role' => 'client',
+    'profile_completed' => false,
     ];
 
     /**
