@@ -3,15 +3,24 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfessionalController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ExploreController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Redireciona para o dashboard correto conforme a role
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    if (auth()->user()->isProfessional()) {
+        return redirect()->route('professional.dashboard');
+    }
+    return redirect()->route('explore'); // cliente vai pra página de exploração
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// Página de exploração — acessível por qualquer um
+Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -19,9 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Rotas para Profissionais
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard
+// Rotas para Profissionais — agora com middleware 'professional'
+Route::middleware(['auth', 'verified', 'professional'])->group(function () {
+
     Route::get('/professional/dashboard', [ProfessionalController::class, 'dashboard'])->name('professional.dashboard');
 
     // Perfil Profissional
@@ -44,6 +53,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
     });
+});
+
+// Pública — qualquer um pode ver o perfil de um profissional
+Route::get('/professional/{professional}', [ProfessionalController::class, 'publicShow'])
+    ->name('professional.public');
+
+// Dashboard pessoal do cliente
+Route::middleware(['auth', 'verified', 'client'])->group(function () {
+    Route::get('/client/dashboard', [ClientController::class, 'dashboard'])
+        ->name('client.dashboard');
 });
 
 require __DIR__.'/auth.php';
