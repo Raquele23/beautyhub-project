@@ -31,6 +31,32 @@ class ProfessionalController extends Controller
         return view('professional.create');
     }
 
+    public function dashboard()
+    {
+        $user = Auth::user();
+
+        if (!$user->isProfessional()) {
+            abort(403, 'Apenas profissionais têm acesso a esta área.');
+        }
+
+        $professional = $user->professional;
+        if (!$professional) {
+            return redirect()->route('professional.create');
+        }
+
+        $stats = [
+            'total_services' => $professional->services()->count(),
+            'total_portfolio_photos' => $professional->portfolioPhotos()->count(),
+        ];
+
+        return view('professional.dashboard', [
+            'professional' => $professional,
+            'services' => $professional->services()->get(),
+            'portfolio_photos' => $professional->portfolioPhotos()->get(),
+            'stats' => $stats,
+        ]);
+    }
+
     public function show()
     {
         $user = Auth::user();
