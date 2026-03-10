@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'professional' => \App\Http\Middleware\EnsureProfessional::class,
-            // 'client' middleware left in place for future use but not aliased currently
+            'client' => \App\Http\Middleware\EnsureClient::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
