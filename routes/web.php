@@ -21,6 +21,9 @@ Route::middleware('auth')->group(function () {
 
 // Rotas para Profissionais
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('/professional/dashboard', [ProfessionalController::class, 'dashboard'])->name('professional.dashboard');
+
     // Perfil Profissional
     Route::get('/professional/create', [ProfessionalController::class, 'create'])->name('professional.create');
     Route::post('/professional', [ProfessionalController::class, 'store'])->name('professional.store');
