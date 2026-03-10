@@ -33,25 +33,24 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:client,professional'],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'professional', // for now every new user is a professional
+            'role' => $request->role,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        // Se for profissional, redireciona para criar perfil
-        if ($user->role === 'professional') {
+        if ($user->isProfessional()) {
             return redirect(route('professional.create', absolute: false));
         }
 
-        // Se for cliente, vai para o dashboard
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('explore', absolute: false));
     }
 }
