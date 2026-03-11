@@ -186,4 +186,13 @@ class ProfessionalController extends Controller
             'professional' => $professional->load(['services', 'portfolioPhotos', 'user']),
         ]);
     }
+
+    public function appointments()
+    {
+        $professional = Auth::user()->professional;
+        $pending   = $professional->appointments()->with(['client', 'service'])->pending()->upcoming()->get();
+        $confirmed = $professional->appointments()->with(['client', 'service'])->confirmed()->upcoming()->get();
+
+        return view('professional.appointments', compact('pending', 'confirmed'));
+    }
 }
