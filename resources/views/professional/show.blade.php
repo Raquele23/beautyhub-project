@@ -93,18 +93,8 @@
                         </div>
                         @endif
 
-                        {{-- Endereço completo vindo do cadastro --}}
                         @php
-                            $addressParts = array_filter([
-                                $professional->street ?? null,
-                                $professional->number ?? null,
-                                $professional->complement ?? null,
-                                $professional->neighborhood ?? null,
-                                $professional->city ?? null,
-                                $professional->state ?? null,
-                                $professional->zip_code ?? null,
-                            ]);
-                            $address = $professional->full_address ?? implode(', ', $addressParts);
+                            $address = $professional->full_address;
                         @endphp
 
                         @if($address)
@@ -150,15 +140,21 @@
             {{-- SERVIÇOS --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
                 <div class="p-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Serviços</h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Serviços</h3>
+                        <a href="{{ route('services.create') }}"
+                           class="text-sm font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400">
+                            + Adicionar serviço
+                        </a>
+                    </div>
 
                     @forelse($professional->services ?? [] as $service)
                     <div class="flex items-center justify-between py-4 border-b last:border-0 dark:border-gray-700">
                         <div class="flex items-center gap-4">
                             {{-- Foto do serviço --}}
                             <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
-                                @if($service->photo)
-                                    <img src="{{ Storage::url($service->photo) }}"
+                                @if($service->image)
+                                    <img src="{{ Storage::url($service->image) }}"
                                          alt="{{ $service->name }}"
                                          class="w-full h-full object-cover">
                                 @else
@@ -176,17 +172,31 @@
                                 @if($service->description)
                                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ $service->description }}</p>
                                 @endif
-                                <p class="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1">
-                                    R$ {{ number_format($service->price, 2, ',', '.') }}
-                                </p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <p class="text-sm font-medium text-purple-600 dark:text-purple-400">
+                                        R$ {{ number_format($service->price, 2, ',', '.') }}
+                                    </p>
+                                    <span class="text-xs text-gray-400">⏱ {{ $service->duration_formatted }}</span>
+                                </div>
                             </div>
                         </div>
 
-                        {{-- Botão Agendar --}}
-                        <a href="{{ route('services.create', $service->id) }}"
-                           class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 text-sm font-semibold px-6 py-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 transition whitespace-nowrap">
-                            Agendar
-                        </a>
+                        {{-- Ações do profissional --}}
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('services.edit', $service->id) }}"
+                               class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition whitespace-nowrap">
+                                Editar
+                            </a>
+                            <form method="POST" action="{{ route('services.destroy', $service->id) }}"
+                                  onsubmit="return confirm('Tem certeza que deseja excluir este serviço?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-sm font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition whitespace-nowrap">
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     @empty
                     <div class="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-600">
