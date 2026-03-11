@@ -6,8 +6,8 @@
     </x-slot>
 
     <div class="min-h-screen px-8 py-12">
-        <!-- NAV BAR COMO CONTEÚDO PRINCIPAL -->
         <div class="max-w-5xl mx-auto">
+
             <!-- Logo -->
             <div class="mb-8 text-center">
                 <h1 class="text-4xl font-bold text-gray-900 dark:text-white">BP</h1>
@@ -21,9 +21,10 @@
 
             <!-- Botão de agendamentos -->
             <div class="mb-10 text-center">
-                <button class="px-6 py-3 font-semibold rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition">
+                <a href="{{ route('professional.appointments') }}"
+                   class="px-6 py-3 font-semibold rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition">
                     ✓ Verificar agendamentos para hoje
-                </button>
+                </a>
             </div>
 
             <!-- Menu principal em grid -->
@@ -33,7 +34,7 @@
                     <span class="text-gray-800 dark:text-gray-200">Editar perfil</span>
                 </a>
 
-                <a href="#dados-loja" class="flex items-center justify-center p-6 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <a href="{{ route('professional.show') }}" class="flex items-center justify-center p-6 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                     <span class="text-xl mr-2">📊</span>
                     <span class="text-gray-800 dark:text-gray-200">Dados da minha loja</span>
                 </a>
@@ -65,6 +66,7 @@
                     </a>
                 </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>
