@@ -162,7 +162,7 @@
                         {{-- Botão Agendar — exige login --}}
                         @auth
                             @if(auth()->user()->isClient())
-                                <a href="#" {{-- substituir pela rota de agendamento quando criar --}}
+                                <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
                                    class="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 text-sm font-semibold px-6 py-2 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 transition whitespace-nowrap">
                                     Agendar
                                 </a>
