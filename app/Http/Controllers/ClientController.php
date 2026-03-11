@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
@@ -11,15 +10,25 @@ class ClientController extends Controller
     {
         $user = Auth::user();
 
-        // Quando criar o model Appointment, substitua os nulls abaixo:
-        // $nextAppointment     = $user->appointments()->upcoming()->first();
-        // $upcomingAppointments = $user->appointments()->upcoming()->get();
-        // $pastAppointments    = $user->appointments()->past()->get();
+        $nextAppointment = $user->appointments()
+            ->with(['service', 'professional.user'])
+            ->upcoming()
+            ->first();
 
-        return view('client.dashboard', [
-            'nextAppointment'      => null,
-            'upcomingAppointments' => collect(),
-            'pastAppointments'     => collect(),
-        ]);
+        $upcomingAppointments = $user->appointments()
+            ->with(['service', 'professional.user'])
+            ->upcoming()
+            ->get();
+
+        $pastAppointments = $user->appointments()
+            ->with(['service', 'professional.user'])
+            ->past()
+            ->get();
+
+        return view('client.dashboard', compact(
+            'nextAppointment',
+            'upcomingAppointments',
+            'pastAppointments'
+        ));
     }
 }
