@@ -22,7 +22,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         
     </head>
-    <body class="bg-[url(/build/assets/img/background.png)] bg-cover text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
+    <body class="bg-[url(/assets/img/background.png)] bg-cover text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
         <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
             @if (Route::has('login'))
                 <nav class="bg-violet-50 shadow-md flex items-center h-10 absolute inset-x-0 top-0 justify-end gap-4">
@@ -70,6 +70,6 @@
                         @endif
                     @endauth
                 </nav>
-            <img src="{{asset('build/assets/img/Beauty_Hub.png')}}" class="absolute left-0 bottom-25" alt="">
+            <img src="{{asset('assets/img/Beauty_Hub.png')}}" class="absolute left-0 bottom-25" alt="">
     </body>
 </html>
