@@ -36,12 +36,19 @@
                             @endif
                         </div>
 
-                        {{-- Nome --}}
+                        {{-- Nome + distância --}}
                         <div class="pb-1">
                             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
                                 {{ $professional->establishment_name ?? $professional->user->name }}
                             </h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ $professional->user->name }}</p>
+
+                            {{-- Badge de distância — preenchido via JS --}}
+                            @if($professional->latitude && $professional->longitude)
+                                <p id="distance-label" class="hidden mt-1 text-sm font-medium text-purple-600 dark:text-purple-400">
+                                    📍 <span id="distance-text"></span>
+                                </p>
+                            @endif
                         </div>
                     </div>
 
@@ -159,7 +166,6 @@
                             </div>
                         </div>
 
-                        {{-- Botão Agendar — exige login --}}
                         @auth
                             @if(auth()->user()->isClient())
                                 <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
@@ -211,5 +217,40 @@
             </div>
         </div>
     </div>
+
+    {{-- Script de geolocalização --}}
+    @if($professional->latitude && $professional->longitude)
+    <script>
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) ** 2
+                + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+                * Math.sin(dLon/2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const dist = haversine(
+                    position.coords.latitude,
+                    position.coords.longitude,
+                    {{ $professional->latitude }},
+                    {{ $professional->longitude }}
+                );
+
+                const label = document.getElementById('distance-label');
+                const text  = document.getElementById('distance-text');
+
+                text.textContent = dist < 1
+                    ? Math.round(dist * 1000) + ' m de você'
+                    : dist.toFixed(1) + ' km de você';
+
+                label.classList.remove('hidden');
+            });
+        }
+    </script>
+    @endif
 
 </x-app-layout>
