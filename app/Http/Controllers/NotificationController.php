@@ -19,7 +19,7 @@ class NotificationController extends Controller
             return redirect()->route('professional.appointments');
         }
 
-        return redirect()->route('client.dashboard');
+        return redirect()->route('client.appointments');
     }
 
     public function markAsRead(Notification $notification)
