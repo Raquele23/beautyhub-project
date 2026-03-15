@@ -71,7 +71,7 @@ class AppointmentController extends Controller
             'appointment_id' => $appointment->id,
         ]);
 
-        return redirect()->route('client.dashboard')
+        return redirect()->route('client.appointments')
             ->with('status', 'Agendamento realizado! Aguarde a confirmação do profissional.');
     }
 
