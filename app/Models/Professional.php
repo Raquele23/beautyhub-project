@@ -26,6 +26,7 @@ class Professional extends Model
         'profile_photo',
         'latitude',
         'longitude',
+        'auto_complete',
     ];
 
     public function user(): BelongsTo
