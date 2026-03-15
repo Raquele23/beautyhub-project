@@ -67,7 +67,7 @@ class AppointmentController extends Controller
         Notification::create([
             'user_id'        => $professional->user_id,
             'type'           => 'appointment_created',
-            'message'        => Auth::user()->name . ' agendou ' . $service->name . ' para ' . $appointment->scheduled_at->format('d/m/Y \à\s H:i') . '.',
+            'message'        => Auth::user()->name . ' agendou ' . $service->name . ' para ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
             'appointment_id' => $appointment->id,
         ]);
 
@@ -79,13 +79,15 @@ class AppointmentController extends Controller
     {
         $this->authorizeProfessional($appointment);
 
+        abort_if($appointment->status !== 'pending', 403, 'Apenas agendamentos pendentes podem ser confirmados.');
+
         $appointment->update(['status' => 'confirmed']);
 
         // Notifica o cliente
         Notification::create([
             'user_id'        => $appointment->client_id,
             'type'           => 'appointment_confirmed',
-            'message'        => 'Seu agendamento de ' . $appointment->service->name . ' foi confirmado para ' . $appointment->scheduled_at->format('d/m/Y \à\s H:i') . '.',
+            'message'        => 'Seu agendamento de ' . $appointment->service->name . ' foi confirmado para ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
             'appointment_id' => $appointment->id,
         ]);
 
@@ -99,6 +101,14 @@ class AppointmentController extends Controller
         abort_if($appointment->status !== 'confirmed', 403, 'Apenas agendamentos confirmados podem ser concluídos.');
 
         $appointment->update(['status' => 'completed']);
+
+        // Notifica o cliente que pode avaliar
+        Notification::create([
+            'user_id'        => $appointment->client_id,
+            'type'           => 'appointment_completed',
+            'message'        => 'Seu atendimento de ' . $appointment->service->name . ' foi concluído. Que tal deixar uma avaliação?',
+            'appointment_id' => $appointment->id,
+        ]);
 
         return back()->with('status', 'Atendimento marcado como concluído!');
     }
@@ -114,7 +124,7 @@ class AppointmentController extends Controller
             Notification::create([
                 'user_id'        => $appointment->client_id,
                 'type'           => 'appointment_cancelled',
-                'message'        => 'Seu agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \à\s H:i') . ' foi cancelado pelo profissional.',
+                'message'        => 'Seu agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . ' foi cancelado pelo profissional.',
                 'appointment_id' => $appointment->id,
             ]);
         } else {
@@ -126,7 +136,7 @@ class AppointmentController extends Controller
             Notification::create([
                 'user_id'        => $appointment->professional->user_id,
                 'type'           => 'appointment_cancelled',
-                'message'        => $user->name . ' cancelou o agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \à\s H:i') . '.',
+                'message'        => $user->name . ' cancelou o agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
                 'appointment_id' => $appointment->id,
             ]);
         }
