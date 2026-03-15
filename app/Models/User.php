@@ -44,7 +44,6 @@ class User extends Authenticatable
         return $this->hasOne(Professional::class);
     }
 
-    // Agendamentos como cliente
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'client_id');
@@ -60,7 +59,7 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
-        public function notifications(): HasMany
+    public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class)->latest();
     }
@@ -69,5 +68,21 @@ class User extends Authenticatable
     {
         return $this->notifications()->unread()->count();
     }
-}
 
+    // ─── Reviews ───────────────────────────────────────────────────────────────
+
+    public function reviewsGiven(): HasMany
+    {
+        return $this->hasMany(Review::class, 'client_id');
+    }
+
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'professional_id');
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        return round($this->reviewsReceived()->avg('rating') ?? 0, 1);
+    }
+}
