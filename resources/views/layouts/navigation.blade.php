@@ -9,11 +9,12 @@
                 </div>
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('professional.dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
 
+                    {{-- Profissional --}}
                     @if(Auth::check() && Auth::user()->isProfessional() && Auth::user()->professional)
+                        <x-nav-link :href="route('professional.dashboard')" :active="request()->routeIs('professional.dashboard')">
+                            {{ __('Dashboard') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('professional.show')" :active="request()->routeIs('professional.show') || request()->routeIs('professional.edit') || request()->routeIs('professional.portfolio.*')">
                             {{ __('Meu Perfil') }}
                         </x-nav-link>
@@ -31,14 +32,22 @@
                         </x-nav-link>
                     @endif
 
+                    {{-- Cliente --}}
                     @if(Auth::check() && Auth::user()->isClient())
-                        <x-nav-link :href="route('client.dashboard')" :active="request()->routeIs('client.dashboard')">
+                        <x-nav-link :href="route('client.home')" :active="request()->routeIs('client.home')">
+                            {{ __('Início') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('explore')" :active="request()->routeIs('explore')">
+                            {{ __('Explorar') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('client.appointments')" :active="request()->routeIs('client.appointments')">
                             {{ __('Meus Agendamentos') }}
                         </x-nav-link>
                         <x-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')">
                             {{ __('Minhas Avaliações') }}
                         </x-nav-link>
                     @endif
+
                 </div>
             </div>
 
@@ -71,11 +80,10 @@
                              style="display: none;">
 
                             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                                <span class="text-sm font-bold text-gray-900 dark:text-white">Notifications</span>
+                                <span class="text-sm font-bold text-gray-900 dark:text-white">Notificações</span>
                                 @if($unread > 0)
                                     <form method="POST" action="{{ route('notifications.read-all') }}">
-                                        @csrf
-                                        @method('PATCH')
+                                        @csrf @method('PATCH')
                                         <button type="submit" class="text-xs text-purple-600 hover:text-purple-700 font-medium transition">
                                            Marcar todas como lidas
                                         </button>
@@ -88,7 +96,6 @@
                                     <a href="{{ route('notifications.open', $notification->id) }}"
                                        @click.stop
                                        class="flex items-start gap-3 px-4 py-3 {{ $notification->isUnread() ? 'bg-purple-50 dark:bg-purple-900/10' : '' }} hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-
                                         <div class="mt-0.5 flex-shrink-0">
                                             @if($notification->type === 'appointment_confirmed')
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
@@ -98,18 +105,20 @@
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 text-red-500 dark:text-red-400">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 </span>
+                                            @elseif($notification->type === 'appointment_completed')
+                                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                </span>
                                             @else
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                 </span>
                                             @endif
                                         </div>
-
                                         <div class="flex-1 min-w-0">
                                             <p class="text-xs text-gray-700 dark:text-gray-300 leading-snug">{{ $notification->message }}</p>
                                             <p class="text-[11px] text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
                                         </div>
-
                                         @if($notification->isUnread())
                                             <span class="mt-1.5 flex-shrink-0 h-2 w-2 rounded-full bg-purple-500"></span>
                                         @endif
@@ -136,12 +145,10 @@
                                 </div>
                             </button>
                         </x-slot>
-
                         <x-slot name="content">
                             <x-dropdown-link :href="route('profile.edit')">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
-
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <x-dropdown-link :href="route('logout')"
@@ -167,7 +174,7 @@
 
             {{-- Hamburger --}}
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
+                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none transition duration-150 ease-in-out">
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                         <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -177,15 +184,15 @@
         </div>
     </div>
 
-    {{-- Responsive Navigation Menu --}}
+    {{-- Responsive --}}
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('professional.dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
 
             @if(Auth::check() && Auth::user()->isProfessional() && Auth::user()->professional)
-                <x-responsive-nav-link :href="route('professional.show')" :active="request()->routeIs('professional.show') || request()->routeIs('professional.edit') || request()->routeIs('professional.portfolio.*')">
+                <x-responsive-nav-link :href="route('professional.dashboard')" :active="request()->routeIs('professional.dashboard')">
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('professional.show')" :active="request()->routeIs('professional.show') || request()->routeIs('professional.edit')">
                     {{ __('Meu Perfil') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services*')">
@@ -203,24 +210,29 @@
             @endif
 
             @if(Auth::check() && Auth::user()->isClient())
-                <x-responsive-nav-link :href="route('client.dashboard')" :active="request()->routeIs('client.dashboard')">
+                <x-responsive-nav-link :href="route('client.home')" :active="request()->routeIs('client.home')">
+                    {{ __('Início') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('explore')" :active="request()->routeIs('explore')">
+                    {{ __('Explorar') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('client.appointments')" :active="request()->routeIs('client.appointments')">
                     {{ __('Meus Agendamentos') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')">
                     {{ __('Minhas Avaliações') }}
                 </x-responsive-nav-link>
             @endif
+
         </div>
 
-        {{-- Notificações no mobile --}}
         @auth
         <div class="pt-2 pb-3 border-t border-gray-200 dark:border-gray-600">
             <div class="px-4 mb-2 flex items-center justify-between">
-                <span class="text-sm font-bold text-gray-800 dark:text-gray-200">Notifications</span>
+                <span class="text-sm font-bold text-gray-800 dark:text-gray-200">Notificações</span>
                 @if($unread > 0)
                     <form method="POST" action="{{ route('notifications.read-all') }}">
-                        @csrf
-                        @method('PATCH')
+                        @csrf @method('PATCH')
                         <button type="submit" class="text-xs text-purple-600 font-medium">Marcar todas como lidas</button>
                     </form>
                 @endif
@@ -232,7 +244,7 @@
                     <p class="text-[11px] text-gray-400 mt-0.5">{{ $notification->created_at->diffForHumans() }}</p>
                 </a>
             @empty
-                <div class="px-4 py-2 text-xs text-gray-400">No notifications.</div>
+                <div class="px-4 py-2 text-xs text-gray-400">Nenhuma notificação.</div>
             @endforelse
         </div>
 
@@ -242,9 +254,7 @@
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
             </div>
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('profile.edit')">{{ __('Profile') }}</x-responsive-nav-link>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <x-responsive-nav-link :href="route('logout')"
