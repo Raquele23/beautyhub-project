@@ -77,6 +77,7 @@ class ProfessionalController extends Controller
             'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
             'portfolio_photos'   => 'nullable|array|max:10',
             'portfolio_photos.*' => File::image()->max(5 * 1024),
+            'auto_complete'      => 'boolean',
         ]);
 
         if ($request->hasFile('profile_photo')) {
