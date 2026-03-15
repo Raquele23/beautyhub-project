@@ -32,15 +32,15 @@ class ProfessionalController extends Controller
         }
 
         $stats = [
-            'total_services' => $professional->services()->count(),
+            'total_services'         => $professional->services()->count(),
             'total_portfolio_photos' => $professional->portfolioPhotos()->count(),
         ];
 
         return view('professional.dashboard', [
-            'professional' => $professional,
-            'services' => $professional->services()->get(),
+            'professional'    => $professional,
+            'services'        => $professional->services()->get(),
             'portfolio_photos' => $professional->portfolioPhotos()->get(),
-            'stats' => $stats,
+            'stats'           => $stats,
         ]);
     }
 
@@ -66,15 +66,15 @@ class ProfessionalController extends Controller
 
         $validated = $request->validate([
             'establishment_name' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'phone' => 'required|string|max:20',
-            'state' => 'required|string|max:2',
-            'city' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'house_number' => 'required|string|max:10',
-            'instagram' => 'nullable|string|max:255',
-            'profile_photo' => ['nullable', File::image()->max(5 * 1024)],
-            'portfolio_photos' => 'nullable|array|max:10',
+            'description'        => 'required|string',
+            'phone'              => 'required|string|max:20',
+            'state'              => 'required|string|max:2',
+            'city'               => 'required|string|max:255',
+            'street'             => 'required|string|max:255',
+            'house_number'       => 'required|string|max:10',
+            'instagram'          => 'nullable|string|max:255',
+            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
+            'portfolio_photos'   => 'nullable|array|max:10',
             'portfolio_photos.*' => File::image()->max(5 * 1024),
         ]);
 
@@ -83,6 +83,8 @@ class ProfessionalController extends Controller
         }
 
         $professional = $user->professional()->create($validated);
+
+        // Observer cuida do geocoding automaticamente
 
         if ($request->hasFile('portfolio_photos')) {
             foreach ($request->file('portfolio_photos') as $photo) {
@@ -119,14 +121,14 @@ class ProfessionalController extends Controller
 
         $validated = $request->validate([
             'establishment_name' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'phone' => 'required|string|max:20',
-            'state' => 'required|string|max:2',
-            'city' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'house_number' => 'required|string|max:10',
-            'instagram' => 'nullable|string|max:255',
-            'profile_photo' => ['nullable', File::image()->max(5 * 1024)],
+            'description'        => 'required|string',
+            'phone'              => 'required|string|max:20',
+            'state'              => 'required|string|max:2',
+            'city'               => 'required|string|max:255',
+            'street'             => 'required|string|max:255',
+            'house_number'       => 'required|string|max:10',
+            'instagram'          => 'nullable|string|max:255',
+            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
         ]);
 
         if ($request->hasFile('profile_photo')) {
@@ -137,6 +139,8 @@ class ProfessionalController extends Controller
         }
 
         $professional->update($validated);
+
+        // Observer cuida do geocoding automaticamente se o endereço mudou
 
         return redirect()->route('professional.show')->with('status', 'Perfil atualizado com sucesso!');
     }
@@ -151,7 +155,7 @@ class ProfessionalController extends Controller
         }
 
         $validated = $request->validate([
-            'photo' => ['required', File::image()->max(5 * 1024)],
+            'photo'       => ['required', File::image()->max(5 * 1024)],
             'description' => 'nullable|string',
         ]);
 
@@ -161,7 +165,7 @@ class ProfessionalController extends Controller
 
         $path = $request->file('photo')->store('professionals/portfolio', 'public');
         $professional->portfolioPhotos()->create([
-            'photo' => $path,
+            'photo'       => $path,
             'description' => $validated['description'] ?? null,
         ]);
 
