@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <!-- Status Messages -->
+
             @if ($message = Session::get('status'))
                 <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg dark:bg-green-900 dark:border-green-700 dark:text-green-200">
                     {{ $message }}
@@ -26,21 +26,16 @@
                     <h3 class="text-lg font-semibold mb-4">Informações Pessoais</h3>
                     <form action="{{ route('professional.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf
+                        @method('PATCH')
 
-                        <!-- Nome do Profissional -->
                         <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Seu Nome') }}
-                            </label>
+                            <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Seu Nome') }}</label>
                             <input type="text" name="name" id="name" value="{{ Auth::user()->name }}" readonly
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 dark:text-gray-300">
                         </div>
 
-                        <!-- Nome do Estabelecimento (Opcional) -->
                         <div>
-                            <label for="establishment_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Nome do Estabelecimento (Opcional)') }}
-                            </label>
+                            <label for="establishment_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Nome do Estabelecimento (Opcional)') }}</label>
                             <input type="text" name="establishment_name" id="establishment_name"
                                 value="{{ old('establishment_name', $professional->establishment_name) }}"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
@@ -50,11 +45,8 @@
                             @enderror
                         </div>
 
-                        <!-- Descrição -->
                         <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Descrição') }}
-                            </label>
+                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Descrição') }}</label>
                             <textarea name="description" id="description" rows="4"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                 placeholder="Fale sobre você e seus serviços">{{ old('description', $professional->description) }}</textarea>
@@ -63,11 +55,8 @@
                             @enderror
                         </div>
 
-                        <!-- Telefone -->
                         <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Telefone') }}
-                            </label>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Telefone') }}</label>
                             <input type="tel" name="phone" id="phone" value="{{ old('phone', $professional->phone) }}"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                 placeholder="(11) 99999-9999">
@@ -76,12 +65,9 @@
                             @enderror
                         </div>
 
-                        <!-- Endereço -->
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label for="state" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Estado (UF)') }}
-                                </label>
+                                <label for="state" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Estado (UF)') }}</label>
                                 <input type="text" name="state" id="state" value="{{ old('state', $professional->state) }}" maxlength="2"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                     placeholder="SP">
@@ -89,11 +75,8 @@
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
-
                             <div>
-                                <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Cidade') }}
-                                </label>
+                                <label for="city" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Cidade') }}</label>
                                 <input type="text" name="city" id="city" value="{{ old('city', $professional->city) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                     placeholder="São Paulo">
@@ -105,9 +88,7 @@
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label for="street" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Rua') }}
-                                </label>
+                                <label for="street" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Rua') }}</label>
                                 <input type="text" name="street" id="street" value="{{ old('street', $professional->street) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                     placeholder="Rua das Flores">
@@ -115,11 +96,8 @@
                                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
-
                             <div>
-                                <label for="house_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Número') }}
-                                </label>
+                                <label for="house_number" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Número') }}</label>
                                 <input type="text" name="house_number" id="house_number" value="{{ old('house_number', $professional->house_number) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                     placeholder="123">
@@ -129,11 +107,8 @@
                             </div>
                         </div>
 
-                        <!-- Instagram -->
                         <div>
-                            <label for="instagram" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Instagram (Opcional)') }}
-                            </label>
+                            <label for="instagram" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Instagram (Opcional)') }}</label>
                             <input type="text" name="instagram" id="instagram" value="{{ old('instagram', $professional->instagram) }}"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                 placeholder="@seu_instagram">
@@ -142,11 +117,8 @@
                             @enderror
                         </div>
 
-                        <!-- Foto de Perfil -->
                         <div>
-                            <label for="profile_photo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {{ __('Foto de Perfil') }}
-                            </label>
+                            <label for="profile_photo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Foto de Perfil') }}</label>
                             @if ($professional->profile_photo)
                                 <div class="mt-2 mb-4">
                                     <img src="{{ Storage::url($professional->profile_photo) }}" alt="Foto de perfil"
@@ -155,21 +127,72 @@
                             @endif
                             <input type="file" name="profile_photo" id="profile_photo" accept="image/*"
                                 class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
-                                    file:mr-4 file:py-2 file:px-4
-                                    file:rounded-md file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-indigo-50 file:text-indigo-700
-                                    hover:file:bg-indigo-100
-                                    dark:file:bg-indigo-900 dark:file:text-indigo-200">
+                                    file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0
+                                    file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700
+                                    hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-200">
                             @error('profile_photo')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Botão Salvar -->
                         <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                             {{ __('Salvar Alterações') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Configurações de Agendamento -->
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h3 class="text-lg font-semibold mb-1">Configurações de Agendamento</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Defina como seus atendimentos são marcados como concluídos.
+                    </p>
+
+                    <form action="{{ route('professional.settings.update') }}" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="space-y-3">
+                            {{-- Opção: Manual --}}
+                            <label class="flex items-start gap-4 p-4 border rounded-lg cursor-pointer transition
+                                {{ !$professional->auto_complete
+                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600' }}">
+                                <input type="radio" name="auto_complete" value="0"
+                                    {{ !$professional->auto_complete ? 'checked' : '' }}
+                                    class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Manual</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        Você marca o atendimento como concluído manualmente após realizá-lo.
+                                    </p>
+                                </div>
+                            </label>
+
+                            {{-- Opção: Automático --}}
+                            <label class="flex items-start gap-4 p-4 border rounded-lg cursor-pointer transition
+                                {{ $professional->auto_complete
+                                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600' }}">
+                                <input type="radio" name="auto_complete" value="1"
+                                    {{ $professional->auto_complete ? 'checked' : '' }}
+                                    class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Automático</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        O sistema marca automaticamente como concluído após o horário do agendamento
+                                        somado à duração do serviço.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button type="submit"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                            Salvar Configurações
                         </button>
                     </form>
                 </div>
@@ -187,45 +210,34 @@
                         <form action="{{ route('professional.portfolio.add') }}" method="POST" enctype="multipart/form-data" class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             @csrf
                             <div class="mb-4">
-                                <label for="photo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Adicionar Foto ao Portfólio') }}
-                                </label>
+                                <label for="photo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Adicionar Foto ao Portfólio') }}</label>
                                 <input type="file" name="photo" id="photo" accept="image/*" required
                                     class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
-                                        file:mr-4 file:py-2 file:px-4
-                                        file:rounded-md file:border-0
-                                        file:text-sm file:font-semibold
-                                        file:bg-indigo-50 file:text-indigo-700
-                                        hover:file:bg-indigo-100
-                                        dark:file:bg-indigo-900 dark:file:text-indigo-200">
+                                        file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0
+                                        file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700
+                                        hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-200">
                             </div>
-
                             <div class="mb-4">
-                                <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {{ __('Descrição (Opcional)') }}
-                                </label>
-                                <input type="text" name="description" id="description"
+                                <label for="portfolio_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('Descrição (Opcional)') }}</label>
+                                <input type="text" name="description" id="portfolio_description"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
                                     placeholder="Descreva este trabalho">
                             </div>
-
                             <button type="submit"
-                                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                                class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                                 {{ __('Adicionar Foto') }}
                             </button>
                         </form>
                     @endif
 
-                    <!-- Galeria de Fotos -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         @forelse ($professional->portfolioPhotos as $photo)
                             <div class="relative group">
                                 <img src="{{ Storage::url($photo->photo) }}" alt="Portfolio photo"
                                     class="h-48 w-full object-cover rounded-lg shadow-md">
                                 <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                    <form action="{{ route('professional.portfolio.delete', $photo) }}" method="POST" style="display: inline;">
-                                        @csrf
-                                        @method('DELETE')
+                                    <form action="{{ route('professional.portfolio.delete', $photo) }}" method="POST">
+                                        @csrf @method('DELETE')
                                         <button type="submit" onclick="return confirm('Tem certeza que deseja deletar esta foto?')"
                                             class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
                                             {{ __('Deletar') }}
@@ -244,6 +256,7 @@
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </x-app-layout>
