@@ -80,8 +80,7 @@
                                 {{ $appt->status_label }}
                             </span>
                             <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">
-                                @csrf
-                                @method('PATCH')
+                                @csrf @method('PATCH')
                                 <button type="submit" class="text-xs text-red-500 hover:text-red-700 transition">
                                     Cancelar
                                 </button>
@@ -113,9 +112,21 @@
                                 {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                             </p>
                         </div>
-                        <span class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 rounded-full">
-                            {{ $appt->status_label }}
-                        </span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-semibold px-3 py-1 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 rounded-full">
+                                {{ $appt->status_label }}
+                            </span>
+                            @if($appt->status === 'completed')
+                                @if($appt->review)
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">Avaliado</span>
+                                @else
+                                    <a href="{{ route('reviews.create', $appt->id) }}"
+                                       class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition">
+                                        Avaliar
+                                    </a>
+                                @endif
+                            @endif
+                        </div>
                     </div>
                 @empty
                     <div class="px-6 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
