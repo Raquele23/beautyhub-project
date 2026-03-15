@@ -196,8 +196,18 @@ class ProfessionalController extends Controller
     public function appointments()
     {
         $professional = Auth::user()->professional;
-        $pending   = $professional->appointments()->with(['client', 'service'])->pending()->upcoming()->get();
-        $confirmed = $professional->appointments()->with(['client', 'service'])->confirmed()->upcoming()->get();
+
+        $pending = $professional->appointments()
+            ->with(['client', 'service'])
+            ->pending()
+            ->orderBy('scheduled_at')
+            ->get();
+
+        $confirmed = $professional->appointments()
+            ->with(['client', 'service'])
+            ->confirmed()
+            ->orderBy('scheduled_at')
+            ->get();
 
         return view('professional.appointments', compact('pending', 'confirmed'));
     }
