@@ -26,11 +26,17 @@
                         <x-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')">
                             {{ __('Agendamentos') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')">
+                            {{ __('Avaliações') }}
+                        </x-nav-link>
                     @endif
 
                     @if(Auth::check() && Auth::user()->isClient())
                         <x-nav-link :href="route('client.dashboard')" :active="request()->routeIs('client.dashboard')">
                             {{ __('Meus Agendamentos') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')">
+                            {{ __('Minhas Avaliações') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -38,7 +44,6 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
 
-                {{-- Sino de notificações --}}
                 @auth
                     @php $unread = Auth::user()->unreadNotificationsCount(); @endphp
                     <div x-data="{ open: false }" class="relative">
@@ -54,7 +59,6 @@
                             @endif
                         </button>
 
-                        {{-- Dropdown de notificações --}}
                         <div x-show="open"
                              @click.outside="open = false"
                              x-transition:enter="transition ease-out duration-100"
@@ -120,7 +124,6 @@
                     </div>
                 @endauth
 
-                {{-- Settings Dropdown --}}
                 @auth
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -194,11 +197,17 @@
                 <x-responsive-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')">
                     {{ __('Agendamentos') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')">
+                    {{ __('Avaliações') }}
+                </x-responsive-nav-link>
             @endif
 
             @if(Auth::check() && Auth::user()->isClient())
                 <x-responsive-nav-link :href="route('client.dashboard')" :active="request()->routeIs('client.dashboard')">
                     {{ __('Meus Agendamentos') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')">
+                    {{ __('Minhas Avaliações') }}
                 </x-responsive-nav-link>
             @endif
         </div>
