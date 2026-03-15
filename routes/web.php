@@ -8,6 +8,7 @@ use App\Http\Controllers\ExploreController;
 use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,6 +58,12 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
 
     Route::get('/professional/appointments', [ProfessionalController::class, 'appointments'])->name('professional.appointments');
     Route::patch('/appointments/{appointment}/confirm', [AppointmentController::class, 'confirm'])->name('appointments.confirm');
+    Route::patch('/appointments/{appointment}/complete', [AppointmentController::class, 'complete'])->name('appointments.complete');
+
+    Route::patch('/professional/settings', [ProfessionalController::class, 'updateSettings'])->name('professional.settings.update');
+
+    Route::get('/professional/reviews', [ReviewController::class, 'professionalIndex'])->name('reviews.professional.index');
+    Route::patch('/reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
 
     Route::prefix('services')->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('services.index');
@@ -73,6 +80,11 @@ Route::middleware(['auth', 'verified', 'client'])->group(function () {
 
     Route::get('/professional/{professional}/book/{service}', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/professional/{professional}/book/{service}', [AppointmentController::class, 'store'])->name('appointments.store');
+
+    Route::get('/client/reviews', [ReviewController::class, 'clientIndex'])->name('reviews.client.index');
+    Route::get('/appointments/{appointment}/review/create', [ReviewController::class, 'create'])->name('reviews.create');
+    Route::post('/appointments/{appointment}/review', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 Route::get('/professional/{professional}', [ProfessionalController::class, 'publicShow'])
