@@ -164,6 +164,41 @@
                             @enderror
                         </div>
 
+                        <!-- Conclusão de Agendamentos -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Conclusão de Agendamentos
+                            </label>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                                Como seus atendimentos devem ser marcados como concluídos?
+                            </p>
+                            <div class="space-y-3">
+                                <label class="flex items-start gap-4 p-4 border rounded-lg cursor-pointer border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" id="label-manual">
+                                    <input type="radio" name="auto_complete" value="0" checked
+                                        class="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                                        onchange="document.getElementById('label-manual').classList.add('border-indigo-500','bg-indigo-50','dark:bg-indigo-900/20'); document.getElementById('label-auto').classList.remove('border-indigo-500','bg-indigo-50','dark:bg-indigo-900/20'); document.getElementById('label-auto').classList.add('border-gray-200','dark:border-gray-700');">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Manual</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            Você marca o atendimento como concluído manualmente após realizá-lo.
+                                        </p>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-start gap-4 p-4 border rounded-lg cursor-pointer border-gray-200 dark:border-gray-700" id="label-auto">
+                                    <input type="radio" name="auto_complete" value="1"
+                                        class="mt-0.5 text-indigo-600 focus:ring-indigo-500"
+                                        onchange="document.getElementById('label-auto').classList.add('border-indigo-500','bg-indigo-50','dark:bg-indigo-900/20'); document.getElementById('label-manual').classList.remove('border-indigo-500','bg-indigo-50','dark:bg-indigo-900/20'); document.getElementById('label-manual').classList.add('border-gray-200','dark:border-gray-700');">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Automático</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            O sistema marca automaticamente como concluído após o horário do agendamento somado à duração do serviço.
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <!-- Botões -->
                         <div class="flex gap-4">
                             <button type="submit"
