@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Appointment extends Model
 {
@@ -40,6 +41,11 @@ class Appointment extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
     // ─── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopeUpcoming($query)
@@ -71,7 +77,7 @@ class Appointment extends Model
         return $query->where('status', 'confirmed');
     }
 
-    // ─── Helpers de status ─────────────────────────────────────────────────────
+    // ─── Helpers ───────────────────────────────────────────────────────────────
 
     public function isPending(): bool   { return $this->status === 'pending'; }
     public function isConfirmed(): bool { return $this->status === 'confirmed'; }
@@ -98,5 +104,11 @@ class Appointment extends Model
             'completed' => 'gray',
             default     => 'gray',
         };
+    }
+
+    public function canBeReviewed(): bool
+    {
+        return $this->status === 'completed'
+            && ! $this->review()->exists();
     }
 }
