@@ -40,18 +40,16 @@
                                 <p class="text-xs text-gray-400 mt-1 italic">"{{ $appointment->notes }}"</p>
                             @endif
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap">
                             <form method="POST" action="{{ route('appointments.confirm', $appointment->id) }}">
-                                @csrf
-                                @method('PATCH')
+                                @csrf @method('PATCH')
                                 <button type="submit"
                                         class="px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition">
                                     Confirmar
                                 </button>
                             </form>
                             <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}">
-                                @csrf
-                                @method('PATCH')
+                                @csrf @method('PATCH')
                                 <button type="submit"
                                         class="px-4 py-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-xs font-semibold rounded-lg hover:bg-red-200 transition">
                                     Recusar
@@ -84,15 +82,23 @@
                                 {{ $appointment->client->name }} · {{ $appointment->scheduled_at->format('H:i') }}
                             </p>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs font-semibold px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full">
-                                Confirmado
-                            </span>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            @if($appointment->scheduled_at->isPast())
+                                <form method="POST" action="{{ route('appointments.complete', $appointment->id) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit"
+                                            class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition">
+                                        Concluir
+                                    </button>
+                                </form>
+                            @else
+                                <span class="text-xs font-semibold px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full">
+                                    Confirmado
+                                </span>
+                            @endif
                             <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit"
-                                        class="text-xs text-red-500 hover:text-red-700 transition">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="text-xs text-red-500 hover:text-red-700 transition">
                                     Cancelar
                                 </button>
                             </form>
