@@ -92,6 +92,17 @@ class AppointmentController extends Controller
         return back()->with('status', 'Agendamento confirmado!');
     }
 
+    public function complete(Appointment $appointment)
+    {
+        $this->authorizeProfessional($appointment);
+
+        abort_if($appointment->status !== 'confirmed', 403, 'Apenas agendamentos confirmados podem ser concluídos.');
+
+        $appointment->update(['status' => 'completed']);
+
+        return back()->with('status', 'Atendimento marcado como concluído!');
+    }
+
     public function cancel(Appointment $appointment)
     {
         $user = Auth::user();
