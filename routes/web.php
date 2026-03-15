@@ -19,7 +19,7 @@ Route::get('/dashboard', function () {
     if (auth()->user()->isProfessional()) {
         return redirect()->route('professional.dashboard');
     }
-    return redirect()->route('explore');
+    return redirect()->route('client.home');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/explore', [ExploreController::class, 'index'])->name('explore');
@@ -76,7 +76,8 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'client'])->group(function () {
-    Route::get('/client/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');
+    Route::get('/client/home', [ClientController::class, 'home'])->name('client.home');
+    Route::get('/client/appointments', [ClientController::class, 'appointments'])->name('client.appointments');
 
     Route::get('/professional/{professional}/book/{service}', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/professional/{professional}/book/{service}', [AppointmentController::class, 'store'])->name('appointments.store');
