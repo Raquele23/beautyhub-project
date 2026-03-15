@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Professional;
 use App\Models\PortfolioPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\File;
@@ -198,5 +199,23 @@ class ProfessionalController extends Controller
         $confirmed = $professional->appointments()->with(['client', 'service'])->confirmed()->upcoming()->get();
 
         return view('professional.appointments', compact('pending', 'confirmed'));
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $professional = Auth::user()->professional;
+ 
+        if (!$professional) {
+            return redirect()->route('professional.create');
+        }
+ 
+        $validated = $request->validate([
+            'auto_complete' => ['required', 'boolean'],
+        ]);
+ 
+        $professional->update($validated);
+ 
+        return redirect()->route('professional.edit')
+            ->with('status', 'Configurações salvas!');
     }
 }
