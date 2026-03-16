@@ -65,6 +65,8 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
     Route::get('/professional/reviews', [ReviewController::class, 'professionalIndex'])->name('reviews.professional.index');
     Route::patch('/reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
 
+    Route::get('/professional/calendar', [ProfessionalController::class, 'calendar'])->name('professional.calendar');
+
     Route::prefix('services')->group(function () {
         Route::get('/', [ServiceController::class, 'index'])->name('services.index');
         Route::get('/create', [ServiceController::class, 'create'])->name('services.create');
