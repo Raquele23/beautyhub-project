@@ -226,8 +226,24 @@ class ProfessionalController extends Controller
 
     public function publicShow(Professional $professional)
     {
+        $reviews = $professional->user
+            ->reviewsReceived()
+            ->with('client')
+            ->latest()
+            ->paginate(5);
+
+        $starCounts = $professional->user
+            ->reviewsReceived()
+            ->selectRaw('rating, count(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating')
+            ->toArray();
+
         return view('professional.public', [
-            'professional' => $professional->load(['services', 'portfolioPhotos', 'user']),
+            'professional'  => $professional->load(['services', 'portfolioPhotos', 'user']),
+            'reviews'       => $reviews,
+            'starCounts'    => $starCounts,
+            'averageRating' => $professional->user->average_rating,
         ]);
     }
 
