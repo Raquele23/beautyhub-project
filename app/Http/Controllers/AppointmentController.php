@@ -32,6 +32,12 @@ class AppointmentController extends Controller
 
         $slots = $professional->getAvailableSlotsForDate($request->date);
 
+        // Se for hoje, remove os horários que já passaram
+        if ($request->date === now()->toDateString()) {
+            $currentTime = now()->format('H:i');
+            $slots = array_values(array_filter($slots, fn($slot) => $slot > $currentTime));
+        }
+
         return response()->json($slots);
     }
 
