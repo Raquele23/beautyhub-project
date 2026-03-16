@@ -29,6 +29,15 @@
                 @endif
             </form>
 
+            {{-- LOCALIZAÇÃO --}}
+            <div id="location-bar" class="hidden mb-4 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span id="location-text">Ordenando por proximidade...</span>
+            </div>
+
             {{-- CONTAGEM --}}
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 {{ $professionals->count() }} profissional(is) encontrado(s)
@@ -36,10 +45,13 @@
 
             {{-- GRID --}}
             @if($professionals->count())
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div id="professionals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     @foreach($professionals as $professional)
                         <a href="{{ route('professional.public', $professional->id) }}"
-                           class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition block">
+                           class="professional-card bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition block"
+                           data-lat="{{ $professional->latitude }}"
+                           data-lon="{{ $professional->longitude }}"
+                           data-id="{{ $professional->id }}">
 
                             {{-- Foto --}}
                             <div class="h-48 bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -59,9 +71,16 @@
                                 <h3 class="text-base font-bold text-gray-900 dark:text-white">
                                     {{ $professional->establishment_name ?? $professional->user->name }}
                                 </h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                    📍 {{ $professional->city }}, {{ $professional->state }}
-                                </p>
+                                <div class="flex items-center justify-between mb-3">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        📍 {{ $professional->city }}, {{ $professional->state }}
+                                    </p>
+                                    {{-- Badge de distância (preenchido via JS) --}}
+                                    @if($professional->latitude && $professional->longitude)
+                                        <span class="distance-badge-{{ $professional->id }} hidden text-xs font-semibold px-2 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full">
+                                        </span>
+                                    @endif
+                                </div>
 
                                 @if($professional->services->count())
                                     <div class="flex flex-wrap gap-2 mb-4">
@@ -99,7 +118,7 @@
         </div>
     </div>
 
-    {{-- MODAL DE LOGIN (aparece ao tentar agendar sem estar logado) --}}
+    {{-- MODAL DE LOGIN --}}
     <div id="loginModal"
          class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
          onclick="if(event.target===this) this.classList.add('hidden')">
@@ -125,5 +144,64 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) ** 2
+                + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+                * Math.sin(dLon/2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function formatDistance(km) {
+            if (km < 1) return Math.round(km * 1000) + ' m de distância';
+            return km.toFixed(1) + ' km de distância';
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
+
+                // Mostra barra de localização
+                const bar = document.getElementById('location-bar');
+                bar.classList.remove('hidden');
+                document.getElementById('location-text').textContent = 'Apresentando profissionais próximos a você';
+
+                // Calcula distância e preenche badges
+                const cards = Array.from(document.querySelectorAll('.professional-card'));
+
+                cards.forEach(card => {
+                    const lat = parseFloat(card.dataset.lat);
+                    const lon = parseFloat(card.dataset.lon);
+                    const id  = card.dataset.id;
+
+                    if (lat && lon) {
+                        const dist = haversine(userLat, userLon, lat, lon);
+                        card.dataset.distance = dist;
+
+                        const badge = document.querySelector(`.distance-badge-${id}`);
+                        if (badge) {
+                            badge.textContent = formatDistance(dist);
+                            badge.classList.remove('hidden');
+                        }
+                    } else {
+                        card.dataset.distance = 999999;
+                    }
+                });
+
+                // Reordena os cards por proximidade
+                const grid = document.getElementById('professionals-grid');
+                cards.sort((a, b) => parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance));
+                cards.forEach(card => grid.appendChild(card));
+
+            }, function() {
+                // Usuário negou ou erro — não faz nada, mantém ordem original
+            });
+        }
+    </script>
 
 </x-app-layout>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
@@ -43,7 +44,6 @@ class User extends Authenticatable
         return $this->hasOne(Professional::class);
     }
 
-    // Agendamentos como cliente
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class, 'client_id');
@@ -57,5 +57,32 @@ class User extends Authenticatable
     public function isClient(): bool
     {
         return $this->role === 'client';
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->notifications()->unread()->count();
+    }
+
+    // ─── Reviews ───────────────────────────────────────────────────────────────
+
+    public function reviewsGiven(): HasMany
+    {
+        return $this->hasMany(Review::class, 'client_id');
+    }
+
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'professional_id');
+    }
+
+    public function getAverageRatingAttribute(): float
+    {
+        return round($this->reviewsReceived()->avg('rating') ?? 0, 1);
     }
 }

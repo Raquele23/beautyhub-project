@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\AutoCompleteAppointments;
 use App\Models\Professional;
 use App\Models\PortfolioPhoto;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\File;
@@ -14,11 +16,9 @@ class ProfessionalController extends Controller
     public function create()
     {
         $user = Auth::user();
-
         if ($user->professional) {
             return redirect()->route('professional.show');
         }
-
         return view('professional.create');
     }
 
@@ -31,51 +31,101 @@ class ProfessionalController extends Controller
             return redirect()->route('professional.create');
         }
 
+        // ─── Agendamentos ────────────────────────────────────────────────────
+        $allAppointments = $professional->appointments()->with('service')->get();
+
+        $today     = now()->toDateString();
+        $weekStart = now()->startOfWeek()->toDateString();
+        $weekEnd   = now()->endOfWeek()->toDateString();
+
+        $todayAppointments = $allAppointments->filter(
+            fn($a) => $a->scheduled_at->toDateString() === $today
+                   && !in_array($a->status, ['cancelled'])
+        )->count();
+
+        $weekAppointments = $allAppointments->filter(
+            fn($a) => $a->scheduled_at->toDateString() >= $weekStart
+                   && $a->scheduled_at->toDateString() <= $weekEnd
+                   && !in_array($a->status, ['cancelled'])
+        )->count();
+
+        $totalCompleted = $allAppointments->where('status', 'completed')->count();
+        $totalCancelled = $allAppointments->where('status', 'cancelled')->count();
+
+        // ─── Financeiro ──────────────────────────────────────────────────────
+        $completedAppointments = $allAppointments->where('status', 'completed');
+
+        $revenueToday = $completedAppointments
+            ->filter(fn($a) => $a->scheduled_at->toDateString() === $today)
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        $revenueWeek = $completedAppointments
+            ->filter(fn($a) => $a->scheduled_at->toDateString() >= $weekStart
+                            && $a->scheduled_at->toDateString() <= $weekEnd)
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        $revenueTotal = $completedAppointments
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        // ─── Avaliações recentes ─────────────────────────────────────────────
+        $recentReviews = $user->reviewsReceived()
+            ->with('client')
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $averageRating = $user->average_rating;
+
         $stats = [
-            'total_services' => $professional->services()->count(),
+            'total_services'         => $professional->services()->count(),
             'total_portfolio_photos' => $professional->portfolioPhotos()->count(),
         ];
 
-        return view('professional.dashboard', [
-            'professional' => $professional,
-            'services' => $professional->services()->get(),
-            'portfolio_photos' => $professional->portfolioPhotos()->get(),
-            'stats' => $stats,
-        ]);
+        return view('professional.dashboard', compact(
+            'professional',
+            'stats',
+            'todayAppointments',
+            'weekAppointments',
+            'totalCompleted',
+            'totalCancelled',
+            'revenueToday',
+            'revenueWeek',
+            'revenueTotal',
+            'recentReviews',
+            'averageRating',
+        ));
     }
 
     public function show()
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
-
         return view('professional.show', ['professional' => $professional]);
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-
         if ($user->professional) {
             return redirect()->route('professional.show');
         }
 
         $validated = $request->validate([
             'establishment_name' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'phone' => 'required|string|max:20',
-            'state' => 'required|string|max:2',
-            'city' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'house_number' => 'required|string|max:10',
-            'instagram' => 'nullable|string|max:255',
-            'profile_photo' => ['nullable', File::image()->max(5 * 1024)],
-            'portfolio_photos' => 'nullable|array|max:10',
+            'description'        => 'required|string',
+            'phone'              => 'required|string|max:20',
+            'state'              => 'required|string|max:2',
+            'city'               => 'required|string|max:255',
+            'street'             => 'required|string|max:255',
+            'house_number'       => 'required|string|max:10',
+            'instagram'          => 'nullable|string|max:255',
+            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
+            'portfolio_photos'   => 'nullable|array|max:10',
             'portfolio_photos.*' => File::image()->max(5 * 1024),
+            'auto_complete'      => 'boolean',
         ]);
 
         if ($request->hasFile('profile_photo')) {
@@ -100,11 +150,9 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
-
         return view('professional.edit', ['professional' => $professional]);
     }
 
@@ -112,21 +160,20 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
 
         $validated = $request->validate([
             'establishment_name' => 'nullable|string|max:255',
-            'description' => 'required|string',
-            'phone' => 'required|string|max:20',
-            'state' => 'required|string|max:2',
-            'city' => 'required|string|max:255',
-            'street' => 'required|string|max:255',
-            'house_number' => 'required|string|max:10',
-            'instagram' => 'nullable|string|max:255',
-            'profile_photo' => ['nullable', File::image()->max(5 * 1024)],
+            'description'        => 'required|string',
+            'phone'              => 'required|string|max:20',
+            'state'              => 'required|string|max:2',
+            'city'               => 'required|string|max:255',
+            'street'             => 'required|string|max:255',
+            'house_number'       => 'required|string|max:10',
+            'instagram'          => 'nullable|string|max:255',
+            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
         ]);
 
         if ($request->hasFile('profile_photo')) {
@@ -145,13 +192,12 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
 
         $validated = $request->validate([
-            'photo' => ['required', File::image()->max(5 * 1024)],
+            'photo'       => ['required', File::image()->max(5 * 1024)],
             'description' => 'nullable|string',
         ]);
 
@@ -161,7 +207,7 @@ class ProfessionalController extends Controller
 
         $path = $request->file('photo')->store('professionals/portfolio', 'public');
         $professional->portfolioPhotos()->create([
-            'photo' => $path,
+            'photo'       => $path,
             'description' => $validated['description'] ?? null,
         ]);
 
@@ -173,26 +219,119 @@ class ProfessionalController extends Controller
         if ($photo->professional->user_id !== Auth::id()) {
             abort(403);
         }
-
         Storage::disk('public')->delete($photo->photo);
         $photo->delete();
-
         return redirect()->route('professional.edit')->with('status', 'Foto removida do portfólio!');
     }
 
     public function publicShow(Professional $professional)
     {
+        $reviews = $professional->user
+            ->reviewsReceived()
+            ->with('client')
+            ->latest()
+            ->paginate(5);
+
+        $starCounts = $professional->user
+            ->reviewsReceived()
+            ->selectRaw('rating, count(*) as total')
+            ->groupBy('rating')
+            ->pluck('total', 'rating')
+            ->toArray();
+
         return view('professional.public', [
-            'professional' => $professional->load(['services', 'portfolioPhotos', 'user']),
+            'professional'  => $professional->load(['services', 'portfolioPhotos', 'user']),
+            'reviews'       => $reviews,
+            'starCounts'    => $starCounts,
+            'averageRating' => $professional->user->average_rating,
         ]);
     }
 
     public function appointments()
     {
         $professional = Auth::user()->professional;
-        $pending   = $professional->appointments()->with(['client', 'service'])->pending()->upcoming()->get();
-        $confirmed = $professional->appointments()->with(['client', 'service'])->confirmed()->upcoming()->get();
 
-        return view('professional.appointments', compact('pending', 'confirmed'));
+        if ($professional->auto_complete) {
+            AutoCompleteAppointments::dispatchSync();
+        }
+
+        $pending = $professional->appointments()
+            ->with(['client', 'service'])
+            ->pending()
+            ->orderBy('scheduled_at')
+            ->get();
+
+        $agenda = $professional->appointments()
+            ->with(['client', 'service'])
+            ->confirmed()
+            ->where('scheduled_at', '>=', now())
+            ->orderBy('scheduled_at')
+            ->get();
+
+        $awaitingComplete = $professional->appointments()
+            ->with(['client', 'service'])
+            ->confirmed()
+            ->where('scheduled_at', '<', now())
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        $completed = $professional->appointments()
+            ->with(['client', 'service'])
+            ->where('status', 'completed')
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        $cancelled = $professional->appointments()
+            ->with(['client', 'service'])
+            ->where('status', 'cancelled')
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        return view('professional.appointments', compact(
+            'pending',
+            'agenda',
+            'awaitingComplete',
+            'completed',
+            'cancelled'
+        ));
+    }
+
+    public function calendar()
+    {
+        $professional = Auth::user()->professional;
+ 
+        $appointments = $professional->appointments()
+            ->with(['client', 'service'])
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->get()
+            ->map(fn($a) => [
+                'id'      => $a->id,
+                'date'    => $a->scheduled_at->format('Y-m-d'),
+                'time'    => $a->scheduled_at->format('H:i'),
+                'service' => $a->service->name,
+                'client'  => $a->client->name,
+                'status'  => $a->status,
+            ]);
+ 
+        return view('professional.calendar', [
+            'appointmentsJson' => $appointments->toJson(),
+        ]);
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $professional = Auth::user()->professional;
+        if (!$professional) {
+            return redirect()->route('professional.create');
+        }
+
+        $validated = $request->validate([
+            'auto_complete' => ['required', 'boolean'],
+        ]);
+
+        $professional->update($validated);
+
+        return back()
+            ->with('status', 'Configurações salvas!');
     }
 }

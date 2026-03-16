@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="min-h-screen py-12" style="background-image: url('{{ ('/assets/img/background.png') }}'); background-size: cover; background-position: center;">
+    <div class="min-h-screen py-12" style="background: linear-gradient( #e3d0f9, #a675d6, #6a0dad);" background-size: cover; background-position: center;>
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
 
             <!-- Logo -->
@@ -146,7 +146,6 @@
                             <p class="mt-1 text-xs text-gray-400">Você pode selecionar até 10 imagens</p>
                             @error('portfolio_photos')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                         </div>
-
                         <!-- Botões -->
                         <div class="flex gap-4 pt-2">
                             <button type="submit"
