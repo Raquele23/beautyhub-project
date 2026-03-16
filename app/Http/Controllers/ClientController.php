@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\AutoCompleteAppointments;
 use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
@@ -22,6 +23,9 @@ class ClientController extends Controller
     public function appointments()
     {
         $user = Auth::user();
+
+        // Roda o job de auto complete ao abrir a página
+        AutoCompleteAppointments::dispatchSync();
 
         $nextAppointment = $user->appointments()
             ->with(['service', 'professional.user'])
