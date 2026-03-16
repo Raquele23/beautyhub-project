@@ -15,35 +15,30 @@
 
             {{-- CARD DE PERFIL --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
-
-                {{-- Banner --}}
                 <div class="h-40 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900"></div>
-
-                {{-- Conteúdo do perfil --}}
                 <div class="px-8 pb-8">
                     <div class="flex flex-col sm:flex-row sm:items-end gap-6 -mt-14">
-
-                        {{-- Foto de perfil --}}
                         <div class="w-28 h-28 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden shadow-lg bg-yellow-100 flex-shrink-0">
                             @if($professional->profile_photo)
-                                <img src="{{ Storage::url($professional->profile_photo) }}"
-                                     alt="Foto de perfil"
-                                     class="w-full h-full object-cover">
+                                <img src="{{ Storage::url($professional->profile_photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full flex items-center justify-center bg-yellow-200 text-yellow-600 text-4xl font-bold">
                                     {{ strtoupper(substr($professional->user->name, 0, 1)) }}
                                 </div>
                             @endif
                         </div>
-
-                        {{-- Nome + distância --}}
                         <div class="pb-1">
                             <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
                                 {{ $professional->establishment_name ?? $professional->user->name }}
                             </h2>
                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ $professional->user->name }}</p>
-
-                            {{-- Badge de distância — preenchido via JS --}}
+                            @if($averageRating > 0)
+                                <div class="flex items-center gap-2 mt-1">
+                                    <x-star-rating :rating="$averageRating" size="sm" />
+                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ number_format($averageRating, 1) }}</span>
+                                    <span class="text-xs text-gray-400">({{ $reviews->total() }} {{ Str::plural('avaliação', $reviews->total()) }})</span>
+                                </div>
+                            @endif
                             @if($professional->latitude && $professional->longitude)
                                 <p id="distance-label" class="hidden mt-1 text-sm font-medium text-purple-600 dark:text-purple-400">
                                     📍 <span id="distance-text"></span>
@@ -52,9 +47,7 @@
                         </div>
                     </div>
 
-                    {{-- Informações --}}
                     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
                         @if($professional->description)
                         <div class="lg:col-span-3">
                             <p class="text-xs text-gray-400 uppercase font-semibold tracking-wide mb-1">Descrição</p>
@@ -81,9 +74,7 @@
                                 <svg class="w-4 h-4 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                                 </svg>
-                                <a href="https://instagram.com/{{ ltrim($professional->instagram, '@') }}"
-                                   target="_blank"
-                                   class="text-purple-600 hover:underline dark:text-purple-400">
+                                <a href="https://instagram.com/{{ ltrim($professional->instagram, '@') }}" target="_blank" class="text-purple-600 hover:underline dark:text-purple-400">
                                     {{ $professional->instagram }}
                                 </a>
                             </div>
@@ -102,7 +93,6 @@
                             </div>
                         </div>
                         @endif
-
                     </div>
                 </div>
             </div>
@@ -116,9 +106,7 @@
                         @foreach($professional->portfolioPhotos as $photo)
                         <div>
                             <div class="rounded-xl overflow-hidden aspect-square">
-                                <img src="{{ Storage::url($photo->photo) }}"
-                                     alt="{{ $photo->description ?? '' }}"
-                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                <img src="{{ Storage::url($photo->photo) }}" alt="{{ $photo->description ?? '' }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                             </div>
                             @if($photo->description)
                                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
@@ -134,15 +122,12 @@
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
                 <div class="p-6">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Serviços</h3>
-
                     @forelse($professional->services as $service)
                     <div class="flex items-center justify-between py-4 border-b last:border-0 dark:border-gray-700">
                         <div class="flex items-center gap-4">
                             <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 flex-shrink-0">
                                 @if($service->image)
-                                    <img src="{{ Storage::url($service->image) }}"
-                                         alt="{{ $service->name }}"
-                                         class="w-full h-full object-cover">
+                                    <img src="{{ Storage::url($service->image) }}" alt="{{ $service->name }}" class="w-full h-full object-cover">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center text-gray-400">
                                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +136,6 @@
                                     </div>
                                 @endif
                             </div>
-
                             <div>
                                 <p class="text-base font-semibold text-gray-900 dark:text-white">{{ $service->name }}</p>
                                 @if($service->description)
@@ -165,7 +149,6 @@
                                 </div>
                             </div>
                         </div>
-
                         @auth
                             @if(auth()->user()->isClient())
                                 <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
@@ -188,6 +171,87 @@
                 </div>
             </div>
 
+            {{-- AVALIAÇÕES --}}
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Avaliações</h3>
+                        @if($reviews->total() > 0)
+                            <div class="flex items-center gap-2">
+                                <x-star-rating :rating="$averageRating" size="sm" />
+                                <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ number_format($averageRating, 1) }}</span>
+                                <span class="text-xs text-gray-400">({{ $reviews->total() }})</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Distribuição de estrelas --}}
+                    @if($reviews->total() > 0)
+                    <div class="mb-6 space-y-1.5">
+                        @for($star = 5; $star >= 1; $star--)
+                            @php
+                                $count = $starCounts[$star] ?? 0;
+                                $pct   = $reviews->total() > 0 ? ($count / $reviews->total()) * 100 : 0;
+                            @endphp
+                            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span class="w-3 text-right">{{ $star }}</span>
+                                <svg class="w-3.5 h-3.5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                                </svg>
+                                <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-yellow-400 h-2 rounded-full" style="width: {{ $pct }}%"></div>
+                                </div>
+                                <span class="w-5 text-right text-xs">{{ $count }}</span>
+                            </div>
+                        @endfor
+                    </div>
+                    @endif
+
+                    {{-- Lista de avaliações --}}
+                    @forelse($reviews as $review)
+                        <div class="py-4 border-b last:border-0 dark:border-gray-700">
+                            <div class="flex items-start justify-between gap-3 mb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                                        <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">
+                                            {{ strtoupper(substr($review->client->name, 0, 1)) }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $review->client->name }}</p>
+                                        <p class="text-xs text-gray-400">{{ $review->created_at->diffForHumans() }}</p>
+                                    </div>
+                                </div>
+                                <x-star-rating :rating="$review->rating" size="sm" />
+                            </div>
+
+                            @if($review->comment)
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mt-2">{{ $review->comment }}</p>
+                            @endif
+
+                            @if($review->hasReply())
+                                <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-purple-400">
+                                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                                        Resposta do profissional
+                                        <span class="font-normal ml-1">· {{ $review->replied_at->diffForHumans() }}</span>
+                                    </p>
+                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $review->professional_reply }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="py-10 text-center text-sm text-gray-400 dark:text-gray-500">
+                            Nenhuma avaliação ainda.
+                        </div>
+                    @endforelse
+
+                    {{-- Paginação --}}
+                    @if($reviews->hasPages())
+                        <div class="mt-4">{{ $reviews->links() }}</div>
+                    @endif
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -202,23 +266,19 @@
                 Para agendar você precisa estar logado. É rapidinho!
             </p>
             <div class="flex flex-col gap-3">
-                <a href="{{ route('login') }}"
-                   class="bg-purple-600 text-white text-sm font-semibold px-6 py-3 rounded-full hover:bg-purple-700 transition">
+                <a href="{{ route('login') }}" class="bg-purple-600 text-white text-sm font-semibold px-6 py-3 rounded-full hover:bg-purple-700 transition">
                     Entrar na minha conta
                 </a>
-                <a href="{{ route('register') }}"
-                   class="border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold px-6 py-3 rounded-full hover:border-purple-400 transition">
+                <a href="{{ route('register') }}" class="border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-sm font-semibold px-6 py-3 rounded-full hover:border-purple-400 transition">
                     Criar conta grátis
                 </a>
-                <button onclick="document.getElementById('loginModal').classList.add('hidden')"
-                        class="text-xs text-gray-400 hover:text-gray-600 mt-1">
+                <button onclick="document.getElementById('loginModal').classList.add('hidden')" class="text-xs text-gray-400 hover:text-gray-600 mt-1">
                     Continuar navegando
                 </button>
             </div>
         </div>
     </div>
 
-    {{-- Script de geolocalização --}}
     @if($professional->latitude && $professional->longitude)
     <script>
         function haversine(lat1, lon1, lat2, lon2) {
@@ -239,14 +299,11 @@
                     {{ $professional->latitude }},
                     {{ $professional->longitude }}
                 );
-
                 const label = document.getElementById('distance-label');
                 const text  = document.getElementById('distance-text');
-
                 text.textContent = dist < 1
                     ? Math.round(dist * 1000) + ' m de você'
                     : dist.toFixed(1) + ' km de você';
-
                 label.classList.remove('hidden');
             });
         }
