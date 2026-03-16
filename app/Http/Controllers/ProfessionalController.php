@@ -331,7 +331,7 @@ class ProfessionalController extends Controller
 
         $professional->update($validated);
 
-        return redirect()->route('professional.edit')
+        return back()
             ->with('status', 'Configurações salvas!');
     }
 }
