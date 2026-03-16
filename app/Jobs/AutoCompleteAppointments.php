@@ -8,7 +8,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Carbon;
 
 class AutoCompleteAppointments implements ShouldQueue
 {
@@ -16,14 +15,12 @@ class AutoCompleteAppointments implements ShouldQueue
 
     public function handle(): void
     {
-        // Busca agendamentos confirmados de profissionais com auto_complete ativo
         Appointment::query()
             ->where('status', 'confirmed')
             ->whereHas('professional', fn($q) => $q->where('auto_complete', true))
-            ->with('service') // precisa da duração
+            ->with('service')
             ->get()
             ->each(function (Appointment $appointment) {
-                // Horário de término = scheduled_at + duração do serviço (em minutos)
                 $endsAt = $appointment->scheduled_at
                     ->copy()
                     ->addMinutes($appointment->service->duration ?? 60);
