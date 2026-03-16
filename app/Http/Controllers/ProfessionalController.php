@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\AutoCompleteAppointments;
 use App\Models\Professional;
 use App\Models\PortfolioPhoto;
 use Illuminate\Http\Request;
@@ -15,11 +16,9 @@ class ProfessionalController extends Controller
     public function create()
     {
         $user = Auth::user();
-
         if ($user->professional) {
             return redirect()->route('professional.show');
         }
-
         return view('professional.create');
     }
 
@@ -38,10 +37,10 @@ class ProfessionalController extends Controller
         ];
 
         return view('professional.dashboard', [
-            'professional'    => $professional,
-            'services'        => $professional->services()->get(),
+            'professional'     => $professional,
+            'services'         => $professional->services()->get(),
             'portfolio_photos' => $professional->portfolioPhotos()->get(),
-            'stats'           => $stats,
+            'stats'            => $stats,
         ]);
     }
 
@@ -49,18 +48,15 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
-
         return view('professional.show', ['professional' => $professional]);
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-
         if ($user->professional) {
             return redirect()->route('professional.show');
         }
@@ -86,8 +82,6 @@ class ProfessionalController extends Controller
 
         $professional = $user->professional()->create($validated);
 
-        // Observer cuida do geocoding automaticamente
-
         if ($request->hasFile('portfolio_photos')) {
             foreach ($request->file('portfolio_photos') as $photo) {
                 $path = $photo->store('professionals/portfolio', 'public');
@@ -104,11 +98,9 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
-
         return view('professional.edit', ['professional' => $professional]);
     }
 
@@ -116,7 +108,6 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
@@ -142,8 +133,6 @@ class ProfessionalController extends Controller
 
         $professional->update($validated);
 
-        // Observer cuida do geocoding automaticamente se o endereço mudou
-
         return redirect()->route('professional.show')->with('status', 'Perfil atualizado com sucesso!');
     }
 
@@ -151,7 +140,6 @@ class ProfessionalController extends Controller
     {
         $user = Auth::user();
         $professional = $user->professional;
-
         if (!$professional) {
             return redirect()->route('professional.create');
         }
@@ -179,10 +167,8 @@ class ProfessionalController extends Controller
         if ($photo->professional->user_id !== Auth::id()) {
             abort(403);
         }
-
         Storage::disk('public')->delete($photo->photo);
         $photo->delete();
-
         return redirect()->route('professional.edit')->with('status', 'Foto removida do portfólio!');
     }
 
@@ -197,35 +183,72 @@ class ProfessionalController extends Controller
     {
         $professional = Auth::user()->professional;
 
+        // Dispara verificação automática para profissionais com auto_complete ativo
+        if ($professional->auto_complete) {
+            AutoCompleteAppointments::dispatchSync();
+        }
+
+        // Aguardando confirmação — todos os pending, qualquer data
         $pending = $professional->appointments()
             ->with(['client', 'service'])
             ->pending()
             ->orderBy('scheduled_at')
             ->get();
 
-        $confirmed = $professional->appointments()
+        // Agenda — confirmados com horário futuro
+        $agenda = $professional->appointments()
             ->with(['client', 'service'])
             ->confirmed()
+            ->where('scheduled_at', '>=', now())
             ->orderBy('scheduled_at')
             ->get();
 
-        return view('professional.appointments', compact('pending', 'confirmed'));
+        // Confirmados passados aguardando conclusão manual
+        $awaitingComplete = $professional->appointments()
+            ->with(['client', 'service'])
+            ->confirmed()
+            ->where('scheduled_at', '<', now())
+            ->orderByDesc('scheduled_at')
+            ->get();
+
+        // Concluídos
+        $completed = $professional->appointments()
+            ->with(['client', 'service'])
+            ->where('status', 'completed')
+            ->orderByDesc('scheduled_at')
+            
+            ->get();
+
+        // Cancelados
+        $cancelled = $professional->appointments()
+            ->with(['client', 'service'])
+            ->where('status', 'cancelled')
+            ->orderByDesc('scheduled_at')
+            
+            ->get();
+
+        return view('professional.appointments', compact(
+            'pending',
+            'agenda',
+            'awaitingComplete',
+            'completed',
+            'cancelled'
+        ));
     }
 
     public function updateSettings(Request $request): RedirectResponse
     {
         $professional = Auth::user()->professional;
- 
         if (!$professional) {
             return redirect()->route('professional.create');
         }
- 
+
         $validated = $request->validate([
             'auto_complete' => ['required', 'boolean'],
         ]);
- 
+
         $professional->update($validated);
- 
+
         return redirect()->route('professional.edit')
             ->with('status', 'Configurações salvas!');
     }
