@@ -280,6 +280,28 @@ class ProfessionalController extends Controller
         ));
     }
 
+    public function calendar()
+    {
+        $professional = Auth::user()->professional;
+ 
+        $appointments = $professional->appointments()
+            ->with(['client', 'service'])
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->get()
+            ->map(fn($a) => [
+                'id'      => $a->id,
+                'date'    => $a->scheduled_at->format('Y-m-d'),
+                'time'    => $a->scheduled_at->format('H:i'),
+                'service' => $a->service->name,
+                'client'  => $a->client->name,
+                'status'  => $a->status,
+            ]);
+ 
+        return view('professional.calendar', [
+            'appointmentsJson' => $appointments->toJson(),
+        ]);
+    }
+
     public function updateSettings(Request $request): RedirectResponse
     {
         $professional = Auth::user()->professional;
