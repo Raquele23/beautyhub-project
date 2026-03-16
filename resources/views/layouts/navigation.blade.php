@@ -10,7 +10,6 @@
 
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
 
-                    {{-- Profissional --}}
                     @if(Auth::check() && Auth::user()->isProfessional() && Auth::user()->professional)
                         <x-nav-link :href="route('professional.dashboard')" :active="request()->routeIs('professional.dashboard')">
                             {{ __('Dashboard') }}
@@ -27,12 +26,14 @@
                         <x-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')">
                             {{ __('Agendamentos') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('professional.calendar')" :active="request()->routeIs('professional.calendar')">
+                            {{ __('Calendário') }}
+                        </x-nav-link>
                         <x-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')">
                             {{ __('Avaliações') }}
                         </x-nav-link>
                     @endif
 
-                    {{-- Cliente --}}
                     @if(Auth::check() && Auth::user()->isClient())
                         <x-nav-link :href="route('client.home')" :active="request()->routeIs('client.home')">
                             {{ __('Início') }}
@@ -203,6 +204,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')">
                     {{ __('Agendamentos') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('professional.calendar')" :active="request()->routeIs('professional.calendar')">
+                    {{ __('Calendário') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')">
                     {{ __('Avaliações') }}
