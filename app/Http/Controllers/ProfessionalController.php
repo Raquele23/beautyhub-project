@@ -31,17 +31,69 @@ class ProfessionalController extends Controller
             return redirect()->route('professional.create');
         }
 
+        // ─── Agendamentos ────────────────────────────────────────────────────
+        $allAppointments = $professional->appointments()->with('service')->get();
+
+        $today     = now()->toDateString();
+        $weekStart = now()->startOfWeek()->toDateString();
+        $weekEnd   = now()->endOfWeek()->toDateString();
+
+        $todayAppointments = $allAppointments->filter(
+            fn($a) => $a->scheduled_at->toDateString() === $today
+                   && !in_array($a->status, ['cancelled'])
+        )->count();
+
+        $weekAppointments = $allAppointments->filter(
+            fn($a) => $a->scheduled_at->toDateString() >= $weekStart
+                   && $a->scheduled_at->toDateString() <= $weekEnd
+                   && !in_array($a->status, ['cancelled'])
+        )->count();
+
+        $totalCompleted = $allAppointments->where('status', 'completed')->count();
+        $totalCancelled = $allAppointments->where('status', 'cancelled')->count();
+
+        // ─── Financeiro ──────────────────────────────────────────────────────
+        $completedAppointments = $allAppointments->where('status', 'completed');
+
+        $revenueToday = $completedAppointments
+            ->filter(fn($a) => $a->scheduled_at->toDateString() === $today)
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        $revenueWeek = $completedAppointments
+            ->filter(fn($a) => $a->scheduled_at->toDateString() >= $weekStart
+                            && $a->scheduled_at->toDateString() <= $weekEnd)
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        $revenueTotal = $completedAppointments
+            ->sum(fn($a) => $a->service->price ?? 0);
+
+        // ─── Avaliações recentes ─────────────────────────────────────────────
+        $recentReviews = $user->reviewsReceived()
+            ->with('client')
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $averageRating = $user->average_rating;
+
         $stats = [
             'total_services'         => $professional->services()->count(),
             'total_portfolio_photos' => $professional->portfolioPhotos()->count(),
         ];
 
-        return view('professional.dashboard', [
-            'professional'     => $professional,
-            'services'         => $professional->services()->get(),
-            'portfolio_photos' => $professional->portfolioPhotos()->get(),
-            'stats'            => $stats,
-        ]);
+        return view('professional.dashboard', compact(
+            'professional',
+            'stats',
+            'todayAppointments',
+            'weekAppointments',
+            'totalCompleted',
+            'totalCancelled',
+            'revenueToday',
+            'revenueWeek',
+            'revenueTotal',
+            'recentReviews',
+            'averageRating',
+        ));
     }
 
     public function show()
@@ -183,19 +235,16 @@ class ProfessionalController extends Controller
     {
         $professional = Auth::user()->professional;
 
-        // Dispara verificação automática para profissionais com auto_complete ativo
         if ($professional->auto_complete) {
             AutoCompleteAppointments::dispatchSync();
         }
 
-        // Aguardando confirmação — todos os pending, qualquer data
         $pending = $professional->appointments()
             ->with(['client', 'service'])
             ->pending()
             ->orderBy('scheduled_at')
             ->get();
 
-        // Agenda — confirmados com horário futuro
         $agenda = $professional->appointments()
             ->with(['client', 'service'])
             ->confirmed()
@@ -203,7 +252,6 @@ class ProfessionalController extends Controller
             ->orderBy('scheduled_at')
             ->get();
 
-        // Confirmados passados aguardando conclusão manual
         $awaitingComplete = $professional->appointments()
             ->with(['client', 'service'])
             ->confirmed()
@@ -211,20 +259,16 @@ class ProfessionalController extends Controller
             ->orderByDesc('scheduled_at')
             ->get();
 
-        // Concluídos
         $completed = $professional->appointments()
             ->with(['client', 'service'])
             ->where('status', 'completed')
             ->orderByDesc('scheduled_at')
-            
             ->get();
 
-        // Cancelados
         $cancelled = $professional->appointments()
             ->with(['client', 'service'])
             ->where('status', 'cancelled')
             ->orderByDesc('scheduled_at')
-            
             ->get();
 
         return view('professional.appointments', compact(
