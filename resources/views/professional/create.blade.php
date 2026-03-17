@@ -9,7 +9,7 @@
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
 
         
-            <div class="w[55%] bg-white overflow-hidden shadow-xl rounded-3xl">
+            <div class="w [55%] bg-white overflow-hidden shadow-xl rounded-3xl">
                 <div class="p-8">
                     <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Criar Perfil Profissional</h3>
 
