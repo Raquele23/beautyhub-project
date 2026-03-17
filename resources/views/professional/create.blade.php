@@ -5,17 +5,11 @@
         </h2>
     </x-slot>
 
-    <div class="min-h-screen py-12" style="background: linear-gradient( #e3d0f9, #a675d6, #6a0dad);" background-size: cover; background-position: center;>
+    <div class="min-h-screen py-12" style="background-color: #EDE4F8" background-size: cover; background-position: center;>
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
 
-            <!-- Logo -->
-            <div class="flex justify-center mb-6">
-                <div class="text-white text-5xl font-serif font-bold tracking-widest drop-shadow-lg">
-                    BH
-                </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-xl rounded-3xl">
+        
+            <div class="w[55%] bg-white overflow-hidden shadow-xl rounded-3xl">
                 <div class="p-8">
                     <h3 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Criar Perfil Profissional</h3>
 
