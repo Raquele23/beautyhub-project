@@ -9,6 +9,14 @@
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Minha Loja</h1>
             </div>
             <div class="flex items-center gap-2">
+                <a href="{{ route('professional.portfolio.edit') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                   style="background-color: #E3D0F9;">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Portfólio
+                </a>
                 <a href="{{ route('services.index') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                    style="background-color: #E3D0F9;">
@@ -31,13 +39,10 @@
         {{-- ── Card de Perfil ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
 
-            {{-- Banner com foto centrada --}}
             <div class="relative h-36 w-full" style="background: linear-gradient(135deg, #6A0DAD 0%, #9B4DCA 100%);">
                 <div class="absolute left-1/2 -bottom-16 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden" style="background-color: #EDE4F8;">
                     @if($professional->profile_photo)
-                        <img src="{{ Storage::url($professional->profile_photo) }}"
-                             alt="Foto de perfil"
-                             class="w-full h-full object-cover">
+                        <img src="{{ Storage::url($professional->profile_photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-4xl font-bold text-purple-300">
                             {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -46,11 +51,8 @@
                 </div>
             </div>
 
-            {{-- Nome + avaliação centrados --}}
             <div class="pt-20 pb-5 text-center px-6">
-                <h2 class="text-xl font-bold text-gray-900">
-                    {{ $professional->establishment_name ?? Auth::user()->name }}
-                </h2>
+                <h2 class="text-xl font-bold text-gray-900">{{ $professional->establishment_name ?? Auth::user()->name }}</h2>
                 <p class="text-xs text-purple-400 mt-0.5">{{ Auth::user()->name }}</p>
                 @php
                     $storeAvg = round($professional->user->reviewsReceived()->avg('rating') ?? 0, 1);
@@ -65,25 +67,19 @@
                 @endif
             </div>
 
-            {{-- Faixa horizontal de infos --}}
             @php
                 $address = $professional->full_address;
                 $hasInfos = $professional->phone || $professional->instagram || $address;
             @endphp
             @if($hasInfos || $professional->description)
             <div class="border-t border-purple-50">
-
-                {{-- Descrição se existir --}}
                 @if($professional->description)
                 <div class="px-6 py-4 border-b border-purple-50">
                     <p class="text-sm text-gray-600 text-center leading-relaxed">{{ $professional->description }}</p>
                 </div>
                 @endif
-
-                {{-- Linha horizontal de contatos --}}
                 @if($hasInfos)
                 <div class="px-6 py-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-
                     @if($professional->phone)
                     <div class="flex items-center gap-2 text-sm text-gray-700">
                         <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,20 +88,14 @@
                         <span class="font-medium">{{ $professional->phone }}</span>
                     </div>
                     @endif
-
                     @if($professional->instagram)
                     <div class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                         </svg>
-                        <a href="https://instagram.com/{{ ltrim($professional->instagram, '@') }}"
-                           target="_blank"
-                           class="text-sm font-medium text-purple-600 hover:underline">
-                            {{ $professional->instagram }}
-                        </a>
+                        <a href="https://instagram.com/{{ ltrim($professional->instagram, '@') }}" target="_blank" class="text-sm font-medium text-purple-600 hover:underline">{{ $professional->instagram }}</a>
                     </div>
                     @endif
-
                     @if($address)
                     <div class="flex items-center gap-2 text-sm text-gray-700">
                         <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +105,6 @@
                         <span class="font-medium">{{ $address }}</span>
                     </div>
                     @endif
-
                 </div>
                 @endif
             </div>
@@ -124,25 +113,55 @@
         </div>
 
         {{-- ── Portfólio ── --}}
-        @if($professional->portfolioPhotos->count() > 0)
-        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
-            <p class="text-sm font-bold text-purple-400 uppercase tracking-wide mb-4">Portfólio</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                @foreach($professional->portfolioPhotos as $photo)
-                <div>
-                    <div class="rounded-xl overflow-hidden aspect-square">
-                        <img src="{{ Storage::url($photo->photo) }}"
-                             alt="{{ $photo->description ?? '' }}"
-                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
-                    </div>
-                    @if($photo->description)
-                        <p class="mt-1 text-xs text-purple-300">{{ $photo->description }}</p>
-                    @endif
-                </div>
-                @endforeach
+        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50">
+                <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Portfólio</p>
+                <a href="{{ route('professional.portfolio.edit') }}"
+                   class="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Adicionar
+                </a>
             </div>
+
+            @if($professional->portfolioPhotos->count() > 0)
+            <div class="p-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    @foreach($professional->portfolioPhotos as $photo)
+                    <div class="group relative">
+                        <div class="rounded-xl overflow-hidden aspect-square">
+                            <img src="{{ Storage::url($photo->photo) }}"
+                                 alt="{{ $photo->description ?? '' }}"
+                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                        </div>
+                        {{-- Overlay de excluir --}}
+                        <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                            <form action="{{ route('professional.portfolio.delete', $photo) }}" method="POST"
+                                  onsubmit="return confirm('Tem certeza que deseja excluir esta foto?')">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-xs font-semibold text-red-500 rounded-xl hover:bg-red-50 transition-colors shadow-lg">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
+                        @if($photo->description)
+                            <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="px-6 py-10 text-center">
+                <p class="text-sm text-purple-300">Nenhuma foto no portfólio ainda.</p>
+            </div>
+            @endif
         </div>
-        @endif
 
         {{-- ── Serviços ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
@@ -160,12 +179,9 @@
             @forelse($professional->services ?? [] as $service)
             <div class="flex items-center gap-4 px-6 py-4 border-b border-purple-50 last:border-0">
 
-                {{-- Imagem do serviço --}}
                 <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
                     @if($service->image)
-                        <img src="{{ Storage::url($service->image) }}"
-                             alt="{{ $service->name }}"
-                             class="w-full h-full object-cover">
+                        <img src="{{ Storage::url($service->image) }}" alt="{{ $service->name }}" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center">
                             <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +191,6 @@
                     @endif
                 </div>
 
-                {{-- Info --}}
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $service->name }}</p>
                     @if($service->description)
@@ -187,7 +202,6 @@
                     </div>
                 </div>
 
-                {{-- Ações --}}
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <a href="{{ route('services.edit', $service->id) }}"
                        class="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
