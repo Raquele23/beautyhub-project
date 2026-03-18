@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
     Route::get('/professional/edit', [ProfessionalController::class, 'edit'])->name('professional.edit');
     Route::patch('/professional', [ProfessionalController::class, 'update'])->name('professional.update');
 
+    Route::get('/professional/portfolio', [ProfessionalController::class, 'portfolioEdit'])->name('professional.portfolio.edit'); // nova rota
     Route::post('/professional/portfolio', [ProfessionalController::class, 'addPortfolioPhoto'])->name('professional.portfolio.add');
     Route::delete('/professional/portfolio/{photo}', [ProfessionalController::class, 'deletePortfolioPhoto'])->name('professional.portfolio.delete');
 
