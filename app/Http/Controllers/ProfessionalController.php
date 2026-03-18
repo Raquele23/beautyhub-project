@@ -165,6 +165,7 @@ class ProfessionalController extends Controller
         }
 
         $validated = $request->validate([
+            'name'               => 'required|string|max:255',
             'establishment_name' => 'nullable|string|max:255',
             'description'        => 'required|string',
             'phone'              => 'required|string|max:20',
@@ -174,18 +175,42 @@ class ProfessionalController extends Controller
             'house_number'       => 'required|string|max:10',
             'instagram'          => 'nullable|string|max:255',
             'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
+            'delete_profile_photo' => 'nullable|boolean',
         ]);
 
-        if ($request->hasFile('profile_photo')) {
+        // Atualiza o nome do usuário
+        $user->update(['name' => $validated['name']]);
+
+        // Exclui foto se solicitado
+        if ($request->input('delete_profile_photo') == '1') {
+            if ($professional->profile_photo) {
+                Storage::disk('public')->delete($professional->profile_photo);
+            }
+            $validated['profile_photo'] = null;
+        } elseif ($request->hasFile('profile_photo')) {
             if ($professional->profile_photo) {
                 Storage::disk('public')->delete($professional->profile_photo);
             }
             $validated['profile_photo'] = $request->file('profile_photo')->store('professionals/profiles', 'public');
         }
 
+        unset($validated['name'], $validated['delete_profile_photo']);
+
         $professional->update($validated);
 
         return redirect()->route('professional.show')->with('status', 'Perfil atualizado com sucesso!');
+    }
+
+    // ─── Portfólio ───────────────────────────────────────────────────────────
+
+    public function portfolioEdit()
+    {
+        $user = Auth::user();
+        $professional = $user->professional;
+        if (!$professional) {
+            return redirect()->route('professional.create');
+        }
+        return view('professional.portfolio.edit', ['professional' => $professional]);
     }
 
     public function addPortfolioPhoto(Request $request)
@@ -202,7 +227,7 @@ class ProfessionalController extends Controller
         ]);
 
         if ($professional->portfolioPhotos()->count() >= 10) {
-            return redirect()->route('professional.edit')->with('error', 'Limite de 10 fotos no portfólio atingido!');
+            return back()->with('error', 'Limite de 10 fotos no portfólio atingido!');
         }
 
         $path = $request->file('photo')->store('professionals/portfolio', 'public');
@@ -211,7 +236,7 @@ class ProfessionalController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return redirect()->route('professional.edit')->with('status', 'Foto adicionada ao portfólio!');
+        return back()->with('status', 'Foto adicionada ao portfólio!');
     }
 
     public function deletePortfolioPhoto(PortfolioPhoto $photo)
@@ -221,7 +246,7 @@ class ProfessionalController extends Controller
         }
         Storage::disk('public')->delete($photo->photo);
         $photo->delete();
-        return redirect()->route('professional.edit')->with('status', 'Foto removida do portfólio!');
+        return back()->with('status', 'Foto removida do portfólio!');
     }
 
     public function publicShow(Professional $professional)
@@ -299,7 +324,7 @@ class ProfessionalController extends Controller
     public function calendar()
     {
         $professional = Auth::user()->professional;
- 
+
         $appointments = $professional->appointments()
             ->with(['client', 'service'])
             ->whereIn('status', ['pending', 'confirmed'])
@@ -312,7 +337,7 @@ class ProfessionalController extends Controller
                 'client'  => $a->client->name,
                 'status'  => $a->status,
             ]);
- 
+
         return view('professional.calendar', [
             'appointmentsJson' => $appointments->toJson(),
         ]);
@@ -331,7 +356,6 @@ class ProfessionalController extends Controller
 
         $professional->update($validated);
 
-        return back()
-            ->with('status', 'Configurações salvas!');
+        return back()->with('status', 'Configurações salvas!');
     }
 }
