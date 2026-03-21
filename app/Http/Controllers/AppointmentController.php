@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Notification;
 use App\Models\Professional;
 use App\Models\Service;
 use Illuminate\Http\Request;
@@ -10,10 +11,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
-    // Tela de agendamento — cliente escolhe data e horário
     public function create(Professional $professional, Service $service)
     {
-        // Verifica se o serviço pertence ao profissional
         if ($service->professional_id !== $professional->id) {
             abort(404);
         }
@@ -25,7 +24,6 @@ class AppointmentController extends Controller
         ]);
     }
 
-    // Retorna os slots disponíveis para uma data (chamada via fetch)
     public function slots(Professional $professional, Request $request)
     {
         $request->validate([
@@ -34,21 +32,25 @@ class AppointmentController extends Controller
 
         $slots = $professional->getAvailableSlotsForDate($request->date);
 
+        // Se for hoje, remove os horários que já passaram
+        if ($request->date === now()->toDateString()) {
+            $currentTime = now()->format('H:i');
+            $slots = array_values(array_filter($slots, fn($slot) => $slot > $currentTime));
+        }
+
         return response()->json($slots);
     }
 
-    // Cliente confirma o agendamento
     public function store(Request $request, Professional $professional, Service $service)
     {
         $request->validate([
-            'date' => ['required', 'date', 'after_or_equal:today'],
-            'time' => ['required', 'date_format:H:i'],
+            'date'  => ['required', 'date', 'after_or_equal:today'],
+            'time'  => ['required', 'date_format:H:i'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $scheduledAt = $request->date . ' ' . $request->time . ':00';
 
-        // Verifica se o slot ainda está disponível
         $alreadyBooked = Appointment::where('professional_id', $professional->id)
             ->where('scheduled_at', $scheduledAt)
             ->whereIn('status', ['pending', 'confirmed'])
@@ -58,7 +60,7 @@ class AppointmentController extends Controller
             return back()->withErrors(['time' => 'Este horário já foi reservado. Escolha outro.']);
         }
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'client_id'       => Auth::id(),
             'professional_id' => $professional->id,
             'service_id'      => $service->id,
@@ -67,31 +69,82 @@ class AppointmentController extends Controller
             'notes'           => $request->notes,
         ]);
 
-        return redirect()->route('client.dashboard')
+        // Notifica o profissional sobre novo agendamento
+        Notification::create([
+            'user_id'        => $professional->user_id,
+            'type'           => 'appointment_created',
+            'message'        => Auth::user()->name . ' agendou ' . $service->name . ' para ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
+            'appointment_id' => $appointment->id,
+        ]);
+
+        return redirect()->route('client.appointments')
             ->with('status', 'Agendamento realizado! Aguarde a confirmação do profissional.');
     }
 
-    // Profissional confirma o agendamento
     public function confirm(Appointment $appointment)
     {
         $this->authorizeProfessional($appointment);
 
+        abort_if($appointment->status !== 'pending', 403, 'Apenas agendamentos pendentes podem ser confirmados.');
+
         $appointment->update(['status' => 'confirmed']);
+
+        // Notifica o cliente
+        Notification::create([
+            'user_id'        => $appointment->client_id,
+            'type'           => 'appointment_confirmed',
+            'message'        => 'Seu agendamento de ' . $appointment->service->name . ' foi confirmado para ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
+            'appointment_id' => $appointment->id,
+        ]);
 
         return back()->with('status', 'Agendamento confirmado!');
     }
 
-    // Profissional ou cliente cancela o agendamento
+    public function complete(Appointment $appointment)
+    {
+        $this->authorizeProfessional($appointment);
+
+        abort_if($appointment->status !== 'confirmed', 403, 'Apenas agendamentos confirmados podem ser concluídos.');
+
+        $appointment->update(['status' => 'completed']);
+
+        // Notifica o cliente que pode avaliar
+        Notification::create([
+            'user_id'        => $appointment->client_id,
+            'type'           => 'appointment_completed',
+            'message'        => 'Seu atendimento de ' . $appointment->service->name . ' foi concluído. Que tal deixar uma avaliação?',
+            'appointment_id' => $appointment->id,
+        ]);
+
+        return back()->with('status', 'Atendimento marcado como concluído!');
+    }
+
     public function cancel(Appointment $appointment)
     {
         $user = Auth::user();
 
         if ($user->isProfessional()) {
             $this->authorizeProfessional($appointment);
+
+            // Notifica o cliente que o profissional cancelou
+            Notification::create([
+                'user_id'        => $appointment->client_id,
+                'type'           => 'appointment_cancelled',
+                'message'        => 'Seu agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . ' foi cancelado pelo profissional.',
+                'appointment_id' => $appointment->id,
+            ]);
         } else {
             if ($appointment->client_id !== $user->id) {
                 abort(403);
             }
+
+            // Notifica o profissional que o cliente cancelou
+            Notification::create([
+                'user_id'        => $appointment->professional->user_id,
+                'type'           => 'appointment_cancelled',
+                'message'        => $user->name . ' cancelou o agendamento de ' . $appointment->service->name . ' em ' . $appointment->scheduled_at->format('d/m/Y \às H:i') . '.',
+                'appointment_id' => $appointment->id,
+            ]);
         }
 
         $appointment->update(['status' => 'cancelled']);
@@ -99,7 +152,6 @@ class AppointmentController extends Controller
         return back()->with('status', 'Agendamento cancelado.');
     }
 
-    // Garante que só o profissional dono do agendamento pode agir
     private function authorizeProfessional(Appointment $appointment): void
     {
         if ($appointment->professional->user_id !== Auth::id()) {

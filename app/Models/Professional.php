@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class Professional extends Model
 {
@@ -22,6 +24,9 @@ class Professional extends Model
         'house_number',
         'instagram',
         'profile_photo',
+        'latitude',
+        'longitude',
+        'auto_complete',
     ];
 
     public function user(): BelongsTo
@@ -54,7 +59,45 @@ class Professional extends Model
         return "{$this->street}, {$this->house_number} - {$this->city}, {$this->state}";
     }
 
-    // Retorna os slots disponíveis para uma data específica, excluindo os já agendados
+    // Chama OpenStreetMap para converter endereço em coordenadas
+    public function geocode(): void
+    {
+        try {
+            $query = urlencode("{$this->street}, {$this->house_number}, {$this->city}, {$this->state}, Brasil");
+
+            $response = Http::withHeaders([
+            'User-Agent' => 'AgendaApp/1.0'
+            ])->withoutVerifying()->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
+                $results = $response->json();
+
+            if (!empty($results)) {
+                $this->latitude  = $results[0]['lat'];
+                $this->longitude = $results[0]['lon'];
+                $this->saveQuietly();
+            }
+        } catch (\Exception $e) {
+            Log::warning('Geocoding failed for professional ' . $this->id . ': ' . $e->getMessage());
+        }
+    }
+
+    // Calcula distância em km usando fórmula de Haversine
+    public function distanceTo(float $lat, float $lon): ?float
+    {
+        if (!$this->latitude || !$this->longitude) {
+            return null;
+        }
+
+        $earthRadius = 6371;
+
+        $latDelta = deg2rad($lat - $this->latitude);
+        $lonDelta = deg2rad($lon - $this->longitude);
+
+        $a = sin($latDelta / 2) ** 2
+            + cos(deg2rad($this->latitude)) * cos(deg2rad($lat)) * sin($lonDelta / 2) ** 2;
+
+        return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
+    }
+
     public function getAvailableSlotsForDate(string $date): array
     {
         $weekday = (int) date('w', strtotime($date));
@@ -67,7 +110,6 @@ class Professional extends Model
 
         $allSlots = $availability->generateSlots();
 
-        // Busca horários já agendados nessa data (apenas confirmados e pendentes)
         $bookedTimes = $this->appointments()
             ->whereDate('scheduled_at', $date)
             ->whereIn('status', ['pending', 'confirmed'])
@@ -75,7 +117,6 @@ class Professional extends Model
             ->map(fn($dt) => $dt->format('H:i'))
             ->toArray();
 
-        // Remove os slots já ocupados
         return array_values(array_diff($allSlots, $bookedTimes));
     }
 }
