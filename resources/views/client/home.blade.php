@@ -13,11 +13,18 @@
             <div>
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400 mb-4">Perfil</p>
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center gap-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                    {{-- Avatar --}}
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl font-extrabold text-purple-700"
-                         style="background-color: #E3D0F9;">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                    </div>
+
+                    {{-- Avatar: foto ou inicial --}}
+                    @if(auth()->user()->profile_photo_path)
+                        <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}"
+                             alt="Foto de perfil"
+                             class="w-14 h-14 rounded-full object-cover flex-shrink-0 ring-2 ring-purple-200">
+                    @else
+                        <div class="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-2xl font-extrabold text-purple-700"
+                             style="background-color: #E3D0F9;">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    @endif
 
                     <div class="flex-1 min-w-0">
                         <p class="text-base font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
