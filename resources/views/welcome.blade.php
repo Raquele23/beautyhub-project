@@ -19,14 +19,14 @@
     </style>
 </head>
 
-<body class="bg-[url(build/assets/img/background.png)] bg-cover bg-center flex items-center justify-center min-h-screen">
+<body class="bg-[url(assets/img/background.png)] bg-cover bg-center flex items-center justify-center min-h-screen">
 
 @if (Route::has('login'))
 
 <div class="flex flex-col items-center">
 
     <!-- Logo pequena -->
-    <img src="{{ asset('build/assets/img/Beauty_Hub.png') }}"
+    <img src="{{ asset('assets/img/Beauty_Hub.png') }}"
         class="w-40 mb-6"
         alt="Logo BeautyHub">
 
