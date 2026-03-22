@@ -28,6 +28,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
+    Route::delete('/profile/photo', [ProfileController::class, 'removePhoto'])->name('profile.photo.remove'); // <-- ADICIONADO
 
     Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
         ->name('appointments.cancel');
@@ -50,7 +52,7 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
     Route::get('/professional/edit', [ProfessionalController::class, 'edit'])->name('professional.edit');
     Route::patch('/professional', [ProfessionalController::class, 'update'])->name('professional.update');
 
-    Route::get('/professional/portfolio', [ProfessionalController::class, 'portfolioEdit'])->name('professional.portfolio.edit'); // nova rota
+    Route::get('/professional/portfolio', [ProfessionalController::class, 'portfolioEdit'])->name('professional.portfolio.edit');
     Route::post('/professional/portfolio', [ProfessionalController::class, 'addPortfolioPhoto'])->name('professional.portfolio.add');
     Route::delete('/professional/portfolio/{photo}', [ProfessionalController::class, 'deletePortfolioPhoto'])->name('professional.portfolio.delete');
 
