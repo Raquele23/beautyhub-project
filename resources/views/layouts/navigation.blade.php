@@ -155,11 +155,11 @@
                         </div>
                     </div>
 
-                    {{-- User dropdown --}}
+                    {{-- ── User dropdown ── --}}
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-purple-800 bg-purple-100 hover:bg-purple-200 transition-all duration-150">
-                                <div>{{ Auth::user()->name }}</div>
+                                <span>{{ Auth::user()->name }}</span>
                                 <svg class="fill-current h-4 w-4 text-purple-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -283,9 +283,22 @@
         </div>
 
         <div class="pt-3 pb-3 border-t border-purple-200 px-3">
-            <div class="px-2 mb-2">
-                <div class="font-semibold text-sm text-purple-900">{{ Auth::user()->name }}</div>
-                <div class="text-xs text-purple-400">{{ Auth::user()->email }}</div>
+            {{-- Avatar + info no menu mobile --}}
+            <div class="px-2 mb-2 flex items-center gap-3">
+                @if(Auth::user()->profile_photo_path)
+                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
+                         alt="Foto"
+                         class="w-10 h-10 rounded-full object-cover ring-2 ring-purple-300">
+                @else
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-purple-300"
+                         style="background: linear-gradient(135deg, #6A0DAD, #A675D6);">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </div>
+                @endif
+                <div>
+                    <div class="font-semibold text-sm text-purple-900">{{ Auth::user()->name }}</div>
+                    <div class="text-xs text-purple-400">{{ Auth::user()->email }}</div>
+                </div>
             </div>
             <div class="space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')"
