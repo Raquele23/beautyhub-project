@@ -19,6 +19,7 @@ class User extends Authenticatable
         'password',
         'role',
         'profile_completed',
+        'profile_photo_path', // <-- ADICIONADO
     ];
 
     protected $attributes = [
