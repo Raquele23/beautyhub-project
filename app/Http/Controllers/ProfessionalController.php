@@ -114,6 +114,7 @@ class ProfessionalController extends Controller
         }
 
         $validated = $request->validate([
+            'name'               => 'required|string|max:255',
             'establishment_name' => 'nullable|string|max:255',
             'description'        => 'required|string',
             'phone'              => 'required|string|max:20',
@@ -127,6 +128,10 @@ class ProfessionalController extends Controller
             'portfolio_photos.*' => File::image()->max(5 * 1024),
             'auto_complete'      => 'boolean',
         ]);
+
+        // Atualiza o nome do usuário
+        $user->update(['name' => $validated['name']]);
+        unset($validated['name']);
 
         if ($request->hasFile('profile_photo')) {
             $validated['profile_photo'] = $request->file('profile_photo')->store('professionals/profiles', 'public');
@@ -143,7 +148,8 @@ class ProfessionalController extends Controller
 
         $user->update(['profile_completed' => true]);
 
-        return redirect()->route('professional.show')->with('status', 'Perfil criado com sucesso!');
+        return redirect()->route('professional.portfolio.edit')
+            ->with('status', 'Perfil criado! Agora adicione fotos ao seu portfólio.');
     }
 
     public function edit()
