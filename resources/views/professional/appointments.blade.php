@@ -94,28 +94,37 @@
             <div
                 x-data="{ show: true }"
                 x-show="show"
-                x-init="setTimeout(() => show = false, 5000)"
+                x-init="setTimeout(() => show = false, 4000)"
                 x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-start="opacity-0 -translate-y-2"
                 x-transition:enter-end="opacity-100 translate-y-0"
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0"
-                x-transition:leave-end="opacity-0 translate-y-4"
-                class="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-white border border-purple-100 shadow-xl shadow-purple-100 rounded-2xl px-5 py-4 max-w-sm">
-                <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #E0F7F4;">
-                    <svg class="w-4 h-4" style="color: #0D9488;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                    </svg>
-                </div>
-                <p class="text-sm font-medium text-gray-800">{{ session('status') }}</p>
-                <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-500 transition-colors flex-shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                x-transition:leave-end="opacity-0 -translate-y-2"
+                class="fixed top-20 left-1/2 -translate-x-1/2 z-30
+                    flex items-center gap-2.5
+                    bg-purple-300/30 backdrop-blur-md
+                    text-purple-900 text-xs font-semibold
+                    rounded-2xl px-4 py-2.5
+                    shadow-sm border border-purple-300/40
+                    w-max max-w-xs">
+
+                <span class="relative flex h-2 w-2 shrink-0">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-50"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
+                </span>
+
+                <p class="leading-snug">{{ session('status') }}</p>
+
+                <button @click="show = false"
+                        class="ml-1 text-purple-400 hover:text-purple-700 transition-colors shrink-0">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
         @endif
-
+       
         {{-- ── ABAS ── --}}
         <div x-data="{ tab: 'pendentes' }">
 
