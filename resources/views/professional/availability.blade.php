@@ -6,7 +6,7 @@
     </x-slot>
 
     {{-- ── Page ── --}}
-    <div class="min-h-screen relative" style="background-color: #e8e0f5;">
+    <div class="min-h-screen relative">
 
         {{-- ── Toast (flutua dentro da página, não cobre navbar nem conteúdo) ── --}}
         @if(session('status'))

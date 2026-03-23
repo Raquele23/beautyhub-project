@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-8" style="background: linear-gradient(160deg, #f3effe 0%, #e8d9fc 100%); min-height: 100vh;">
+   <div class="py-8 min-h-screen">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
                 x-data="calendar({{ $appointmentsJson }})"
