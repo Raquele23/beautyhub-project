@@ -117,6 +117,7 @@
                             </div>
                             <input type="tel" name="phone" id="phone" value="{{ old('phone') }}"
                                    placeholder="(11) 99999-9999"
+                                maxlength="15"
                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                         </div>
                         @error('phone')
@@ -153,18 +154,21 @@
                     <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label for="state" class="block text-xs font-semibold text-gray-500 mb-2">Estado (UF)</label>
-                            <input type="text" name="state" id="state" value="{{ old('state') }}"
-                                   maxlength="2" placeholder="CE"
-                                   class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm uppercase">
+                            <select name="state" id="state"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                <option value="">Selecione</option>
+                            </select>
                             @error('state')
                                 <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
                         <div class="col-span-2">
                             <label for="city" class="block text-xs font-semibold text-gray-500 mb-2">Cidade</label>
-                            <input type="text" name="city" id="city" value="{{ old('city') }}"
-                                   placeholder="São Paulo"
-                                   class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                            <select name="city" id="city"
+                                    class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                                    disabled>
+                                <option value="">Selecione um estado primeiro</option>
+                            </select>
                             @error('city')
                                 <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
                             @enderror
@@ -216,4 +220,120 @@
 
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const phoneInput = document.getElementById('phone');
+            const stateSelect = document.getElementById('state');
+            const citySelect = document.getElementById('city');
+
+            const oldState = "{{ old('state') }}";
+            const oldCity = "{{ old('city') }}";
+
+            async function loadStates(selectedState) {
+                stateSelect.disabled = true;
+                setSelectPlaceholder(stateSelect, 'Carregando estados...');
+
+                try {
+                    const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                    const states = await response.json();
+
+                    setSelectPlaceholder(stateSelect, 'Selecione');
+                    states.forEach(function (state) {
+                        const option = document.createElement('option');
+                        option.value = state.sigla;
+                        option.textContent = state.nome + ' (' + state.sigla + ')';
+                        stateSelect.appendChild(option);
+                    });
+
+                    stateSelect.disabled = false;
+
+                    if (selectedState) {
+                        stateSelect.value = selectedState;
+                    }
+                } catch (error) {
+                    setSelectPlaceholder(stateSelect, 'Nao foi possivel carregar os estados');
+                }
+            }
+
+            function setSelectPlaceholder(select, placeholder) {
+                select.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = placeholder;
+                select.appendChild(option);
+            }
+
+            async function loadCities(uf, selectedCity) {
+                citySelect.disabled = true;
+                setSelectPlaceholder(citySelect, 'Carregando cidades...');
+
+                if (!uf) {
+                    citySelect.disabled = true;
+                    setSelectPlaceholder(citySelect, 'Selecione um estado primeiro');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + uf + '/municipios');
+                    const cities = await response.json();
+
+                    setSelectPlaceholder(citySelect, 'Selecione');
+                    cities.forEach(function (city) {
+                        const option = document.createElement('option');
+                        option.value = city.nome;
+                        option.textContent = city.nome;
+                        citySelect.appendChild(option);
+                    });
+
+                    citySelect.disabled = false;
+
+                    if (selectedCity) {
+                        citySelect.value = selectedCity;
+                    }
+                } catch (error) {
+                    setSelectPlaceholder(citySelect, 'Nao foi possivel carregar as cidades');
+                }
+            }
+
+            function applyPhoneMask(value) {
+                const digits = value.replace(/\D/g, '').slice(0, 11);
+
+                if (!digits) {
+                    return '';
+                }
+
+                if (digits.length <= 2) {
+                    return '(' + digits;
+                }
+
+                if (digits.length <= 6) {
+                    return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+                }
+
+                if (digits.length <= 10) {
+                    return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
+                }
+
+                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
+            }
+
+            if (phoneInput) {
+                phoneInput.value = applyPhoneMask(phoneInput.value);
+                phoneInput.addEventListener('input', function () {
+                    phoneInput.value = applyPhoneMask(phoneInput.value);
+                });
+            }
+
+            stateSelect.addEventListener('change', function () {
+                loadCities(stateSelect.value, '');
+            });
+
+            loadStates(oldState).then(function () {
+                if (oldState) {
+                    loadCities(oldState, oldCity);
+                }
+            });
+        });
+    </script>
 </x-app-layout>

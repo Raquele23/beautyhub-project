@@ -209,6 +209,7 @@
                         </div>
                         <input type="tel" name="phone" id="phone" value="{{ old('phone', $professional->phone) }}"
                                placeholder="(11) 99999-9999"
+                               maxlength="15"
                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                     </div>
                     @error('phone')
@@ -299,3 +300,40 @@
     </div>
 
 </x-app-layout>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const phoneInput = document.getElementById('phone');
+
+        if (!phoneInput) {
+            return;
+        }
+
+        function applyPhoneMask(value) {
+            const digits = value.replace(/\D/g, '').slice(0, 11);
+
+            if (!digits) {
+                return '';
+            }
+
+            if (digits.length <= 2) {
+                return '(' + digits;
+            }
+
+            if (digits.length <= 6) {
+                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+            }
+
+            if (digits.length <= 10) {
+                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
+            }
+
+            return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
+        }
+
+        phoneInput.value = applyPhoneMask(phoneInput.value);
+        phoneInput.addEventListener('input', function () {
+            phoneInput.value = applyPhoneMask(phoneInput.value);
+        });
+    });
+</script>
