@@ -1,69 +1,48 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-bold text-xl text-purple-800 leading-tight tracking-tight">
-            {{ __('Minha Disponibilidade') }}
-        </h2>
-    </x-slot>
 
     {{-- ── Page ── --}}
     <div class="min-h-screen relative">
 
-        {{-- ── Toast (flutua dentro da página, não cobre navbar nem conteúdo) ── --}}
+        {{-- ── Toast ── --}}
         @if(session('status'))
             <div
                 x-data="{ show: true }"
                 x-show="show"
-                x-init="setTimeout(() => show = false, 4000)"
+                x-init="setTimeout(() => show = false, 5000)"
                 x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-start="opacity-0 -translate-y-4"
                 x-transition:enter-end="opacity-100 translate-y-0"
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0"
-                x-transition:leave-end="opacity-0 -translate-y-2"
-                class="absolute top-4 left-1/2 -translate-x-1/2 z-20
-                       flex items-center gap-2.5
-                       bg-purple-300/40 backdrop-blur-md
-                       text-purple-900 text-xs font-semibold
-                       rounded-2xl px-4 py-2.5
-                       border border-purple-300/50
-                       w-max max-w-xs">
-
-                <span class="relative flex h-2 w-2 shrink-0">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-50"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-600"></span>
-                </span>
-
-                <p class="leading-snug">{{ session('status') }}</p>
-
-                <button @click="show = false"
-                        class="ml-1 text-purple-400 hover:text-purple-700 transition-colors shrink-0">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                x-transition:leave-end="opacity-0 -translate-y-4"
+                class="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-white border border-purple-200 shadow-xl shadow-purple-100 rounded-2xl px-5 py-4 w-max max-w-sm">
+                <div class="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <p class="text-sm font-semibold text-purple-800">{{ session('status') }}</p>
+                <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-600 transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
         @endif
 
-        <div class="pt-16 pb-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-10 space-y-6">
 
-            {{-- Header card --}}
-            <div class="bg-purple-800 text-white rounded-3xl shadow-lg p-6 mb-6 flex items-center gap-4">
-                <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
+            {{-- ── Topo ── --}}
+            <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="font-bold text-lg leading-tight">Configure sua agenda</h3>
-                    <p class="text-purple-200 text-sm mt-0.5">
-                        Selecione os dias em que você atende e defina os horários de cada período.
-                    </p>
+                    <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
+                    <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Minha Disponibilidade</h1>
+                    <p class="text-xs text-purple-400 mt-1">Selecione os dias em que você atende e defina os horários de cada período.</p>
                 </div>
             </div>
 
             {{-- Main card --}}
-            <div class="bg-white rounded-3xl shadow-sm border border-purple-100 p-6">
+            <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden p-6">
 
                 <form method="POST" action="{{ route('professional.availability.save') }}">
                     @csrf
@@ -164,7 +143,8 @@
                     <div class="mt-8 flex justify-end">
                         <button
                             type="submit"
-                            class="inline-flex items-center gap-2 px-7 py-3 bg-purple-800 hover:bg-purple-900 text-white text-sm font-bold rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
+                            class="inline-flex items-center gap-2 px-7 py-3 text-white text-sm font-bold rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+                            style="background-color: #6A0DAD;"
                         >
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
