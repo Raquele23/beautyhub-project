@@ -69,15 +69,22 @@
                     <label for="duration" class="block text-xs font-bold text-purple-400 uppercase tracking-wide mb-3">
                         Duração <span class="text-red-400">*</span>
                     </label>
-                    <div class="relative">
-                        <input type="number" name="duration" id="duration" value="{{ old('duration', $service->duration) }}"
-                               placeholder="Ex: 60"
-                               min="15"
-                               class="w-full px-4 py-2.5 pr-14 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
-                               required>
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">min</span>
+                    <input type="hidden" name="duration" id="duration" value="{{ old('duration', $service->duration) }}">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="relative">
+                            <input type="number" id="duration_hours" value="0" min="0" max="12"
+                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                                   placeholder="0">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">h</span>
+                        </div>
+                        <div class="relative">
+                            <input type="number" id="duration_minutes" value="0" min="0" max="59"
+                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                                   placeholder="0">
+                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">min</span>
+                        </div>
                     </div>
-                    <p class="mt-2 text-xs text-purple-300">Mínimo 15 minutos</p>
+                    <p class="mt-2 text-xs text-purple-300">Informe em horas e minutos (mínimo 15 minutos)</p>
                     @error('duration')
                         <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                     @enderror
@@ -89,9 +96,9 @@
                     </label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">R$</span>
-                        <input type="number" name="price" id="price" value="{{ old('price', $service->price) }}" step="0.01"
+                        <input type="hidden" name="price" id="price" value="{{ old('price', $service->price) }}">
+                        <input type="text" id="price_display" value=""
                                placeholder="0,00"
-                               min="0.01"
                                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
                                required>
                     </div>
@@ -145,5 +152,78 @@
 
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form[action="{{ route('services.update', $service) }}"]');
+            const priceHidden = document.getElementById('price');
+            const priceDisplay = document.getElementById('price_display');
+            const durationHidden = document.getElementById('duration');
+            const durationHours = document.getElementById('duration_hours');
+            const durationMinutes = document.getElementById('duration_minutes');
+
+            function toDigits(value) {
+                return String(value || '').replace(/\D/g, '');
+            }
+
+            function formatCurrencyFromDigits(digits) {
+                if (!digits) {
+                    return '';
+                }
+
+                const amount = Number(digits) / 100;
+                return amount.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                });
+            }
+
+            function updatePriceHidden() {
+                const digits = toDigits(priceDisplay.value).slice(0, 9);
+                priceDisplay.value = formatCurrencyFromDigits(digits);
+
+                if (!digits) {
+                    priceHidden.value = '';
+                    return;
+                }
+
+                priceHidden.value = (Number(digits) / 100).toFixed(2);
+            }
+
+            function updateDurationHidden() {
+                const hours = Math.max(0, parseInt(durationHours.value || '0', 10) || 0);
+                const minutes = Math.max(0, Math.min(59, parseInt(durationMinutes.value || '0', 10) || 0));
+                durationHours.value = String(hours);
+                durationMinutes.value = String(minutes);
+
+                durationHidden.value = String((hours * 60) + minutes);
+            }
+
+            function fillDurationFromTotal(totalMinutes) {
+                const total = Math.max(0, parseInt(totalMinutes || '0', 10) || 0);
+                durationHours.value = String(Math.floor(total / 60));
+                durationMinutes.value = String(total % 60);
+                durationHidden.value = String(total);
+            }
+
+            if (priceDisplay && priceHidden) {
+                priceDisplay.value = formatCurrencyFromDigits(toDigits(priceHidden.value));
+                priceDisplay.addEventListener('input', updatePriceHidden);
+            }
+
+            if (durationHidden && durationHours && durationMinutes) {
+                fillDurationFromTotal(durationHidden.value);
+                durationHours.addEventListener('input', updateDurationHidden);
+                durationMinutes.addEventListener('input', updateDurationHidden);
+            }
+
+            if (form) {
+                form.addEventListener('submit', function () {
+                    updatePriceHidden();
+                    updateDurationHidden();
+                });
+            }
+        });
+    </script>
 
 </x-app-layout>
