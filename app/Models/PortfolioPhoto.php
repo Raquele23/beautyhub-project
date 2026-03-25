@@ -16,6 +16,7 @@ class PortfolioPhoto extends Model
     protected $fillable = [
         'professional_id',
         'photo',
+        'original_photo',
         'description',
     ];
 
