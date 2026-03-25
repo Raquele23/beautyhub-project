@@ -19,7 +19,7 @@
         </div>
 
         {{-- ── Acesso rápido ao portfólio ── --}}
-        <a href="{{ route('professional.portfolio.edit') }}"
+        <a href="{{ route('professional.portfolio.manage', ['from' => 'edit']) }}"
            class="flex items-center justify-between px-5 py-4 bg-white rounded-2xl border border-purple-100 shadow-sm hover:border-purple-300 hover:shadow-md transition-all duration-200 group">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #EDE4F8;">
