@@ -11,8 +11,18 @@ class Service extends Model
 {
     use HasFactory;
 
+    public const CATEGORY_OPTIONS = [
+        'cabelo' => 'Cuidados Capilares',
+        'manicure' => 'Manicure & Pedicure',
+        'depilacao' => 'Depilação',
+        'sobrancelha' => 'Sobrancelhas',
+        'maquiagem' => 'Maquiagem',
+        'tratamentos' => 'Tratamentos',
+    ];
+
     protected $fillable = [
         'professional_id',
+        'category',
         'name',
         'description',
         'duration',
@@ -23,6 +33,11 @@ class Service extends Model
     protected $casts = [
         'price' => 'decimal:2',
     ];
+
+    public static function categoryOptions(): array
+    {
+        return self::CATEGORY_OPTIONS;
+    }
 
     public function professional(): BelongsTo
     {

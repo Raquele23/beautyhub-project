@@ -50,7 +50,9 @@ class ServiceController extends Controller
             return redirect()->route('professional.create');
         }
 
-        return view('professional.services.create');
+        return view('professional.services.create', [
+            'categories' => Service::categoryOptions(),
+        ]);
     }
 
     public function store(Request $request)
@@ -69,6 +71,7 @@ class ServiceController extends Controller
         }
 
         $validated = $request->validate([
+            'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'duration' => 'required|integer|min:15',
@@ -96,7 +99,10 @@ class ServiceController extends Controller
             abort(403);
         }
 
-        return view('professional.services.edit', ['service' => $service]);
+        return view('professional.services.edit', [
+            'service' => $service,
+            'categories' => Service::categoryOptions(),
+        ]);
     }
 
     public function update(Request $request, Service $service)
@@ -108,6 +114,7 @@ class ServiceController extends Controller
         }
 
         $validated = $request->validate([
+            'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'duration' => 'required|integer|min:15',
