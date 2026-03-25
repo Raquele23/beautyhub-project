@@ -54,6 +54,7 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
 
     Route::get('/professional/portfolio', [ProfessionalController::class, 'portfolioManage'])->name('professional.portfolio.manage');
     Route::post('/professional/portfolio', [ProfessionalController::class, 'addPortfolioPhoto'])->name('professional.portfolio.add');
+    Route::patch('/professional/portfolio/{photo}', [ProfessionalController::class, 'updatePortfolioPhoto'])->name('professional.portfolio.update');
     Route::delete('/professional/portfolio/{photo}', [ProfessionalController::class, 'deletePortfolioPhoto'])->name('professional.portfolio.delete');
 
     Route::get('/professional/availability', [AvailabilityController::class, 'index'])->name('professional.availability');

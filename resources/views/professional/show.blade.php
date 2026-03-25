@@ -188,14 +188,22 @@
             <div class="p-6">
                 <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
                     @foreach($professional->portfolioPhotos as $photo)
-                    <div class="group relative flex-shrink-0 w-32 sm:w-40">
+                    <div class="group relative flex-shrink-0 w-32 sm:w-40"
+                        x-data="{ editOpen: false, editPreview: @js(Storage::url($photo->photo)), editDescription: @js($photo->description ?? '') }">
                         <div class="rounded-xl overflow-hidden aspect-square">
                             <img src="{{ Storage::url($photo->photo) }}"
                                  alt="{{ $photo->description ?? '' }}"
                                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                         </div>
 
-                        <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2">
+                            <button @click="editOpen = true"
+                                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-xs font-semibold text-purple-600 rounded-xl hover:bg-purple-50 transition-colors shadow-lg">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar
+                            </button>
                             <form action="{{ route('professional.portfolio.delete', $photo) }}"
                                   method="POST"
                                   onsubmit="return confirm('Tem certeza que deseja excluir esta foto?')">
@@ -213,6 +221,75 @@
                         @if($photo->description)
                             <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
                         @endif
+
+                            <div x-show="editOpen"
+                                x-cloak
+                             @click="editOpen = false"
+                             x-transition
+                             class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                            <div @click.stop
+                                 x-transition
+                                 class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-bold text-purple-800">Editar foto</h3>
+                                    <button @click="editOpen = false"
+                                            class="text-purple-300 hover:text-purple-600 transition-colors">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <form action="{{ route('professional.portfolio.update', $photo) }}"
+                                      method="POST"
+                                      enctype="multipart/form-data"
+                                      @submit="editOpen = false"
+                                      class="space-y-4">
+                                    @csrf @method('PATCH')
+
+                                    <div class="relative w-full h-40 rounded-xl overflow-hidden bg-gray-100">
+                                        <img :src="editPreview"
+                                             class="w-full h-full object-cover">
+                                        <label class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer group">
+                                            <div class="text-center">
+                                                <svg class="w-6 h-6 text-white mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                                <span class="text-xs text-white font-medium">Trocar foto</span>
+                                            </div>
+                                            <input type="file"
+                                                   name="photo"
+                                                   accept="image/*"
+                                                   class="sr-only"
+                                                   @change="editPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : editPreview">
+                                        </label>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 mb-2">Descrição</label>
+                                        <input type="text"
+                                               name="description"
+                                               x-model="editDescription"
+                                               placeholder="Ex: Corte e tingimento"
+                                               maxlength="255"
+                                               class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                    </div>
+
+                                    <div class="flex gap-2 pt-4">
+                                        <button type="button"
+                                                @click="editOpen = false"
+                                                class="flex-1 px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit"
+                                                class="flex-1 px-4 py-2.5 rounded-xl text-white text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                                style="background-color: #6A0DAD;">
+                                            Salvar
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     @endforeach
                 </div>
