@@ -130,6 +130,7 @@ class ProfessionalController extends Controller
             'banner_style'       => 'nullable|in:color,photo',
             'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo'       => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
+            'banner_photo_base64' => ['nullable', 'string'],
             'portfolio_photos'   => 'nullable|array|max:10',
             'portfolio_photos.*' => [File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
             'auto_complete'      => 'boolean',
@@ -147,15 +148,17 @@ class ProfessionalController extends Controller
 
         $bannerStyle = $validated['banner_style'] ?? 'color';
 
-        if ($bannerStyle === 'photo' && $request->hasFile('banner_photo')) {
-            $validated['banner_photo'] = $request->file('banner_photo')->store('professionals/banners', 'public');
+        if ($bannerStyle === 'photo' && ($request->hasFile('banner_photo') || !empty($validated['banner_photo_base64']))) {
+            $validated['banner_photo'] = $request->hasFile('banner_photo')
+                ? $request->file('banner_photo')->store('professionals/banners', 'public')
+                : $this->storeProfileBase64Image($validated['banner_photo_base64'], 'professionals/banners');
             $validated['banner_color'] = null;
         } else {
             $validated['banner_photo'] = null;
             $validated['banner_color'] = $validated['banner_color'] ?? '#6A0DAD';
         }
 
-        unset($validated['banner_style']);
+        unset($validated['banner_style'], $validated['banner_photo_base64']);
 
         $professional = $user->professional()->create($validated);
 
@@ -205,6 +208,7 @@ class ProfessionalController extends Controller
             'banner_style'       => 'nullable|in:color,photo',
             'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo'       => ['nullable', File::image()->max(8 * 1024)],
+            'banner_photo_base64' => ['nullable', 'string'],
             'delete_profile_photo' => 'nullable|boolean',
         ]);
 
@@ -229,18 +233,20 @@ class ProfessionalController extends Controller
 
         $bannerStyle = $validated['banner_style'] ?? ($professional->banner_photo ? 'photo' : 'color');
 
-        if ($bannerStyle === 'photo' && !$professional->banner_photo && !$request->hasFile('banner_photo')) {
+        if ($bannerStyle === 'photo' && !$professional->banner_photo && !$request->hasFile('banner_photo') && empty($validated['banner_photo_base64'])) {
             return back()->withErrors([
                 'banner_photo' => 'Envie uma foto para usar no banner.',
             ])->withInput();
         }
 
         if ($bannerStyle === 'photo') {
-            if ($request->hasFile('banner_photo')) {
+            if ($request->hasFile('banner_photo') || !empty($validated['banner_photo_base64'])) {
                 if ($professional->banner_photo) {
                     Storage::disk('public')->delete($professional->banner_photo);
                 }
-                $validated['banner_photo'] = $request->file('banner_photo')->store('professionals/banners', 'public');
+                $validated['banner_photo'] = $request->hasFile('banner_photo')
+                    ? $request->file('banner_photo')->store('professionals/banners', 'public')
+                    : $this->storeProfileBase64Image($validated['banner_photo_base64'], 'professionals/banners');
             }
             $validated['banner_color'] = null;
         } else {
@@ -251,7 +257,7 @@ class ProfessionalController extends Controller
             $validated['banner_color'] = $validated['banner_color'] ?? '#6A0DAD';
         }
 
-        unset($validated['name'], $validated['delete_profile_photo'], $validated['banner_style']);
+        unset($validated['name'], $validated['delete_profile_photo'], $validated['banner_style'], $validated['banner_photo_base64']);
 
         $professional->update($validated);
 

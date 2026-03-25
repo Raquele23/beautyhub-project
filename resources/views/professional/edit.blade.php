@@ -177,6 +177,7 @@
                 </div>
 
                 <input type="hidden" name="cropped_profile_photo" id="cropped_profile_photo">
+                <input type="hidden" name="profile_photo_existing" value="{{ $professional->profile_photo ? Storage::url($professional->profile_photo) : '' }}">
 
                 {{-- Campo hidden para sinalizar exclusão --}}
                 <input type="hidden" name="delete_profile_photo" id="delete_profile_photo_input" value="0">
@@ -188,7 +189,7 @@
 
             {{-- ── Banner da loja ── --}}
               <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4"
-                  x-data="{ bannerStyle: '{{ old('banner_style', $professional->banner_photo ? 'photo' : 'color') }}', bannerPreview: {{ $professional->banner_photo ? "'".Storage::url($professional->banner_photo)."'" : 'null' }}, selectedColor: '{{ old('banner_color', $professional->banner_color ?? '#6A0DAD') }}', showAllColors: false }">
+                  x-data="{ bannerStyle: '{{ old('banner_style', $professional->banner_photo ? 'photo' : 'color') }}', bannerPreview: @js(old('banner_photo_base64') ?: ($professional->banner_photo ? Storage::url($professional->banner_photo) : null)), selectedColor: '{{ old('banner_color', $professional->banner_color ?? '#6A0DAD') }}', showAllColors: false }">
                 <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Banner da loja</p>
                 <p class="text-xs text-purple-300">Escolha uma cor ou envie uma foto para o topo do seu perfil.</p>
 
@@ -267,9 +268,10 @@
                     <label class="w-full h-28 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200 flex items-center justify-center text-xs text-purple-400 font-medium overflow-hidden">
                         <span x-show="!bannerPreview">Clique para selecionar uma foto</span>
                         <img x-show="bannerPreview" :src="bannerPreview" class="w-full h-full rounded-xl object-cover">
-                        <input type="file" name="banner_photo" accept="image/*" class="sr-only"
+                        <input type="file" name="banner_photo" id="banner_photo_input" accept="image/*" class="sr-only"
                                @change="bannerPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
                     </label>
+                    <input type="hidden" name="banner_photo_base64" id="banner_photo_base64" value="{{ old('banner_photo_base64') }}">
                     @error('banner_photo')
                         <p class="text-xs text-red-400">{{ $message }}</p>
                     @enderror
@@ -479,6 +481,9 @@
         const cropperCancel = document.getElementById('cropper_cancel');
         const cropperConfirm = document.getElementById('cropper_confirm');
         const cropperBackdrop = document.getElementById('cropper_backdrop');
+        const bannerPhotoInput = document.getElementById('banner_photo_input');
+        const bannerPhotoBase64Input = document.getElementById('banner_photo_base64');
+        const oldCroppedProfile = @js(old('cropped_profile_photo'));
 
         const oldState = "{{ old('state', $professional->state) }}";
         const oldCity = "{{ old('city', $professional->city) }}";
@@ -585,6 +590,15 @@
             selectedFiles.delete('profile_photo_input');
         }
 
+        function fileToDataUrl(file) {
+            return new window.Promise(function (resolve, reject) {
+                const reader = new window.FileReader();
+                reader.onloadend = function () { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         if (profileInput) {
             profileInput.addEventListener('change', function (event) {
                 const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
@@ -643,6 +657,28 @@
                 clearProfilePreview(true);
                 if (profileInput) {
                     profileInput.value = '';
+                }
+            });
+        }
+
+        if (oldCroppedProfile && croppedProfileInput) {
+            croppedProfileInput.value = oldCroppedProfile;
+            applyProfilePreview(oldCroppedProfile);
+        }
+
+        if (bannerPhotoInput && bannerPhotoBase64Input) {
+            bannerPhotoInput.addEventListener('change', async function (event) {
+                const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                if (!file) {
+                    bannerPhotoBase64Input.value = '';
+                    return;
+                }
+
+                try {
+                    bannerPhotoBase64Input.value = await fileToDataUrl(file);
+                } catch (error) {
+                    console.error('Falha ao preparar banner para persistencia:', error);
+                    bannerPhotoBase64Input.value = '';
                 }
             });
         }
