@@ -95,7 +95,12 @@
         {{-- ── Card de Perfil ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
 
-            <div class="relative h-36 w-full" style="background: linear-gradient(135deg, #6A0DAD 0%, #9B4DCA 100%);">
+            @php
+                $bannerStyle = $professional->banner_photo
+                    ? 'background-image: url(' . asset('storage/' . $professional->banner_photo) . '); background-size: cover; background-position: center;'
+                    : 'background-color: ' . ($professional->banner_color ?? '#6A0DAD') . ';';
+            @endphp
+            <div class="relative h-36 w-full" style="{{ $bannerStyle }}">
                 <div class="absolute left-1/2 -bottom-16 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden" style="background-color: #EDE4F8;">
                     @if($professional->profile_photo)
                         <img src="{{ Storage::url($professional->profile_photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">

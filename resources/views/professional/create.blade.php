@@ -60,6 +60,95 @@
                     @enderror
                 </div>
 
+                {{-- ── Banner da loja ── --}}
+                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4"
+                     x-data="{ bannerStyle: '{{ old('banner_style', 'color') }}', bannerPreview: null, selectedColor: '{{ old('banner_color', '#6A0DAD') }}' }">
+                    <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Banner da loja</p>
+                    <p class="text-xs text-purple-300">Escolha uma cor ou envie uma foto para o topo do seu perfil.</p>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button"
+                                @click="bannerStyle = 'color'"
+                                :class="bannerStyle === 'color' ? 'border-purple-400 bg-purple-50' : 'border-purple-100 bg-white'"
+                                class="px-4 py-2.5 rounded-xl border text-xs font-semibold text-purple-600 transition-all duration-200">
+                            Usar cor
+                        </button>
+                        <button type="button"
+                                @click="bannerStyle = 'photo'"
+                                :class="bannerStyle === 'photo' ? 'border-purple-400 bg-purple-50' : 'border-purple-100 bg-white'"
+                                class="px-4 py-2.5 rounded-xl border text-xs font-semibold text-purple-600 transition-all duration-200">
+                            Usar foto
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="banner_style" :value="bannerStyle">
+
+                    <div x-show="bannerStyle === 'color'" class="space-y-3">
+                        <label class="block text-xs font-semibold text-gray-500">Escolha uma cor para o banner</label>
+                        <div class="grid grid-cols-5 gap-2">
+                            @php
+                                $colors = [
+                                    '#6A0DAD' => 'Roxo Premium',
+                                    '#4A235A' => 'Roxo Profundo',
+                                    '#2D1B4E' => 'Roxo Escuro',
+                                    '#2D5016' => 'Verde Profundo',
+                                    '#3D6630' => 'Verde Médio',
+                                    '#1F4E78' => 'Azul Marinho',
+                                    '#0056B3' => 'Azul Royal',
+                                    '#1a237e' => 'Azul Escuro',
+                                    '#8B4513' => 'Marrom Elegante',
+                                    '#654321' => 'Marrom Profundo',
+                                    '#C41E3A' => 'Vinho Sofisticado',
+                                    '#E94B3C' => 'Coral Moderno',
+                                    '#FF6B6B' => 'Coral Claro',
+                                    '#FFB81C' => 'Ouro Luxo',
+                                    '#FF8C00' => 'Laranja Queimado',
+                                    '#1B1B1B' => 'Preto Elegante',
+                                ];
+                            @endphp
+                            @foreach($colors as $hex => $name)
+                                <button type="button"
+                                        @click="selectedColor = '{{ $hex }}'; document.querySelector('input[name=banner_color]').value = '{{ $hex }}'"
+                                        :class="selectedColor === '{{ $hex }}' ? 'ring-2 ring-yellow-400' : 'ring-1 ring-gray-300'"
+                                        class="flex items-center justify-center w-full h-14 rounded-lg transition-all duration-150 hover:shadow-md"
+                                        style="background-color: {{ $hex }}"
+                                        title="{{ $name }}">
+                                    <svg x-show="selectedColor === '{{ $hex }}'" class="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            @endforeach
+                        </div>
+                        <input type="hidden" name="banner_color" value="{{ old('banner_color', '#6A0DAD') }}">
+                        @error('banner_color')
+                            <p class="text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                                        </svg>
+                                    </span>
+                                </button>
+                            @endforeach
+                        </div>
+                        <input type="hidden" name="banner_color" value="{{ old('banner_color', '#6A0DAD') }}">
+                        @error('banner_color')
+                            <p class="text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div x-show="bannerStyle === 'photo'" class="space-y-3">
+                        <label class="block text-xs font-semibold text-gray-500">Foto do banner</label>
+                        <label class="w-full h-28 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200 flex items-center justify-center text-xs text-purple-400 font-medium">
+                            <span x-show="!bannerPreview">Clique para selecionar uma foto</span>
+                            <img x-show="bannerPreview" :src="bannerPreview" class="w-full h-full rounded-xl object-cover">
+                            <input type="file" name="banner_photo" accept="image/*" class="sr-only"
+                                   @change="bannerPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
+                        </label>
+                        @error('banner_photo')
+                            <p class="text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 {{-- ── Identidade ── --}}
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-5">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Identidade</p>
