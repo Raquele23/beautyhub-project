@@ -24,6 +24,8 @@ class Professional extends Model
         'house_number',
         'instagram',
         'profile_photo',
+        'banner_color',
+        'banner_photo',
         'latitude',
         'longitude',
         'auto_complete',
