@@ -78,9 +78,7 @@
                                       x-text="cell.day"></span>
 
                                 <template x-for="appt in appointmentsForDay(cell.date).slice(0,2)" :key="appt.id">
-                                    <div :class="appt.status === 'confirmed'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-amber-100 text-amber-700'"
+                                    <div :class="appointmentTagClass(appt)"
                                          class="text-[10px] font-medium px-1.5 py-0.5 rounded-md mb-0.5 truncate hover:opacity-80 transition duration-150">
                                         <span x-text="appt.time + ' ' + appt.service"></span>
                                     </div>
@@ -121,19 +119,18 @@
                                 <p class="text-xs font-bold text-purple-400 uppercase tracking-wide mb-3"
                                    x-text="day.fullLabel"></p>
                                 <template x-for="appt in appointmentsForDay(day.date)" :key="appt.id">
-                                    <div class="flex items-center gap-3 mb-2 p-2 rounded-lg hover:bg-purple-50 transition duration-150">
+                                     <div :class="isPastAppointment(appt) ? 'opacity-65' : ''"
+                                         class="flex items-center gap-3 mb-2 p-2 rounded-lg hover:bg-purple-50 transition duration-150">
                                         <span class="text-xs font-semibold text-purple-400 w-12 flex-shrink-0"
                                               x-text="appt.time"></span>
-                                        <div :class="appt.status === 'confirmed' ? 'border-emerald-400' : 'border-amber-400'"
+                                        <div :class="appointmentBorderClass(appt)"
                                              class="flex-1 border-l-2 pl-3">
                                             <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
                                             <p class="text-xs text-purple-400" x-text="appt.client"></p>
                                         </div>
-                                        <span :class="appt.status === 'confirmed'
-                                                ? 'bg-emerald-100 text-emerald-700'
-                                                : 'bg-amber-100 text-amber-700'"
+                                        <span :class="appointmentTagClass(appt)"
                                               class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0"
-                                              x-text="appt.status === 'confirmed' ? 'Confirmado' : 'Pendente'"></span>
+                                              x-text="statusLabel(appt.status)"></span>
                                     </div>
                                 </template>
                             </div>
@@ -170,19 +167,18 @@
 
                         <div class="p-4 space-y-2">
                             <template x-for="appt in appointmentsForDay(selectedDay)" :key="appt.id">
-                                <div class="flex items-start gap-3 p-3 rounded-xl bg-purple-50/60 border border-purple-100 hover:bg-purple-100/60 hover:border-purple-200 transition duration-150">
-                                    <div :class="appt.status === 'confirmed' ? 'bg-emerald-400' : 'bg-amber-400'"
+                                  <div :class="isPastAppointment(appt) ? 'opacity-65' : ''"
+                                      class="flex items-start gap-3 p-3 rounded-xl bg-purple-50/60 border border-purple-100 hover:bg-purple-100/60 hover:border-purple-200 transition duration-150">
+                                     <div :class="appointmentDotClass(appt)"
                                          class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"></div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
                                         <p class="text-xs text-purple-400" x-text="appt.client"></p>
                                         <p class="text-xs text-purple-300 mt-0.5" x-text="appt.time"></p>
                                     </div>
-                                    <span :class="appt.status === 'confirmed'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-amber-100 text-amber-700'"
+                                    <span :class="appointmentTagClass(appt)"
                                           class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0"
-                                          x-text="appt.status === 'confirmed' ? 'Confirmado' : 'Pendente'"></span>
+                                        x-text="statusLabel(appt.status)"></span>
                                 </div>
                             </template>
                             <div x-show="appointmentsForDay(selectedDay).length === 0"
@@ -280,6 +276,7 @@
                 appointmentsForDay(dateStr) {
                     if (!dateStr) return [];
                     return this.appointments
+                        .filter(a => a.status === 'confirmed')
                         .filter(a => a.date === dateStr)
                         .sort((a, b) => a.time.localeCompare(b.time));
                 },
@@ -293,6 +290,41 @@
                     const [y, m, d] = this.selectedDay.split('-');
                     const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
                     return `${parseInt(d)} de ${months[parseInt(m)-1]} de ${y}`;
+                },
+
+                isPastAppointment(appt) {
+                    const apptDate = new Date(`${appt.date}T${appt.time}:00`);
+                    return apptDate < new Date();
+                },
+
+                statusLabel(status) {
+                    return status === 'confirmed' ? 'Confirmado' : 'Aguardando confirmação';
+                },
+
+                appointmentTagClass(appt) {
+                    if (this.isPastAppointment(appt)) {
+                        return 'bg-transparent text-purple-500 border border-purple-200';
+                    }
+
+                    return appt.status === 'confirmed'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100 text-slate-700';
+                },
+
+                appointmentBorderClass(appt) {
+                    if (this.isPastAppointment(appt)) {
+                        return 'border-purple-200';
+                    }
+
+                    return appt.status === 'confirmed' ? 'border-emerald-400' : 'border-slate-400';
+                },
+
+                appointmentDotClass(appt) {
+                    if (this.isPastAppointment(appt)) {
+                        return 'bg-purple-300';
+                    }
+
+                    return appt.status === 'confirmed' ? 'bg-emerald-400' : 'bg-slate-400';
                 },
             };
         }
