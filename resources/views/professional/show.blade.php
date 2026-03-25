@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
+    </style>
+
     <div class="max-w-4xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Toast: sucesso ── --}}
@@ -104,15 +108,15 @@
                         <img src="{{ Storage::url($professional->profile_photo) }}" alt="Foto de perfil" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-4xl font-bold text-purple-300">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
                     @endif
                 </div>
             </div>
 
             <div class="pt-20 pb-5 text-center px-6">
-                <h2 class="text-xl font-bold text-gray-900">{{ $professional->establishment_name ?? Auth::user()->name }}</h2>
-                <p class="text-xs text-purple-400 mt-0.5">{{ Auth::user()->name }}</p>
+                <h2 class="text-xl font-bold text-gray-900">{{ $professional->establishment_name ?? auth()->user()->name }}</h2>
+                <p class="text-xs text-purple-400 mt-0.5">{{ auth()->user()->name }}</p>
                 @php
                     $storeAvg = round($professional->user->reviewsReceived()->avg('rating') ?? 0, 1);
                     $storeCount = $professional->user->reviewsReceived()->count();
@@ -189,8 +193,8 @@
                 <div class="flex gap-3 overflow-x-auto pb-3 scroll-smooth scrollbar-thin-soft">
                     @foreach($professional->portfolioPhotos as $photo)
                     <div class="group relative flex-shrink-0 w-32 sm:w-40"
-                        x-data="{ editOpen: false, editPreview: @js(Storage::url($photo->photo)), editDescription: @js($photo->description ?? '') }">
-                        <div class="rounded-xl overflow-hidden aspect-square">
+                        x-data="{ editOpen: false, editDescription: @js($photo->description ?? '') }">
+                        <div class="rounded-xl overflow-hidden aspect-[4/5]">
                             <img src="{{ Storage::url($photo->photo) }}"
                                  alt="{{ $photo->description ?? '' }}"
                                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
@@ -227,9 +231,9 @@
                              @click="editOpen = false"
                              x-transition
                              class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                            <div @click.stop
-                                 x-transition
-                                 class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+                               <div @click.stop
+                                   x-transition
+                                   class="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                                 <div class="flex items-center justify-between">
                                     <h3 class="text-lg font-bold text-purple-800">Editar foto</h3>
                                     <button @click="editOpen = false"
@@ -247,8 +251,9 @@
                                       class="space-y-4">
                                     @csrf @method('PATCH')
 
-                                    <div class="relative w-full h-40 rounded-xl overflow-hidden bg-gray-100">
-                                        <img :src="editPreview"
+                                    <div class="relative w-full max-w-[260px] mx-auto rounded-xl overflow-hidden bg-gray-100 aspect-[4/5]">
+                                        <img src="{{ Storage::url($photo->original_photo ?? $photo->photo) }}"
+                                             id="show_edit_preview_img_{{ $photo->id }}"
                                              class="w-full h-full object-cover">
                                         <label class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer group">
                                             <div class="text-center">
@@ -261,9 +266,23 @@
                                                    name="photo"
                                                    accept="image/*"
                                                    class="sr-only"
-                                                   @change="editPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : editPreview">
+                                                   id="show_edit_photo_input_{{ $photo->id }}"
+                                                   data-crop-target="show-edit-{{ $photo->id }}"
+                                                   data-preview-img="show_edit_preview_img_{{ $photo->id }}"
+                                                   data-hidden-input="show_edit_cropped_photo_{{ $photo->id }}"
+                                                   data-original-hidden-input="show_edit_original_photo_base64_{{ $photo->id }}"
+                                                   data-original-src="{{ Storage::url($photo->original_photo ?? $photo->photo) }}">
                                         </label>
                                     </div>
+
+                                    <input type="hidden" name="cropped_photo" id="show_edit_cropped_photo_{{ $photo->id }}">
+                                    <input type="hidden" name="original_photo_base64" id="show_edit_original_photo_base64_{{ $photo->id }}">
+
+                                    <button type="button"
+                                            data-recrop-input="show_edit_photo_input_{{ $photo->id }}"
+                                            class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                        Recortar novamente
+                                    </button>
 
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-500 mb-2">Descrição</label>
@@ -271,7 +290,7 @@
                                                name="description"
                                                x-model="editDescription"
                                                placeholder="Ex: Corte e tingimento"
-                                               maxlength="255"
+                                                 maxlength="30"
                                                class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                     </div>
 
@@ -386,5 +405,227 @@
         </div>
 
     </div>
+
+    <div id="cropper_modal_show" class="fixed inset-0 z-[80] hidden">
+        <div class="absolute inset-0 bg-black/70" id="cropper_backdrop_show"></div>
+        <div class="relative z-10 min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+                <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-purple-800">Ajustar recorte 4:5</h3>
+                    <button type="button" id="cropper_close_show" class="text-purple-300 hover:text-purple-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="w-full max-h-[65vh] overflow-hidden rounded-xl bg-gray-100">
+                        <img id="cropper_image_show" alt="Imagem para recorte" class="max-w-full block">
+                    </div>
+                    <p class="mt-3 text-xs text-purple-400">Arraste e ajuste a área para escolher o corte da foto.</p>
+                </div>
+                <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
+                    <button type="button" id="cropper_cancel_show" class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" id="cropper_confirm_show" class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200" style="background-color: #6A0DAD;">
+                        Usar recorte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cropperModal = document.getElementById('cropper_modal_show');
+        const cropperImage = document.getElementById('cropper_image_show');
+        const cropperClose = document.getElementById('cropper_close_show');
+        const cropperCancel = document.getElementById('cropper_cancel_show');
+        const cropperConfirm = document.getElementById('cropper_confirm_show');
+        const cropperBackdrop = document.getElementById('cropper_backdrop_show');
+
+        let cropper = null;
+        let activeInput = null;
+        const selectedFiles = new window.Map();
+        const selectedOriginalBase64 = new window.Map();
+
+        function blobToDataUrl(blob) {
+            return new window.Promise(function (resolve, reject) {
+                const reader = new window.FileReader();
+                reader.onloadend = function () { resolve(reader.result); };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        function setOriginalBase64ForInput(input, dataUrl) {
+            const hiddenOriginalId = input.dataset.originalHiddenInput;
+            if (!hiddenOriginalId || !dataUrl) {
+                return;
+            }
+
+            selectedOriginalBase64.set(input.id, dataUrl);
+            const hiddenOriginalInput = document.getElementById(hiddenOriginalId);
+            if (hiddenOriginalInput) {
+                hiddenOriginalInput.value = dataUrl;
+            }
+        }
+
+        function openCropper(file, input) {
+            if (!file) {
+                return;
+            }
+
+            activeInput = input;
+            const objectUrl = URL.createObjectURL(file);
+            cropperImage.src = objectUrl;
+            cropperModal.classList.remove('hidden');
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new window.Cropper(cropperImage, {
+                aspectRatio: 4 / 5,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                responsive: true,
+                background: false,
+            });
+        }
+
+        function closeCropper(clearPendingSelection = false) {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+            cropperModal.classList.add('hidden');
+            cropperImage.removeAttribute('src');
+
+            if (clearPendingSelection && activeInput) {
+                activeInput.value = '';
+            }
+
+            activeInput = null;
+        }
+
+        document.querySelectorAll('input[data-crop-target^="show-edit-"]').forEach(function (input) {
+            input.addEventListener('change', async function (event) {
+                const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                if (file) {
+                    selectedFiles.set(input.id, file);
+                    try {
+                        const originalBase64 = await blobToDataUrl(file);
+                        setOriginalBase64ForInput(input, originalBase64);
+                    } catch (error) {
+                        console.error('Falha ao preparar foto original para envio:', error);
+                    }
+                }
+                openCropper(file, input);
+            });
+        });
+
+        document.querySelectorAll('[data-recrop-input^="show_edit_photo_input_"]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const inputId = button.dataset.recropInput;
+                const input = document.getElementById(inputId);
+
+                if (!input) {
+                    return;
+                }
+
+                let fileToUse = selectedFiles.get(input.id);
+
+                if (!fileToUse && input.files && input.files[0]) {
+                    fileToUse = input.files[0];
+                    selectedFiles.set(input.id, fileToUse);
+                }
+
+                if (fileToUse) {
+                    openCropper(fileToUse, input);
+                    return;
+                }
+
+                const originalSrc = input.dataset.originalSrc;
+                if (originalSrc) {
+                    fetch(originalSrc, { cache: 'no-store' })
+                            .then(response => response.blob())
+                            .then(async blob => {
+                                const originalBase64 = await blobToDataUrl(blob);
+                                setOriginalBase64ForInput(input, originalBase64);
+                                openCropper(blob, input);
+                            })
+                            .catch(error => {
+                                console.error('Falha ao carregar imagem original:', error);
+                                input.click();
+                            });
+                    return;
+                }
+
+                input.click();
+            });
+        });
+
+        function handleCropConfirm() {
+            if (!cropper || !activeInput) {
+                closeCropper(true);
+                return;
+            }
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 1200,
+                height: 1500,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                closeCropper(true);
+                return;
+            }
+
+            const hiddenInputId = activeInput.dataset.hiddenInput;
+            const previewImgId = activeInput.dataset.previewImg;
+
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    closeCropper(true);
+                    return;
+                }
+
+                const reader = new window.FileReader();
+                reader.onloadend = function () {
+                    const hiddenInput = document.getElementById(hiddenInputId);
+                    if (hiddenInput) {
+                        hiddenInput.value = reader.result;
+                    }
+
+                    const fallbackOriginalBase64 = selectedOriginalBase64.get(activeInput.id);
+                    if (fallbackOriginalBase64) {
+                        setOriginalBase64ForInput(activeInput, fallbackOriginalBase64);
+                    }
+
+                    const previewImg = document.getElementById(previewImgId);
+                    if (previewImg) {
+                        previewImg.src = URL.createObjectURL(blob);
+                    }
+
+                    activeInput.value = '';
+                    closeCropper(false);
+                };
+
+                reader.readAsDataURL(blob);
+            }, 'image/jpeg', 0.92);
+        }
+
+        cropperConfirm.addEventListener('click', handleCropConfirm);
+        cropperClose.addEventListener('click', function () { closeCropper(true); });
+        cropperCancel.addEventListener('click', function () { closeCropper(true); });
+        cropperBackdrop.addEventListener('click', function () { closeCropper(true); });
+    });
+    </script>
 
 </x-app-layout>
