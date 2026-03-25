@@ -183,17 +183,18 @@
 
             @if($professional->portfolioPhotos->count() > 0)
             <div class="p-6">
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
                     @foreach($professional->portfolioPhotos as $photo)
-                    <div class="group relative">
+                    <div class="group relative flex-shrink-0 w-32 sm:w-40">
                         <div class="rounded-xl overflow-hidden aspect-square">
                             <img src="{{ Storage::url($photo->photo) }}"
                                  alt="{{ $photo->description ?? '' }}"
                                  class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                         </div>
-                        {{-- Overlay de excluir --}}
+
                         <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                            <form action="{{ route('professional.portfolio.delete', $photo) }}" method="POST"
+                            <form action="{{ route('professional.portfolio.delete', $photo) }}"
+                                  method="POST"
                                   onsubmit="return confirm('Tem certeza que deseja excluir esta foto?')">
                                 @csrf @method('DELETE')
                                 <button type="submit"
@@ -205,6 +206,7 @@
                                 </button>
                             </form>
                         </div>
+
                         @if($photo->description)
                             <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
                         @endif
