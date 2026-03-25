@@ -4,6 +4,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Poppins', sans-serif !important; }
+        @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
     </style>
 
     <div class="min-h-screen" style="background-color: #EDE4F8;">
@@ -31,8 +32,7 @@
                 @csrf
 
                 {{-- ── Foto de perfil ── --}}
-                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
-                     x-data="{ preview: null }">
+                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide mb-1">Foto de perfil</p>
                     <p class="text-xs text-purple-300 mb-4">Imagem exibida no seu perfil público.</p>
 
@@ -40,8 +40,8 @@
                         {{-- Preview circular --}}
                         <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-100 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-purple-300"
                              style="background-color: #EDE4F8;">
-                            <img x-show="preview" :src="preview" class="w-full h-full object-cover">
-                            <span x-show="!preview">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
+                            <img id="profile_preview_img" class="w-full h-full object-cover hidden" alt="Prévia da foto de perfil recortada">
+                            <span id="profile_initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                         </div>
 
                         {{-- Upload --}}
@@ -49,11 +49,33 @@
                             <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
-                            <span class="text-xs text-purple-400 font-medium" x-text="preview ? 'Clique para trocar a foto' : 'Clique para adicionar uma foto'"></span>
-                            <input type="file" name="profile_photo" id="profile_photo" accept="image/*" class="sr-only"
-                                   @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
+                            <span id="profile_upload_text" class="text-xs text-purple-400 font-medium">Clique para adicionar uma foto</span>
+                            <input type="file"
+                                   name="profile_photo"
+                                   id="profile_photo_input"
+                                   accept="image/*"
+                                   class="sr-only"
+                                   data-crop-target="profile"
+                                   data-preview-img="profile_preview_img"
+                                   data-hidden-input="cropped_profile_photo">
                         </label>
                     </div>
+
+                    <div class="mt-3 flex items-center gap-3">
+                        <button type="button"
+                                id="profile_recrop_button"
+                                data-recrop-input="profile_photo_input"
+                                class="hidden text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                            Recortar novamente
+                        </button>
+                        <button type="button"
+                                id="profile_remove_button"
+                                class="hidden text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">
+                            Remover foto
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="cropped_profile_photo" id="cropped_profile_photo">
 
                     @error('profile_photo')
                         <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
@@ -311,14 +333,237 @@
         </div>
     </div>
 
+    <div id="cropper_modal" class="fixed inset-0 z-[80] hidden">
+        <div class="absolute inset-0 bg-black/70" id="cropper_backdrop"></div>
+        <div class="relative z-10 min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+                <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-purple-800">Ajustar foto de perfil</h3>
+                    <button type="button" id="cropper_close" class="text-purple-300 hover:text-purple-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="w-full max-h-[65vh] overflow-hidden rounded-xl bg-gray-100">
+                        <img id="cropper_image" alt="Imagem para recorte" class="max-w-full block">
+                    </div>
+                    <p class="mt-3 text-xs text-purple-400">Arraste e ajuste a área para escolher o recorte.</p>
+                </div>
+                <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
+                    <button type="button" id="cropper_cancel" class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" id="cropper_confirm" class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200" style="background-color: #6A0DAD;">
+                        Usar recorte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const phoneInput = document.getElementById('phone');
             const stateSelect = document.getElementById('state');
             const citySelect = document.getElementById('city');
+            const profileInput = document.getElementById('profile_photo_input');
+            const profilePreview = document.getElementById('profile_preview_img');
+            const profileInitial = document.getElementById('profile_initial');
+            const profileUploadText = document.getElementById('profile_upload_text');
+            const profileRecropButton = document.getElementById('profile_recrop_button');
+            const profileRemoveButton = document.getElementById('profile_remove_button');
+            const croppedProfileInput = document.getElementById('cropped_profile_photo');
+            const cropperModal = document.getElementById('cropper_modal');
+            const cropperImage = document.getElementById('cropper_image');
+            const cropperClose = document.getElementById('cropper_close');
+            const cropperCancel = document.getElementById('cropper_cancel');
+            const cropperConfirm = document.getElementById('cropper_confirm');
+            const cropperBackdrop = document.getElementById('cropper_backdrop');
 
             const oldState = "{{ old('state') }}";
             const oldCity = "{{ old('city') }}";
+            let cropper = null;
+            let activeInput = null;
+            const selectedFiles = new window.Map();
+
+            function openCropper(file, input) {
+                if (!file) {
+                    return;
+                }
+
+                activeInput = input;
+                const objectUrl = URL.createObjectURL(file);
+                cropperImage.src = objectUrl;
+                cropperModal.classList.remove('hidden');
+
+                if (cropper) {
+                    cropper.destroy();
+                }
+
+                cropper = new window.Cropper(cropperImage, {
+                    aspectRatio: 1,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    responsive: true,
+                    background: false,
+                });
+            }
+
+            function closeCropper(clearPendingSelection) {
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
+
+                cropperModal.classList.add('hidden');
+                cropperImage.removeAttribute('src');
+
+                if (clearPendingSelection && activeInput) {
+                    activeInput.value = '';
+                }
+
+                activeInput = null;
+            }
+
+            function applyProfilePreview(src) {
+                if (!profilePreview || !profileInitial) {
+                    return;
+                }
+
+                profilePreview.src = src;
+                profilePreview.classList.remove('hidden');
+                profileInitial.classList.add('hidden');
+
+                if (profileUploadText) {
+                    profileUploadText.textContent = 'Clique para trocar a foto';
+                }
+                if (profileRecropButton) {
+                    profileRecropButton.classList.remove('hidden');
+                }
+                if (profileRemoveButton) {
+                    profileRemoveButton.classList.remove('hidden');
+                }
+            }
+
+            function clearProfilePreview() {
+                if (!profilePreview || !profileInitial) {
+                    return;
+                }
+
+                profilePreview.removeAttribute('src');
+                profilePreview.classList.add('hidden');
+                profileInitial.classList.remove('hidden');
+
+                if (profileUploadText) {
+                    profileUploadText.textContent = 'Clique para adicionar uma foto';
+                }
+                if (profileRecropButton) {
+                    profileRecropButton.classList.add('hidden');
+                }
+                if (profileRemoveButton) {
+                    profileRemoveButton.classList.add('hidden');
+                }
+                if (croppedProfileInput) {
+                    croppedProfileInput.value = '';
+                }
+
+                selectedFiles.delete('profile_photo_input');
+            }
+
+            if (profileInput) {
+                profileInput.addEventListener('change', function (event) {
+                    const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                    if (!file) {
+                        return;
+                    }
+
+                    selectedFiles.set(profileInput.id, file);
+                    openCropper(file, profileInput);
+                });
+            }
+
+            if (profileRecropButton) {
+                profileRecropButton.addEventListener('click', function () {
+                    let fileToUse = selectedFiles.get('profile_photo_input');
+
+                    if (!fileToUse && profileInput && profileInput.files && profileInput.files[0]) {
+                        fileToUse = profileInput.files[0];
+                        selectedFiles.set('profile_photo_input', fileToUse);
+                    }
+
+                    if (fileToUse) {
+                        openCropper(fileToUse, profileInput);
+                    } else if (profileInput) {
+                        profileInput.click();
+                    }
+                });
+            }
+
+            if (profileRemoveButton) {
+                profileRemoveButton.addEventListener('click', function () {
+                    clearProfilePreview();
+                    if (profileInput) {
+                        profileInput.value = '';
+                    }
+                });
+            }
+
+            function handleCropConfirm() {
+                if (!cropper || !activeInput) {
+                    closeCropper(true);
+                    return;
+                }
+
+                const canvas = cropper.getCroppedCanvas({
+                    width: 900,
+                    height: 900,
+                    imageSmoothingQuality: 'high',
+                });
+
+                if (!canvas) {
+                    closeCropper(true);
+                    return;
+                }
+
+                canvas.toBlob(function (blob) {
+                    if (!blob) {
+                        closeCropper(true);
+                        return;
+                    }
+
+                    const reader = new window.FileReader();
+                    reader.onloadend = function () {
+                        if (croppedProfileInput) {
+                            croppedProfileInput.value = reader.result;
+                        }
+
+                        applyProfilePreview(URL.createObjectURL(blob));
+
+                        if (activeInput) {
+                            activeInput.value = '';
+                        }
+                        closeCropper(false);
+                    };
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', 0.92);
+            }
+
+            if (cropperConfirm) {
+                cropperConfirm.addEventListener('click', handleCropConfirm);
+            }
+            if (cropperClose) {
+                cropperClose.addEventListener('click', function () { closeCropper(true); });
+            }
+            if (cropperCancel) {
+                cropperCancel.addEventListener('click', function () { closeCropper(true); });
+            }
+            if (cropperBackdrop) {
+                cropperBackdrop.addEventListener('click', function () { closeCropper(true); });
+            }
 
             async function loadStates(selectedState) {
                 stateSelect.disabled = true;

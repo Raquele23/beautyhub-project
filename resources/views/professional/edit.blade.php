@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
+    </style>
+
     <div class="max-w-2xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Topo ── --}}
@@ -38,7 +42,7 @@
         </a>
 
         {{-- ── Toast: sucesso ── --}}
-        @if(Session::get('status'))
+        @if(session('status'))
             <div
                 x-data="{ show: true }"
                 x-show="show"
@@ -56,7 +60,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <p class="text-sm font-semibold text-purple-800">{{ Session::get('status') }}</p>
+                <p class="text-sm font-semibold text-purple-800">{{ session('status') }}</p>
                 <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-600 transition-colors flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -66,7 +70,7 @@
         @endif
 
         {{-- ── Toast: erro ── --}}
-        @if(Session::get('error'))
+        @if(session('error'))
             <div
                 x-data="{ show: true }"
                 x-show="show"
@@ -84,7 +88,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </div>
-                <p class="text-sm font-semibold text-red-800">{{ Session::get('error') }}</p>
+                <p class="text-sm font-semibold text-red-800">{{ session('error') }}</p>
                 <button @click="show = false" class="ml-2 text-red-300 hover:text-red-600 transition-colors flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -110,8 +114,7 @@
             @method('PATCH')
 
             {{-- ── Foto de perfil ── --}}
-            <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
-                 x-data="{ preview: {{ $professional->profile_photo ? "'".Storage::url($professional->profile_photo)."'" : 'null' }}, hasExisting: {{ $professional->profile_photo ? 'true' : 'false' }}, deleted: false }">
+            <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
                 <p class="text-xs font-bold text-purple-400 uppercase tracking-wide mb-1">Foto de perfil</p>
                 <p class="text-xs text-purple-300 mb-4">Imagem exibida no seu perfil público.</p>
 
@@ -119,15 +122,19 @@
                     {{-- Preview circular --}}
                     <div class="relative w-20 h-20 flex-shrink-0">
                         <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-100" style="background-color: #EDE4F8;">
-                            <img x-show="preview && !deleted" :src="preview" class="w-full h-full object-cover">
-                            <div x-show="!preview || deleted" class="w-full h-full flex items-center justify-center text-2xl font-bold text-purple-300">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            <img id="profile_preview_img"
+                                 src="{{ $professional->profile_photo ? Storage::url($professional->profile_photo) : '' }}"
+                                 class="w-full h-full object-cover {{ $professional->profile_photo ? '' : 'hidden' }}"
+                                 alt="Prévia da foto de perfil recortada">
+                            <div id="profile_initial" class="w-full h-full flex items-center justify-center text-2xl font-bold text-purple-300 {{ $professional->profile_photo ? 'hidden' : '' }}">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                             </div>
                         </div>
-                        {{-- Botão excluir foto --}}
+
                         <button type="button"
-                                x-show="(preview && !deleted)"
-                                @click="deleted = true; preview = null"
+                                id="profile_remove_icon_button"
+                                class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md border border-red-100 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors {{ $professional->profile_photo ? '' : 'hidden' }}"
+                                title="Remover foto"
                                 class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md border border-red-100 flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -140,14 +147,39 @@
                         <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <span class="text-xs text-purple-400 font-medium" x-text="preview && !deleted ? 'Clique para trocar a foto' : 'Clique para adicionar uma foto'"></span>
-                        <input type="file" name="profile_photo" id="profile_photo" accept="image/*" class="sr-only"
-                               @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null; deleted = false">
+                        <span id="profile_upload_text" class="text-xs text-purple-400 font-medium">
+                            {{ $professional->profile_photo ? 'Clique para trocar a foto' : 'Clique para adicionar uma foto' }}
+                        </span>
+                        <input type="file"
+                               name="profile_photo"
+                               id="profile_photo_input"
+                               accept="image/*"
+                               class="sr-only"
+                               data-crop-target="profile"
+                               data-preview-img="profile_preview_img"
+                               data-hidden-input="cropped_profile_photo"
+                               data-original-src="{{ $professional->profile_photo ? Storage::url($professional->profile_photo) : '' }}">
                     </label>
                 </div>
 
+                <div class="mt-3 flex items-center gap-3">
+                    <button type="button"
+                            id="profile_recrop_button"
+                            data-recrop-input="profile_photo_input"
+                            class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors {{ $professional->profile_photo ? '' : 'hidden' }}">
+                        Recortar novamente
+                    </button>
+                    <button type="button"
+                            id="profile_remove_button"
+                            class="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors {{ $professional->profile_photo ? '' : 'hidden' }}">
+                        Remover foto
+                    </button>
+                </div>
+
+                <input type="hidden" name="cropped_profile_photo" id="cropped_profile_photo">
+
                 {{-- Campo hidden para sinalizar exclusão --}}
-                <input type="hidden" name="delete_profile_photo" :value="deleted ? '1' : '0'">
+                <input type="hidden" name="delete_profile_photo" id="delete_profile_photo_input" value="0">
 
                 @error('profile_photo')
                     <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
@@ -396,14 +428,277 @@
 
 </x-app-layout>
 
+<div id="cropper_modal" class="fixed inset-0 z-[80] hidden">
+    <div class="absolute inset-0 bg-black/70" id="cropper_backdrop"></div>
+    <div class="relative z-10 min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
+                <h3 class="text-base font-bold text-purple-800">Ajustar foto de perfil</h3>
+                <button type="button" id="cropper_close" class="text-purple-300 hover:text-purple-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5">
+                <div class="w-full max-h-[65vh] overflow-hidden rounded-xl bg-gray-100">
+                    <img id="cropper_image" alt="Imagem para recorte" class="max-w-full block">
+                </div>
+                <p class="mt-3 text-xs text-purple-400">Arraste e ajuste a área para escolher o recorte.</p>
+            </div>
+            <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
+                <button type="button" id="cropper_cancel" class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="cropper_confirm" class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200" style="background-color: #6A0DAD;">
+                    Usar recorte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const phoneInput = document.getElementById('phone');
         const stateSelect = document.getElementById('state');
         const citySelect = document.getElementById('city');
+        const profileInput = document.getElementById('profile_photo_input');
+        const profilePreview = document.getElementById('profile_preview_img');
+        const profileInitial = document.getElementById('profile_initial');
+        const profileUploadText = document.getElementById('profile_upload_text');
+        const profileRecropButton = document.getElementById('profile_recrop_button');
+        const profileRemoveButton = document.getElementById('profile_remove_button');
+        const profileRemoveIconButton = document.getElementById('profile_remove_icon_button');
+        const croppedProfileInput = document.getElementById('cropped_profile_photo');
+        const deleteProfileInput = document.getElementById('delete_profile_photo_input');
+        const cropperModal = document.getElementById('cropper_modal');
+        const cropperImage = document.getElementById('cropper_image');
+        const cropperClose = document.getElementById('cropper_close');
+        const cropperCancel = document.getElementById('cropper_cancel');
+        const cropperConfirm = document.getElementById('cropper_confirm');
+        const cropperBackdrop = document.getElementById('cropper_backdrop');
 
         const oldState = "{{ old('state', $professional->state) }}";
         const oldCity = "{{ old('city', $professional->city) }}";
+        let cropper = null;
+        let activeInput = null;
+        const selectedFiles = new window.Map();
+
+        function openCropper(file, input) {
+            if (!file) {
+                return;
+            }
+
+            activeInput = input;
+            const objectUrl = URL.createObjectURL(file);
+            cropperImage.src = objectUrl;
+            cropperModal.classList.remove('hidden');
+
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new window.Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 1,
+                responsive: true,
+                background: false,
+            });
+        }
+
+        function closeCropper(clearPendingSelection) {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
+            cropperModal.classList.add('hidden');
+            cropperImage.removeAttribute('src');
+
+            if (clearPendingSelection && activeInput) {
+                activeInput.value = '';
+            }
+
+            activeInput = null;
+        }
+
+        function showRemoveControls(visible) {
+            const method = visible ? 'remove' : 'add';
+
+            if (profileRecropButton) {
+                profileRecropButton.classList[method]('hidden');
+            }
+            if (profileRemoveButton) {
+                profileRemoveButton.classList[method]('hidden');
+            }
+            if (profileRemoveIconButton) {
+                profileRemoveIconButton.classList[method]('hidden');
+            }
+        }
+
+        function applyProfilePreview(src) {
+            if (!profilePreview || !profileInitial) {
+                return;
+            }
+
+            profilePreview.src = src;
+            profilePreview.classList.remove('hidden');
+            profileInitial.classList.add('hidden');
+
+            if (profileUploadText) {
+                profileUploadText.textContent = 'Clique para trocar a foto';
+            }
+
+            if (deleteProfileInput) {
+                deleteProfileInput.value = '0';
+            }
+
+            showRemoveControls(true);
+        }
+
+        function clearProfilePreview(markAsDeleted) {
+            if (!profilePreview || !profileInitial) {
+                return;
+            }
+
+            profilePreview.removeAttribute('src');
+            profilePreview.classList.add('hidden');
+            profileInitial.classList.remove('hidden');
+
+            if (profileUploadText) {
+                profileUploadText.textContent = 'Clique para adicionar uma foto';
+            }
+
+            if (croppedProfileInput) {
+                croppedProfileInput.value = '';
+            }
+
+            if (deleteProfileInput) {
+                deleteProfileInput.value = markAsDeleted ? '1' : '0';
+            }
+
+            showRemoveControls(false);
+            selectedFiles.delete('profile_photo_input');
+        }
+
+        if (profileInput) {
+            profileInput.addEventListener('change', function (event) {
+                const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                if (!file) {
+                    return;
+                }
+
+                selectedFiles.set(profileInput.id, file);
+                openCropper(file, profileInput);
+            });
+        }
+
+        if (profileRecropButton) {
+            profileRecropButton.addEventListener('click', function () {
+                let fileToUse = selectedFiles.get('profile_photo_input');
+
+                if (!fileToUse && profileInput && profileInput.files && profileInput.files[0]) {
+                    fileToUse = profileInput.files[0];
+                    selectedFiles.set('profile_photo_input', fileToUse);
+                }
+
+                if (fileToUse) {
+                    openCropper(fileToUse, profileInput);
+                    return;
+                }
+
+                const originalSrc = profileInput ? profileInput.dataset.originalSrc : null;
+                if (originalSrc) {
+                    fetch(originalSrc, { cache: 'no-store' })
+                        .then(response => response.blob())
+                        .then(blob => openCropper(blob, profileInput))
+                        .catch(error => {
+                            console.error('Falha ao carregar foto atual:', error);
+                            profileInput.click();
+                        });
+                    return;
+                }
+
+                if (profileInput) {
+                    profileInput.click();
+                }
+            });
+        }
+
+        if (profileRemoveButton) {
+            profileRemoveButton.addEventListener('click', function () {
+                clearProfilePreview(true);
+                if (profileInput) {
+                    profileInput.value = '';
+                }
+            });
+        }
+
+        if (profileRemoveIconButton) {
+            profileRemoveIconButton.addEventListener('click', function () {
+                clearProfilePreview(true);
+                if (profileInput) {
+                    profileInput.value = '';
+                }
+            });
+        }
+
+        function handleCropConfirm() {
+            if (!cropper || !activeInput) {
+                closeCropper(true);
+                return;
+            }
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 900,
+                height: 900,
+                imageSmoothingQuality: 'high',
+            });
+
+            if (!canvas) {
+                closeCropper(true);
+                return;
+            }
+
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    closeCropper(true);
+                    return;
+                }
+
+                const reader = new window.FileReader();
+                reader.onloadend = function () {
+                    if (croppedProfileInput) {
+                        croppedProfileInput.value = reader.result;
+                    }
+
+                    applyProfilePreview(URL.createObjectURL(blob));
+
+                    if (activeInput) {
+                        activeInput.value = '';
+                    }
+                    closeCropper(false);
+                };
+                reader.readAsDataURL(blob);
+            }, 'image/jpeg', 0.92);
+        }
+
+        if (cropperConfirm) {
+            cropperConfirm.addEventListener('click', handleCropConfirm);
+        }
+        if (cropperClose) {
+            cropperClose.addEventListener('click', function () { closeCropper(true); });
+        }
+        if (cropperCancel) {
+            cropperCancel.addEventListener('click', function () { closeCropper(true); });
+        }
+        if (cropperBackdrop) {
+            cropperBackdrop.addEventListener('click', function () { closeCropper(true); });
+        }
 
         async function loadStates(selectedState) {
             stateSelect.disabled = true;

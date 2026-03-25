@@ -125,7 +125,8 @@ class ProfessionalController extends Controller
             'street'             => 'required|string|max:255',
             'house_number'       => 'required|string|max:10',
             'instagram'          => 'nullable|string|max:255',
-            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
+            'profile_photo'      => ['nullable', 'required_without:cropped_profile_photo', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
+            'cropped_profile_photo' => ['nullable', 'required_without:profile_photo', 'string'],
             'banner_style'       => 'nullable|in:color,photo',
             'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo'       => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
@@ -138,7 +139,9 @@ class ProfessionalController extends Controller
         $user->update(['name' => $validated['name']]);
         unset($validated['name']);
 
-        if ($request->hasFile('profile_photo')) {
+        if ($request->filled('cropped_profile_photo')) {
+            $validated['profile_photo'] = $this->storeProfileBase64Image($validated['cropped_profile_photo']);
+        } elseif ($request->hasFile('profile_photo')) {
             $validated['profile_photo'] = $request->file('profile_photo')->store('professionals/profiles', 'public');
         }
 
@@ -197,7 +200,8 @@ class ProfessionalController extends Controller
             'street'             => 'required|string|max:255',
             'house_number'       => 'required|string|max:10',
             'instagram'          => 'nullable|string|max:255',
-            'profile_photo'      => ['nullable', File::image()->max(5 * 1024)],
+            'profile_photo'      => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
+            'cropped_profile_photo' => ['nullable', 'string'],
             'banner_style'       => 'nullable|in:color,photo',
             'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo'       => ['nullable', File::image()->max(8 * 1024)],
@@ -213,11 +217,14 @@ class ProfessionalController extends Controller
                 Storage::disk('public')->delete($professional->profile_photo);
             }
             $validated['profile_photo'] = null;
-        } elseif ($request->hasFile('profile_photo')) {
+        } elseif ($request->filled('cropped_profile_photo') || $request->hasFile('profile_photo')) {
             if ($professional->profile_photo) {
                 Storage::disk('public')->delete($professional->profile_photo);
             }
-            $validated['profile_photo'] = $request->file('profile_photo')->store('professionals/profiles', 'public');
+
+            $validated['profile_photo'] = $request->filled('cropped_profile_photo')
+                ? $this->storeProfileBase64Image($validated['cropped_profile_photo'])
+                : $request->file('profile_photo')->store('professionals/profiles', 'public');
         }
 
         $bannerStyle = $validated['banner_style'] ?? ($professional->banner_photo ? 'photo' : 'color');
@@ -392,6 +399,38 @@ class ProfessionalController extends Controller
         if ($binary === false || strlen($binary) > (5 * 1024 * 1024)) {
             throw ValidationException::withMessages([
                 'photo' => 'A imagem recortada deve ter no máximo 5MB.',
+            ]);
+        }
+
+        $extension = strtolower($matches[1]) === 'jpeg' ? 'jpg' : strtolower($matches[1]);
+        $path = trim($directory, '/') . '/' . Str::uuid() . '.' . $extension;
+
+        Storage::disk('public')->put($path, $binary);
+
+        return $path;
+    }
+
+    private function storeProfileBase64Image(string $dataUrl, string $directory = 'professionals/profiles'): string
+    {
+        if (!preg_match('/^data:image\/(png|jpe?g|webp);base64,/', $dataUrl, $matches)) {
+            throw ValidationException::withMessages([
+                'profile_photo' => 'Formato da imagem recortada inválido.',
+            ]);
+        }
+
+        [$meta, $encoded] = array_pad(explode(',', $dataUrl, 2), 2, null);
+
+        if (!$encoded) {
+            throw ValidationException::withMessages([
+                'profile_photo' => 'Imagem recortada inválida.',
+            ]);
+        }
+
+        $binary = base64_decode($encoded, true);
+
+        if ($binary === false || strlen($binary) > (5 * 1024 * 1024)) {
+            throw ValidationException::withMessages([
+                'profile_photo' => 'A imagem recortada deve ter no máximo 5MB.',
             ]);
         }
 
