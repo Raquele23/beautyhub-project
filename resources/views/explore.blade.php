@@ -126,7 +126,7 @@
                             {{-- Portfólio --}}
                             @if($professional->portfolioPhotos->count() > 0)
                             <div class="mb-3">
-                                <div class="flex gap-1.5 overflow-x-auto pb-1">
+                                <div class="flex gap-1.5 overflow-x-auto pb-3 scrollbar-thin-soft">
                                     @foreach($professional->portfolioPhotos->take(5) as $photo)
                                     <div class="flex-shrink-0">
                                         <img src="{{ Storage::url($photo->photo) }}"
