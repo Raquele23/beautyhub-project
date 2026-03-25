@@ -125,20 +125,20 @@
 
         {{-- ── Portfólio ── --}}
         @if($professional->portfolioPhotos->count() > 0)
-        <div id="portfolio" class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
-             x-data="{ photoModal: false, selectedPhoto: null }">
+           <div id="portfolio" class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
+               x-data="{ photoModal: false, selectedPhoto: null, selectedDescription: '' }">
             <p class="text-sm font-bold text-purple-400 uppercase tracking-wide mb-4">Portfólio</p>
-            <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
+            <div class="flex gap-3 overflow-x-auto pb-3 scroll-smooth scrollbar-thin-soft">
                 @foreach($professional->portfolioPhotos as $photo)
                 <div class="flex-shrink-0">
                     <div class="rounded-xl overflow-hidden aspect-square w-40">
                         <img src="{{ Storage::url($photo->photo) }}"
                              alt="{{ $photo->description ?? '' }}"
-                             @click="photoModal = true; selectedPhoto = '{{ Storage::url($photo->photo) }}'"
+                             @click="photoModal = true; selectedPhoto = @js(Storage::url($photo->photo)); selectedDescription = @js($photo->description ?? 'Sem descrição para esta foto.')"
                              class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer">
                     </div>
                     @if($photo->description)
-                        <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
+                        <p class="mt-1 text-xs font-medium text-gray-600 leading-snug break-words">{{ $photo->description }}</p>
                     @endif
                 </div>
                 @endforeach
@@ -151,6 +151,12 @@
                 <div @click.stop class="relative max-w-4xl w-full">
                     <img :src="selectedPhoto" 
                          class="w-full h-auto rounded-2xl shadow-2xl">
+                    <div class="mt-3 rounded-xl bg-black/45 px-4 py-2.5 shadow-md backdrop-blur-sm">
+                        <p class="text-sm text-white/90 leading-relaxed break-words">
+                            <span class="font-semibold">Descrição:</span>
+                            <span x-text="selectedDescription"></span>
+                        </p>
+                    </div>
                     <button @click="photoModal = false"
                             class="absolute -top-12 right-0 text-white hover:text-gray-300">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
