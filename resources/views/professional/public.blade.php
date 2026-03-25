@@ -125,21 +125,39 @@
 
         {{-- ── Portfólio ── --}}
         @if($professional->portfolioPhotos->count() > 0)
-        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
+        <div id="portfolio" class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
+             x-data="{ photoModal: false, selectedPhoto: null }">
             <p class="text-sm font-bold text-purple-400 uppercase tracking-wide mb-4">Portfólio</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
                 @foreach($professional->portfolioPhotos as $photo)
-                <div>
-                    <div class="rounded-xl overflow-hidden aspect-square">
+                <div class="flex-shrink-0">
+                    <div class="rounded-xl overflow-hidden aspect-square w-40">
                         <img src="{{ Storage::url($photo->photo) }}"
                              alt="{{ $photo->description ?? '' }}"
-                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                             @click="photoModal = true; selectedPhoto = '{{ Storage::url($photo->photo) }}'"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer">
                     </div>
                     @if($photo->description)
-                        <p class="mt-1 text-xs text-purple-300">{{ $photo->description }}</p>
+                        <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
                     @endif
                 </div>
                 @endforeach
+            </div>
+
+            {{-- Modal de ampliação --}}
+              <div x-show="photoModal" x-cloak @click="photoModal = false"
+                 class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+                 x-transition>
+                <div @click.stop class="relative max-w-4xl w-full">
+                    <img :src="selectedPhoto" 
+                         class="w-full h-auto rounded-2xl shadow-2xl">
+                    <button @click="photoModal = false"
+                            class="absolute -top-12 right-0 text-white hover:text-gray-300">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
         @endif
