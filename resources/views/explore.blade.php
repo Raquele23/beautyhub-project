@@ -123,6 +123,27 @@
                                 📍 {{ $professional->city }}, {{ $professional->state }}
                             </p>
 
+                            {{-- Portfólio --}}
+                            @if($professional->portfolioPhotos->count() > 0)
+                            <div class="mb-3">
+                                <div class="flex gap-1.5 overflow-x-auto pb-1">
+                                    @foreach($professional->portfolioPhotos->take(5) as $photo)
+                                    <div class="flex-shrink-0">
+                                        <img src="{{ Storage::url($photo->photo) }}"
+                                             alt="{{ $photo->description ?? '' }}"
+                                            @click.prevent.stop="window.location.href='{{ route('professional.public', $professional->id) }}#portfolio'"
+                                             class="w-12 h-12 rounded-lg object-cover hover:scale-110 transition-transform cursor-pointer shadow-sm">
+                                    </div>
+                                    @endforeach
+                                    @if($professional->portfolioPhotos->count() > 5)
+                                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-purple-200 to-purple-100 flex items-center justify-center text-xs font-bold text-purple-600 shadow-sm">
+                                        +{{ $professional->portfolioPhotos->count() - 5 }}
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
                             @if($professional->services->count())
                                 <div class="flex flex-wrap gap-1.5 mb-4">
                                     @foreach($professional->services->take(3) as $service)
