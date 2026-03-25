@@ -52,13 +52,15 @@
                 </h2>
                 <p class="text-xs text-purple-400 mt-0.5">{{ $professional->user->name }}</p>
 
-                @if($averageRating > 0)
-                    <div class="flex items-center justify-center gap-2 mt-2">
-                        <x-star-rating :rating="$averageRating" size="sm" />
-                        <span class="text-xs font-semibold text-gray-800">{{ number_format($averageRating, 1) }}</span>
-                        <span class="text-xs text-purple-300">({{ $reviews->total() }} {{ Str::plural('avaliação', $reviews->total()) }})</span>
-                    </div>
-                @endif
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <x-star-rating :rating="$averageRating" size="sm" />
+                    <span class="text-xs font-semibold text-gray-800">{{ number_format($averageRating, 1) }}</span>
+                    @if($reviews->total() > 0)
+                        <span class="text-xs text-purple-300">({{ $reviews->total() }} {{ \Illuminate\Support\Str::plural('avaliação', $reviews->total()) }})</span>
+                    @else
+                        <span class="text-xs text-purple-300">(0 avaliações)</span>
+                    @endif
+                </div>
 
                 @if($professional->latitude && $professional->longitude)
                     <p id="distance-label" class="hidden mt-2 text-xs font-medium text-purple-500">
@@ -285,13 +287,11 @@
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
             <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Avaliações</p>
-                @if($reviews->total() > 0)
-                    <div class="flex items-center gap-2">
-                        <x-star-rating :rating="$averageRating" size="sm" />
-                        <span class="text-xs font-semibold text-gray-800">{{ number_format($averageRating, 1) }}</span>
-                        <span class="text-xs text-purple-300">({{ $reviews->total() }})</span>
-                    </div>
-                @endif
+                <div class="flex items-center gap-2">
+                    <x-star-rating :rating="$averageRating" size="sm" />
+                    <span class="text-xs font-semibold text-gray-800">{{ number_format($averageRating, 1) }}</span>
+                    <span class="text-xs text-purple-300">({{ $reviews->total() }})</span>
+                </div>
             </div>
 
             {{-- Distribuição de estrelas --}}
