@@ -62,13 +62,13 @@
 
                 {{-- ── Banner da loja ── --}}
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4"
-                     x-data="{ bannerStyle: '{{ old('banner_style', 'color') }}', bannerPreview: null, selectedColor: '{{ old('banner_color', '#6A0DAD') }}' }">
+                     x-data="{ bannerStyle: '{{ old('banner_style', 'color') }}', bannerPreview: null, selectedColor: '{{ old('banner_color', '#6A0DAD') }}', showAllColors: false }">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Banner da loja</p>
                     <p class="text-xs text-purple-300">Escolha uma cor ou envie uma foto para o topo do seu perfil.</p>
 
                     <div class="grid grid-cols-2 gap-3">
                         <button type="button"
-                                @click="bannerStyle = 'color'"
+                                @click="bannerStyle = 'color'; bannerPreview = null"
                                 :class="bannerStyle === 'color' ? 'border-purple-400 bg-purple-50' : 'border-purple-100 bg-white'"
                                 class="px-4 py-2.5 rounded-xl border text-xs font-semibold text-purple-600 transition-all duration-200">
                             Usar cor
@@ -85,7 +85,7 @@
 
                     <div x-show="bannerStyle === 'color'" class="space-y-3">
                         <label class="block text-xs font-semibold text-gray-500">Escolha uma cor para o banner</label>
-                        <div class="grid grid-cols-5 gap-2">
+                        <div class="grid grid-cols-8 gap-2">
                             @php
                                 $colors = [
                                     '#6A0DAD' => 'Roxo Premium',
@@ -109,8 +109,9 @@
                             @foreach($colors as $hex => $name)
                                 <button type="button"
                                         @click="selectedColor = '{{ $hex }}'; document.querySelector('input[name=banner_color]').value = '{{ $hex }}'"
+                                        x-show="showAllColors || {{ $loop->index }} < 8"
                                         :class="selectedColor === '{{ $hex }}' ? 'ring-2 ring-yellow-400' : 'ring-1 ring-gray-300'"
-                                        class="flex items-center justify-center w-full h-14 rounded-lg transition-all duration-150 hover:shadow-md"
+                                        class="flex items-center justify-center w-full h-10 rounded-lg transition-all duration-150 hover:shadow-md"
                                         style="background-color: {{ $hex }}"
                                         title="{{ $name }}">
                                     <svg x-show="selectedColor === '{{ $hex }}'" class="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
@@ -119,6 +120,16 @@
                                 </button>
                             @endforeach
                         </div>
+
+                        @if(count($colors) > 8)
+                            <button type="button"
+                                    @click="showAllColors = !showAllColors"
+                                    class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                <span x-show="!showAllColors">Mostrar mais cores</span>
+                                <span x-show="showAllColors">Mostrar menos</span>
+                            </button>
+                        @endif
+
                         <input type="hidden" name="banner_color" value="{{ old('banner_color', '#6A0DAD') }}">
                         @error('banner_color')
                             <p class="text-xs text-red-400">{{ $message }}</p>
