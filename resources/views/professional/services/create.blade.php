@@ -33,6 +33,24 @@
         <form action="{{ route('services.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
             @csrf
 
+            {{-- ── Categoria/Tipo ── --}}
+            <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
+                <label for="category" class="block text-xs font-bold text-purple-400 uppercase tracking-wide mb-3">
+                    Tipo do serviço <span class="text-red-400">*</span>
+                </label>
+                <select name="category" id="category"
+                        class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                        required>
+                    <option value="">Selecione uma categoria</option>
+                    @foreach($categories as $key => $label)
+                        <option value="{{ $key }}" @selected(old('category') === $key)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('category')
+                    <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+            </div>
+
             {{-- ── Nome ── --}}
             <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
                 <label for="name" class="block text-xs font-bold text-purple-400 uppercase tracking-wide mb-3">
