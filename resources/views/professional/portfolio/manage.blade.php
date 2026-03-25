@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    <style>
+        @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
+    </style>
+
     <div class="max-w-2xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Topo ── --}}
@@ -19,7 +23,7 @@
         </div>
 
         {{-- ── Toast ── --}}
-        @if(Session::get('status'))
+        @if(session('status'))
             <div
                 x-data="{ show: true }"
                 x-show="show"
@@ -36,7 +40,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <p class="text-sm font-medium text-gray-800">{{ Session::get('status') }}</p>
+                <p class="text-sm font-medium text-gray-800">{{ session('status') }}</p>
                 <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-500 transition-colors flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -56,23 +60,33 @@
                 </span>
             </div>
 
-            <div id="form-adicionar" class="p-6" x-data="{ preview: null }">
-                <form action="{{ route('professional.portfolio.add') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <div class="p-6">
+                <form id="form-add-photo" action="{{ route('professional.portfolio.add') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                     @csrf
 
-                    <label class="flex flex-col items-center justify-center gap-3 w-full h-36 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200"
-                           x-show="!preview">
+                          <label class="flex flex-col items-center justify-center gap-3 w-full max-w-[240px] mx-auto aspect-[4/5] rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200"
+                           id="add-upload-label">
                         <svg class="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <span class="text-xs text-purple-400 font-medium">Clique para selecionar uma foto</span>
-                        <input type="file" name="photo" accept="image/*" class="sr-only" required
-                               @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
+                        <span class="text-xs text-purple-400 font-medium">Clique para selecionar e recortar a foto</span>
+                           <input type="file" name="photo" accept="image/*" class="sr-only"
+                               id="add_photo_input"
+                               data-crop-target="add"
+                               data-preview-wrapper="add_preview_container"
+                               data-preview-img="add_preview_img"
+                               data-hidden-input="add_cropped_photo"
+                               data-original-hidden-input="add_original_photo_base64">
                     </label>
 
-                    <div x-show="preview" class="relative w-full h-36 rounded-xl overflow-hidden">
-                        <img :src="preview" class="w-full h-full object-cover">
-                        <button type="button" @click="preview = null"
+                    <div id="add_preview_container" class="relative w-full max-w-[240px] mx-auto rounded-xl overflow-hidden hidden aspect-[4/5]">
+                        <img id="add_preview_img" class="w-full h-full object-cover" alt="Prévia da foto recortada">
+                        <button type="button"
+                                data-recrop-input="add_photo_input"
+                                class="absolute bottom-2 left-2 px-3 py-1.5 rounded-lg bg-white/95 text-xs font-semibold text-purple-700 hover:bg-white transition-colors shadow-md">
+                            Recortar novamente
+                        </button>
+                        <button type="button" id="add_remove_preview"
                                 class="absolute top-2 right-2 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
@@ -80,8 +94,12 @@
                         </button>
                     </div>
 
+                    <input type="hidden" name="cropped_photo" id="add_cropped_photo">
+                    <input type="hidden" name="original_photo_base64" id="add_original_photo_base64">
+
                     <input type="text" name="description"
                            placeholder="Descrição (opcional)"
+                              maxlength="30"
                            class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
 
                     <button type="submit"
@@ -124,7 +142,7 @@
                     @foreach($professional->portfolioPhotos as $photo)
                     <div class="group relative"
                         x-data="{ editOpen: false, editPreview: @js(Storage::url($photo->photo)), editDescription: @js($photo->description ?? '') }">
-                        <div class="rounded-xl overflow-hidden aspect-square">
+                        <div class="rounded-xl overflow-hidden aspect-[4/5]">
                             <img src="{{ Storage::url($photo->photo) }}"
                                  alt="{{ $photo->description ?? '' }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
@@ -160,9 +178,9 @@
                              @click="editOpen = false"
                              x-transition
                              class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                            <div @click.stop
-                                 x-transition
-                                 class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4">
+                               <div @click.stop
+                                   x-transition
+                                   class="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                                 <div class="flex items-center justify-between">
                                     <h3 class="text-lg font-bold text-purple-800">Editar foto</h3>
                                     <button @click="editOpen = false"
@@ -181,8 +199,9 @@
                                     @csrf @method('PATCH')
 
                                     {{-- Preview da foto --}}
-                                    <div class="relative w-full h-40 rounded-xl overflow-hidden bg-gray-100">
-                                        <img :src="editPreview"
+                                    <div class="relative w-full max-w-[260px] mx-auto rounded-xl overflow-hidden bg-gray-100 aspect-[4/5]">
+                                        <img src="{{ Storage::url($photo->original_photo ?? $photo->photo) }}"
+                                             id="edit_preview_img_{{ $photo->id }}"
                                              class="w-full h-full object-cover">
                                         <label class="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center cursor-pointer group">
                                             <div class="text-center">
@@ -195,9 +214,23 @@
                                                    name="photo"
                                                    accept="image/*"
                                                    class="sr-only"
-                                                   @change="editPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : editPreview">
+                                                   id="edit_photo_input_{{ $photo->id }}"
+                                                   data-crop-target="edit-{{ $photo->id }}"
+                                                   data-preview-img="edit_preview_img_{{ $photo->id }}"
+                                                   data-hidden-input="edit_cropped_photo_{{ $photo->id }}"
+                                                   data-original-hidden-input="edit_original_photo_base64_{{ $photo->id }}"
+                                                   data-original-src="{{ Storage::url($photo->original_photo ?? $photo->photo) }}">
                                         </label>
                                     </div>
+
+                                    <input type="hidden" name="cropped_photo" id="edit_cropped_photo_{{ $photo->id }}">
+                                    <input type="hidden" name="original_photo_base64" id="edit_original_photo_base64_{{ $photo->id }}">
+
+                                    <button type="button"
+                                            data-recrop-input="edit_photo_input_{{ $photo->id }}"
+                                            class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                        Recortar novamente
+                                    </button>
 
                                     {{-- Campo descrição --}}
                                     <div>
@@ -206,7 +239,7 @@
                                                name="description"
                                                x-model="editDescription"
                                                placeholder="Ex: Corte e tingimento"
-                                               maxlength="255"
+                                                 maxlength="30"
                                                class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                     </div>
 
@@ -244,5 +277,269 @@
         </div>
 
     </div>
+<div id="cropper_modal" class="fixed inset-0 z-[80] hidden">
+    <div class="absolute inset-0 bg-black/70" id="cropper_backdrop"></div>
+    <div class="relative z-10 min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
+                <h3 class="text-base font-bold text-purple-800">Ajustar recorte 4:5</h3>
+                <button type="button" id="cropper_close" class="text-purple-300 hover:text-purple-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5">
+                <div class="w-full max-h-[65vh] overflow-hidden rounded-xl bg-gray-100">
+                    <img id="cropper_image" alt="Imagem para recorte" class="max-w-full block">
+                </div>
+                <p class="mt-3 text-xs text-purple-400">Arraste e ajuste a área para escolher o corte da foto.</p>
+            </div>
+            <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
+                <button type="button" id="cropper_cancel" class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="cropper_confirm" class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200" style="background-color: #6A0DAD;">
+                    Usar recorte
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cropperModal = document.getElementById('cropper_modal');
+    const cropperImage = document.getElementById('cropper_image');
+    const cropperClose = document.getElementById('cropper_close');
+    const cropperCancel = document.getElementById('cropper_cancel');
+    const cropperConfirm = document.getElementById('cropper_confirm');
+    const cropperBackdrop = document.getElementById('cropper_backdrop');
+
+    let cropper = null;
+    let activeInput = null;
+    const selectedFiles = new window.Map();
+    const selectedOriginalBase64 = new window.Map();
+
+    function blobToDataUrl(blob) {
+        return new window.Promise(function (resolve, reject) {
+            const reader = new window.FileReader();
+            reader.onloadend = function () { resolve(reader.result); };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    function setOriginalBase64ForInput(input, dataUrl) {
+        const hiddenOriginalId = input.dataset.originalHiddenInput;
+        if (!hiddenOriginalId || !dataUrl) {
+            return;
+        }
+
+        selectedOriginalBase64.set(input.id, dataUrl);
+        const hiddenOriginalInput = document.getElementById(hiddenOriginalId);
+        if (hiddenOriginalInput) {
+            hiddenOriginalInput.value = dataUrl;
+        }
+    }
+
+    function openCropper(file, input) {
+        if (!file) {
+            return;
+        }
+
+        activeInput = input;
+        const objectUrl = URL.createObjectURL(file);
+        cropperImage.src = objectUrl;
+        cropperModal.classList.remove('hidden');
+
+        if (cropper) {
+            cropper.destroy();
+        }
+
+        cropper = new window.Cropper(cropperImage, {
+            aspectRatio: 4 / 5,
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
+        });
+    }
+
+    function closeCropper(clearPendingSelection = false) {
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+
+        cropperModal.classList.add('hidden');
+        cropperImage.removeAttribute('src');
+
+        if (clearPendingSelection && activeInput) {
+            activeInput.value = '';
+        }
+
+        activeInput = null;
+    }
+
+    document.querySelectorAll('input[data-crop-target]').forEach(function (input) {
+        input.addEventListener('change', async function (event) {
+            const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+            if (file) {
+                selectedFiles.set(input.id, file);
+                try {
+                    const originalBase64 = await blobToDataUrl(file);
+                    setOriginalBase64ForInput(input, originalBase64);
+                } catch (error) {
+                    console.error('Falha ao preparar foto original para envio:', error);
+                }
+            }
+            openCropper(file, input);
+        });
+    });
+
+    document.querySelectorAll('[data-recrop-input]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const inputId = button.dataset.recropInput;
+            const input = document.getElementById(inputId);
+
+            if (!input) {
+                return;
+            }
+
+            let fileToUse = selectedFiles.get(input.id);
+
+            if (!fileToUse && input.files && input.files[0]) {
+                fileToUse = input.files[0];
+                selectedFiles.set(input.id, fileToUse);
+            }
+
+            if (fileToUse) {
+                openCropper(fileToUse, input);
+                return;
+            }
+
+            const originalSrc = input.dataset.originalSrc;
+            if (originalSrc) {
+                fetch(originalSrc, { cache: 'no-store' })
+                        .then(response => response.blob())
+                        .then(async blob => {
+                            const originalBase64 = await blobToDataUrl(blob);
+                            setOriginalBase64ForInput(input, originalBase64);
+                            openCropper(blob, input);
+                        })
+                        .catch(error => {
+                            console.error('Falha ao carregar imagem original:', error);
+                            input.click();
+                        });
+                return;
+            }
+
+            input.click();
+        });
+    });
+
+    function handleCropConfirm() {
+        if (!cropper || !activeInput) {
+            closeCropper(true);
+            return;
+        }
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 1200,
+            height: 1500,
+            imageSmoothingQuality: 'high',
+        });
+
+        if (!canvas) {
+            closeCropper(true);
+            return;
+        }
+
+        const hiddenInputId = activeInput.dataset.hiddenInput;
+        const previewImgId = activeInput.dataset.previewImg;
+        const previewWrapperId = activeInput.dataset.previewWrapper;
+
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                closeCropper(true);
+                return;
+            }
+
+            const reader = new window.FileReader();
+            reader.onloadend = function () {
+                const hiddenInput = document.getElementById(hiddenInputId);
+                if (hiddenInput) {
+                    hiddenInput.value = reader.result;
+                }
+
+                const fallbackOriginalBase64 = selectedOriginalBase64.get(activeInput.id);
+                if (fallbackOriginalBase64) {
+                    setOriginalBase64ForInput(activeInput, fallbackOriginalBase64);
+                }
+
+                const previewImg = document.getElementById(previewImgId);
+                if (previewImg) {
+                    previewImg.src = URL.createObjectURL(blob);
+                }
+
+                const previewWrapper = document.getElementById(previewWrapperId);
+                if (previewWrapper) {
+                    previewWrapper.classList.remove('hidden');
+                }
+
+                if (activeInput.id === 'add_photo_input') {
+                    const addLabel = document.getElementById('add-upload-label');
+                    if (addLabel) {
+                        addLabel.classList.add('hidden');
+                    }
+                }
+
+                activeInput.value = '';
+                closeCropper(false);
+            };
+
+            reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.92);
+    }
+
+    cropperConfirm.addEventListener('click', handleCropConfirm);
+    cropperClose.addEventListener('click', function () { closeCropper(true); });
+    cropperCancel.addEventListener('click', function () { closeCropper(true); });
+    cropperBackdrop.addEventListener('click', function () { closeCropper(true); });
+
+    const addRemovePreview = document.getElementById('add_remove_preview');
+    if (addRemovePreview) {
+        addRemovePreview.addEventListener('click', function () {
+            const previewWrapper = document.getElementById('add_preview_container');
+            const hiddenInput = document.getElementById('add_cropped_photo');
+            const addLabel = document.getElementById('add-upload-label');
+            const previewImg = document.getElementById('add_preview_img');
+
+            if (previewWrapper) {
+                previewWrapper.classList.add('hidden');
+            }
+            if (hiddenInput) {
+                hiddenInput.value = '';
+            }
+            const hiddenOriginalInput = document.getElementById('add_original_photo_base64');
+            if (hiddenOriginalInput) {
+                hiddenOriginalInput.value = '';
+            }
+            if (previewImg) {
+                previewImg.removeAttribute('src');
+            }
+            if (addLabel) {
+                addLabel.classList.remove('hidden');
+            }
+
+            selectedFiles.delete('add_photo_input');
+            selectedOriginalBase64.delete('add_photo_input');
+        });
+    }
+});
+</script>
 
 </x-app-layout>
