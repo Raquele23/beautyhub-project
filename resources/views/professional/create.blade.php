@@ -124,16 +124,6 @@
                             <p class="text-xs text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
-                                        </svg>
-                                    </span>
-                                </button>
-                            @endforeach
-                        </div>
-                        <input type="hidden" name="banner_color" value="{{ old('banner_color', '#6A0DAD') }}">
-                        @error('banner_color')
-                            <p class="text-xs text-red-400">{{ $message }}</p>
-                        @enderror
-                    </div>
 
                     <div x-show="bannerStyle === 'photo'" class="space-y-3">
                         <label class="block text-xs font-semibold text-gray-500">Foto do banner</label>
