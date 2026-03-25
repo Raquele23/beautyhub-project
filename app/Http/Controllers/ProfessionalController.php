@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\File;
 
 class ProfessionalController extends Controller
@@ -128,7 +130,7 @@ class ProfessionalController extends Controller
             'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo'       => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
             'portfolio_photos'   => 'nullable|array|max:10',
-            'portfolio_photos.*' => File::image()->max(5 * 1024),
+            'portfolio_photos.*' => [File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
             'auto_complete'      => 'boolean',
         ]);
 
@@ -270,18 +272,35 @@ class ProfessionalController extends Controller
         }
 
         $validated = $request->validate([
-            'photo'       => ['required', File::image()->max(5 * 1024)],
-            'description' => 'nullable|string',
+            'photo' => ['nullable', 'required_without:cropped_photo', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
+            'cropped_photo' => ['nullable', 'required_without:photo', 'string'],
+            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
+            'original_photo_base64' => ['nullable', 'string'],
+            'description' => 'nullable|string|max:30',
         ]);
 
         if ($professional->portfolioPhotos()->count() >= 10) {
             return back()->with('error', 'Limite de 10 fotos no portfólio atingido!');
         }
 
-        $path = $request->file('photo')->store('professionals/portfolio', 'public');
+        $path = $request->filled('cropped_photo')
+            ? $this->storePortfolioBase64Image($validated['cropped_photo'])
+            : $request->file('photo')->store('professionals/portfolio', 'public');
+
+        $originalPath = null;
+        if ($request->hasFile('original_photo')) {
+            $originalPath = $request->file('original_photo')->store('professionals/portfolio/originals', 'public');
+        } elseif (!empty($validated['original_photo_base64'])) {
+            $originalPath = $this->storePortfolioBase64Image($validated['original_photo_base64'], 'professionals/portfolio/originals');
+        } elseif ($request->hasFile('photo')) {
+            // Se não há original_photo mas foi enviado arquivo photo direto, usar como original
+            $originalPath = $path;
+        }
+
         $professional->portfolioPhotos()->create([
-            'photo'       => $path,
-            'description' => $validated['description'] ?? null,
+            'photo'           => $path,
+            'original_photo'  => $originalPath,
+            'description'     => $validated['description'] ?? null,
         ]);
 
         return back()->with('status', 'Foto adicionada ao portfólio!');
@@ -293,6 +312,9 @@ class ProfessionalController extends Controller
             abort(403);
         }
         Storage::disk('public')->delete($photo->photo);
+        if ($photo->original_photo) {
+            Storage::disk('public')->delete($photo->original_photo);
+        }
         $photo->delete();
         return back()->with('status', 'Foto removida do portfólio!');
     }
@@ -304,15 +326,39 @@ class ProfessionalController extends Controller
         }
 
         $validated = $request->validate([
-            'photo'       => 'nullable|image|max:5120',
-            'description' => 'nullable|string|max:255',
+            'photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
+            'cropped_photo' => ['nullable', 'string'],
+            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
+            'original_photo_base64' => ['nullable', 'string'],
+            'description' => 'nullable|string|max:30',
         ]);
 
-        // Se uma nova foto foi enviada, atualizar
-        if ($request->hasFile('photo')) {
+        // Se uma nova foto foi enviada/recortada, atualizar
+        if ($request->filled('cropped_photo') || $request->hasFile('photo')) {
             Storage::disk('public')->delete($photo->photo);
-            $path = $request->file('photo')->store('professionals/portfolio', 'public');
+            $path = $request->filled('cropped_photo')
+                ? $this->storePortfolioBase64Image($validated['cropped_photo'])
+                : $request->file('photo')->store('professionals/portfolio', 'public');
             $photo->photo = $path;
+
+            // Salvar foto original se enviada
+            if ($request->hasFile('original_photo')) {
+                if ($photo->original_photo) {
+                    Storage::disk('public')->delete($photo->original_photo);
+                }
+                $photo->original_photo = $request->file('original_photo')->store('professionals/portfolio/originals', 'public');
+            } elseif (!empty($validated['original_photo_base64'])) {
+                if ($photo->original_photo) {
+                    Storage::disk('public')->delete($photo->original_photo);
+                }
+                $photo->original_photo = $this->storePortfolioBase64Image($validated['original_photo_base64'], 'professionals/portfolio/originals');
+            } elseif ($request->hasFile('photo')) {
+                // Se não há original_photo mas foi enviado arquivo photo direto, usar como original
+                if ($photo->original_photo) {
+                    Storage::disk('public')->delete($photo->original_photo);
+                }
+                $photo->original_photo = $path;
+            }
         }
 
         // Atualizar descrição
@@ -323,6 +369,38 @@ class ProfessionalController extends Controller
         $photo->save();
 
         return back()->with('status', 'Foto atualizada com sucesso!');
+    }
+
+    private function storePortfolioBase64Image(string $dataUrl, string $directory = 'professionals/portfolio'): string
+    {
+        if (!preg_match('/^data:image\/(png|jpe?g|webp);base64,/', $dataUrl, $matches)) {
+            throw ValidationException::withMessages([
+                'photo' => 'Formato da imagem recortada inválido.',
+            ]);
+        }
+
+        [$meta, $encoded] = array_pad(explode(',', $dataUrl, 2), 2, null);
+
+        if (!$encoded) {
+            throw ValidationException::withMessages([
+                'photo' => 'Imagem recortada inválida.',
+            ]);
+        }
+
+        $binary = base64_decode($encoded, true);
+
+        if ($binary === false || strlen($binary) > (5 * 1024 * 1024)) {
+            throw ValidationException::withMessages([
+                'photo' => 'A imagem recortada deve ter no máximo 5MB.',
+            ]);
+        }
+
+        $extension = strtolower($matches[1]) === 'jpeg' ? 'jpg' : strtolower($matches[1]);
+        $path = trim($directory, '/') . '/' . Str::uuid() . '.' . $extension;
+
+        Storage::disk('public')->put($path, $binary);
+
+        return $path;
     }
 
     public function publicShow(Professional $professional)
