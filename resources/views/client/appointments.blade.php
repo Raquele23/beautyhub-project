@@ -23,6 +23,7 @@
             <div
                 x-data="{ show: true }"
                 x-show="show"
+                x-cloak
                 x-init="setTimeout(() => show = false, 5000)"
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 -translate-y-4"
@@ -97,7 +98,7 @@
             </div>
 
             {{-- ── ABA: PRÓXIMOS ── --}}
-            <div x-show="tab === 'proximos'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-show="tab === 'proximos'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                     @forelse($upcomingAppointments as $appt)
                         <div x-data="{ open: false }" class="border-b border-purple-50 last:border-0">
@@ -128,7 +129,7 @@
                                 </div>
                             </div>
 
-                            <div x-show="open" x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
+                            <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
                                 <div class="flex flex-wrap gap-x-10 gap-y-3">
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
@@ -176,10 +177,10 @@
             </div>
 
             {{-- ── ABA: HISTÓRICO ── --}}
-            <div x-data="{ shown: 10 }" x-show="tab === 'historico'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-data="{ shown: 10 }" x-show="tab === 'historico'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                     @forelse($pastAppointments as $index => $appt)
-                        <div x-data="{ open: false }" x-show="{{ $index }} < shown" class="border-b border-purple-50 last:border-0">
+                        <div x-data="{ open: false }" x-show="{{ $index }} < shown" x-cloak class="border-b border-purple-50 last:border-0">
                             <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
                                 <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
                                     <p class="text-lg font-semibold text-gray-900 leading-none">{{ $appt->scheduled_at->format('d') }}</p>
@@ -225,7 +226,7 @@
                                 </div>
                             </div>
 
-                            <div x-show="open" x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50">
+                            <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50">
                                 <div class="flex flex-wrap gap-x-10 gap-y-3">
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
@@ -263,7 +264,7 @@
                     @endforelse
 
                     @if($pastAppointments->count() > 10)
-                        <div class="px-6 py-3 border-t border-purple-50 text-center" x-show="shown < {{ $pastAppointments->count() }}">
+                        <div class="px-6 py-3 border-t border-purple-50 text-center" x-show="shown < {{ $pastAppointments->count() }}" x-cloak>
                             <button @click="shown += 10" class="text-sm font-semibold text-purple-600 hover:text-purple-800 transition-colors">Ver mais</button>
                         </div>
                     @endif
