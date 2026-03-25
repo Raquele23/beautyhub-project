@@ -126,15 +126,40 @@
         {{-- ── Portfólio ── --}}
         @if($professional->portfolioPhotos->count() > 0)
            <div id="portfolio" class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6"
-               x-data="{ photoModal: false, selectedPhoto: null, selectedDescription: '' }">
+               x-data="{
+                   photoModal: false,
+                   currentIndex: 0,
+                   photos: @js($professional->portfolioPhotos->map(fn($photo) => [
+                       'url' => Storage::url($photo->photo),
+                       'description' => $photo->description ?? 'Sem descrição para esta foto.',
+                   ])->values()),
+                   get selectedPhoto() {
+                       return this.photos[this.currentIndex]?.url ?? null;
+                   },
+                   get selectedDescription() {
+                       return this.photos[this.currentIndex]?.description ?? '';
+                   },
+                   openPhoto(index) {
+                       this.currentIndex = index;
+                       this.photoModal = true;
+                   },
+                   nextPhoto() {
+                       if (!this.photos.length) return;
+                       this.currentIndex = (this.currentIndex + 1) % this.photos.length;
+                   },
+                   prevPhoto() {
+                       if (!this.photos.length) return;
+                       this.currentIndex = (this.currentIndex - 1 + this.photos.length) % this.photos.length;
+                   }
+               }">
             <p class="text-sm font-bold text-purple-400 uppercase tracking-wide mb-4">Portfólio</p>
             <div class="flex gap-3 overflow-x-auto pb-3 scroll-smooth scrollbar-thin-soft">
                 @foreach($professional->portfolioPhotos as $photo)
                 <div class="flex-shrink-0">
-                    <div class="rounded-xl overflow-hidden aspect-square w-40">
+                    <div class="rounded-xl overflow-hidden aspect-[4/5] w-40">
                         <img src="{{ Storage::url($photo->photo) }}"
                              alt="{{ $photo->description ?? '' }}"
-                             @click="photoModal = true; selectedPhoto = @js(Storage::url($photo->photo)); selectedDescription = @js($photo->description ?? 'Sem descrição para esta foto.')"
+                             @click="openPhoto({{ $loop->index }})"
                              class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer">
                     </div>
                     @if($photo->description)
@@ -146,20 +171,40 @@
 
             {{-- Modal de ampliação --}}
               <div x-show="photoModal" x-cloak @click="photoModal = false"
+                 @keydown.right.window="if (photoModal) nextPhoto()"
+                 @keydown.left.window="if (photoModal) prevPhoto()"
                  class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
                  x-transition>
-                <div @click.stop class="relative max-w-4xl w-full">
-                    <img :src="selectedPhoto" 
-                         class="w-full h-auto rounded-2xl shadow-2xl">
-                    <div class="mt-3 rounded-xl bg-black/45 px-4 py-2.5 shadow-md backdrop-blur-sm">
-                        <p class="text-sm text-white/90 leading-relaxed break-words">
-                            <span class="font-semibold">Descrição:</span>
-                            <span x-text="selectedDescription"></span>
-                        </p>
+                <div @click.stop class="relative max-w-2xl w-full max-h-[80vh]">
+                    <div class="mx-auto w-fit max-w-full">
+                        <img :src="selectedPhoto"
+                             class="w-auto max-w-full h-auto max-h-[70vh] rounded-2xl shadow-2xl object-contain mx-auto">
+
+                        <div class="mt-2 rounded-xl bg-black/45 px-4 py-2.5 shadow-md backdrop-blur-sm max-h-[10vh] overflow-y-auto w-full">
+                            <p class="text-xs text-white/90 leading-relaxed break-words">
+                                <span class="font-semibold">Descrição:</span>
+                                <span x-text="selectedDescription"></span>
+                            </p>
+                        </div>
                     </div>
+
+                    <button @click="prevPhoto()"
+                            class="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 text-white hover:bg-black/65 transition-colors flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+
+                    <button @click="nextPhoto()"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/45 text-white hover:bg-black/65 transition-colors flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+
                     <button @click="photoModal = false"
-                            class="absolute -top-12 right-0 text-white hover:text-gray-300">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="absolute -top-10 right-0 text-white hover:text-gray-300">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
