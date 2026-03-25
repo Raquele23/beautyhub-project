@@ -4,7 +4,7 @@
         @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
     </style>
 
-    <div class="max-w-2xl mx-auto px-4 sm:px-8 py-10 space-y-6">
+    <div class="max-w-6xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Topo ── --}}
         <div class="flex items-center justify-between">
@@ -48,6 +48,8 @@
                 </button>
             </div>
         @endif
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
         {{-- ── Adicionar foto ── --}}
         @if($professional->portfolioPhotos()->count() < 10)
@@ -111,7 +113,7 @@
             </div>
         </div>
         @else
-        <div class="flex items-center gap-3 px-5 py-4 bg-white border border-purple-100 rounded-2xl shadow-sm">
+        <div id="add-limit-card" class="flex items-center gap-3 px-5 py-4 bg-white border border-purple-100 rounded-2xl shadow-sm">
             <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style="background-color: #EDE4F8;">
                 <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -122,21 +124,12 @@
         @endif
 
         {{-- ── Grid de fotos ── --}}
-        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50">
+        <div id="photos-card" class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Suas fotos</p>
-                @if($professional->portfolioPhotos()->count() < 10)
-                <a href="#adicionar" onclick="document.getElementById('form-adicionar').scrollIntoView({behavior:'smooth'}); return false;"
-                   class="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Adicionar
-                </a>
-                @endif
             </div>
 
-            <div class="p-6">
+            <div id="photos-scroll" class="p-6 flex-1 overflow-y-auto scrollbar-thin-soft">
                 @if($professional->portfolioPhotos->count() > 0)
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     @foreach($professional->portfolioPhotos as $photo)
@@ -276,6 +269,8 @@
             </div>
         </div>
 
+        </div>
+
     </div>
 <div id="cropper_modal" class="fixed inset-0 z-[80] hidden">
     <div class="absolute inset-0 bg-black/70" id="cropper_backdrop"></div>
@@ -310,6 +305,26 @@
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    function syncPortfolioCardHeights() {
+        const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+        const addCard = document.getElementById('form-adicionar') || document.getElementById('add-limit-card');
+        const photosCard = document.getElementById('photos-card');
+
+        if (!photosCard) {
+            return;
+        }
+
+        if (!isDesktop || !addCard) {
+            photosCard.style.height = '';
+            return;
+        }
+
+        photosCard.style.height = addCard.offsetHeight + 'px';
+    }
+
+    syncPortfolioCardHeights();
+    window.addEventListener('resize', syncPortfolioCardHeights);
+
     const cropperModal = document.getElementById('cropper_modal');
     const cropperImage = document.getElementById('cropper_image');
     const cropperClose = document.getElementById('cropper_close');
