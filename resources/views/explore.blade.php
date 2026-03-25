@@ -40,7 +40,7 @@
         </form>
 
         {{-- ── Filtros de categoria ── --}}
-        <div class="flex flex-wrap gap-2">
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin-soft">
             @php
                 $categories = [
                     'todos'       => ['label' => 'Todos',            'emoji' => '✨'],
@@ -145,16 +145,16 @@
                             @endif
 
                             @if($professional->services->count())
-                                <div class="flex flex-wrap gap-1.5 mb-4">
+                                <div class="flex gap-1.5 mb-4 items-center flex-nowrap overflow-x-auto scrollbar-thin-soft">
                                     @foreach($professional->services->take(3) as $service)
-                                        <span class="text-xs px-2.5 py-1 rounded-full border"
+                                        <span class="text-xs px-2.5 py-1 rounded-full border flex-shrink-0"
                                               style="background-color: #F5EFFE; color: #6A0DAD; border-color: #E3D0F9;">
                                             {{ $service->name }}
                                         </span>
                                     @endforeach
                                     @if($professional->services->count() > 3)
-                                        <span class="text-xs px-2.5 py-1 text-purple-300">
-                                            +{{ $professional->services->count() - 3 }} mais
+                                        <span class="text-xs px-2.5 py-1 text-purple-300 flex-shrink-0 whitespace-nowrap">
+                                            +{{ $professional->services->count() - 3 }} 
                                         </span>
                                     @endif
                                 </div>

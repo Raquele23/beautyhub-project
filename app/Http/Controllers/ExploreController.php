@@ -3,20 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Professional;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class ExploreController extends Controller
 {
     public function index(Request $request)
     {
-        $categoryKeywords = [
-            'cabelo'      => ['cabelo', 'corte', 'coloração', 'tintura', 'luzes', 'hidratação', 'escova', 'progressiva', 'química', 'alisamento', 'mechas'],
-            'manicure'    => ['manicure', 'pedicure', 'unhas', 'gel', 'alongamento', 'esmaltação'],
-            'depilacao'   => ['depilação', 'cera', 'laser', 'pelo', 'depilação a laser'],
-            'sobrancelha' => ['sobrancelha', 'design de sobrancelha', 'henna', 'micropigmentação', 'brow'],
-            'maquiagem'   => ['maquiagem', 'make', 'noiva', 'visagismo', 'automaquiagem'],
-            'tratamentos' => ['facial', 'corporal', 'limpeza de pele', 'massagem', 'drenagem', 'redução de medidas', 'peeling', 'estética', 'relaxante', 'modeladora', 'anticelulite'],
-        ];
+        $validCategories = array_keys(Service::categoryOptions());
 
         $professionals = Professional::with(['services', 'user'])
             ->when($request->search, function ($query) use ($request) {
@@ -36,14 +30,9 @@ class ExploreController extends Controller
                     $q->where('name', 'like', "%{$request->service}%");
                 });
             })
-            ->when($request->category && isset($categoryKeywords[$request->category]), function ($query) use ($request, $categoryKeywords) {
-                $keywords = $categoryKeywords[$request->category];
-                $query->whereHas('services', function ($q) use ($keywords) {
-                    $q->where(function ($inner) use ($keywords) {
-                        foreach ($keywords as $keyword) {
-                            $inner->orWhere('name', 'like', "%{$keyword}%");
-                        }
-                    });
+            ->when($request->category && in_array($request->category, $validCategories, true), function ($query) use ($request) {
+                $query->whereHas('services', function ($q) use ($request) {
+                    $q->where('category', $request->category);
                 });
             })
             ->get();
