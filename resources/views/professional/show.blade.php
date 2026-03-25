@@ -186,7 +186,7 @@
 
             @if($professional->portfolioPhotos->count() > 0)
             <div class="p-6">
-                <div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth">
+                <div class="flex gap-3 overflow-x-auto pb-3 scroll-smooth scrollbar-thin-soft">
                     @foreach($professional->portfolioPhotos as $photo)
                     <div class="group relative flex-shrink-0 w-32 sm:w-40"
                         x-data="{ editOpen: false, editPreview: @js(Storage::url($photo->photo)), editDescription: @js($photo->description ?? '') }">
@@ -219,7 +219,7 @@
                         </div>
 
                         @if($photo->description)
-                            <p class="mt-1 text-xs text-purple-300 truncate">{{ $photo->description }}</p>
+                            <p class="mt-1 text-xs font-medium text-gray-600 leading-snug break-words">{{ $photo->description }}</p>
                         @endif
 
                             <div x-show="editOpen"
