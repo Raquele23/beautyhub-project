@@ -163,7 +163,7 @@ class ProfessionalController extends Controller
 
         $user->update(['profile_completed' => true]);
 
-        return redirect()->route('professional.portfolio.edit')
+        return redirect()->route('professional.portfolio.manage')
             ->with('status', 'Perfil criado! Agora adicione fotos ao seu portfólio.');
     }
 
@@ -251,14 +251,14 @@ class ProfessionalController extends Controller
 
     // ─── Portfólio ───────────────────────────────────────────────────────────
 
-    public function portfolioEdit()
+    public function portfolioManage()
     {
         $user = Auth::user();
         $professional = $user->professional;
         if (!$professional) {
             return redirect()->route('professional.create');
         }
-        return view('professional.portfolio.edit', ['professional' => $professional]);
+        return view('professional.portfolio.manage', ['professional' => $professional]);
     }
 
     public function addPortfolioPhoto(Request $request)
@@ -295,6 +295,34 @@ class ProfessionalController extends Controller
         Storage::disk('public')->delete($photo->photo);
         $photo->delete();
         return back()->with('status', 'Foto removida do portfólio!');
+    }
+
+    public function updatePortfolioPhoto(Request $request, PortfolioPhoto $photo)
+    {
+        if ($photo->professional->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'photo'       => 'nullable|image|max:5120',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        // Se uma nova foto foi enviada, atualizar
+        if ($request->hasFile('photo')) {
+            Storage::disk('public')->delete($photo->photo);
+            $path = $request->file('photo')->store('professionals/portfolio', 'public');
+            $photo->photo = $path;
+        }
+
+        // Atualizar descrição
+        if (isset($validated['description'])) {
+            $photo->description = $validated['description'];
+        }
+
+        $photo->save();
+
+        return back()->with('status', 'Foto atualizada com sucesso!');
     }
 
     public function publicShow(Professional $professional)
