@@ -70,7 +70,7 @@
         <div x-data="{ tab: 'proximos' }">
 
             {{-- Barra de abas --}}
-            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div class="flex gap-2 overflow-x-auto pb-3 scrollbar-thin-soft">
                 <button
                     @click="tab = 'proximos'"
                     :class="tab === 'proximos'
