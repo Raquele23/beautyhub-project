@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Availability extends Model
 {
@@ -34,23 +36,55 @@ class Availability extends Model
         return $this->belongsTo(Professional::class);
     }
 
+    public function breaks(): HasMany
+    {
+        return $this->hasMany(AvailabilityBreak::class)->orderBy('start_time');
+    }
+
     // Retorna o nome do dia da semana
     public function getWeekdayNameAttribute(): string
     {
         return self::WEEKDAYS[$this->weekday] ?? '';
     }
 
-    // Gera todos os slots de horário disponíveis para este dia
-    public function generateSlots(): array
+    // Gera todos os slots de horário possíveis para este dia.
+    public function generateSlots(string $date, int $serviceDurationMinutes, array $blockedRanges = []): array
     {
-        $slots = [];
-        $current = strtotime($this->open_time);
-        $close = strtotime($this->close_time);
-        $interval = $this->slot_interval * 60; // converte para segundos
+        if ($serviceDurationMinutes <= 0) {
+            return [];
+        }
 
-        while ($current < $close) {
-            $slots[] = date('H:i', $current);
-            $current += $interval;
+        $slots = [];
+        $open = Carbon::parse("{$date} {$this->open_time}");
+        $close = Carbon::parse("{$date} {$this->close_time}");
+
+        if ($close->lessThanOrEqualTo($open)) {
+            return [];
+        }
+
+        $current = $open->copy();
+        while ($current->lessThan($close)) {
+            $slotStart = $current->copy();
+            $slotEnd = $slotStart->copy()->addMinutes($serviceDurationMinutes);
+
+            if ($slotEnd->greaterThan($close)) {
+                $current->addMinutes($this->slot_interval);
+                continue;
+            }
+
+            $overlapsBlockedRange = false;
+            foreach ($blockedRanges as [$blockedStart, $blockedEnd]) {
+                if ($slotStart->lessThan($blockedEnd) && $slotEnd->greaterThan($blockedStart)) {
+                    $overlapsBlockedRange = true;
+                    break;
+                }
+            }
+
+            if (!$overlapsBlockedRange) {
+                $slots[] = $slotStart->format('H:i');
+            }
+
+            $current->addMinutes($this->slot_interval);
         }
 
         return $slots;

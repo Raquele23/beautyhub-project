@@ -53,6 +53,15 @@
                                 $avail     = $availabilities->get($number);
                                 $openTime  = $avail ? \Carbon\Carbon::parse($avail->open_time)->format('H:i')  : '09:00';
                                 $closeTime = $avail ? \Carbon\Carbon::parse($avail->close_time)->format('H:i') : '18:00';
+                                $breakItems = $avail
+                                    ? $avail->breaks
+                                        ->map(fn($break) => [
+                                            'start' => \Carbon\Carbon::parse($break->start_time)->format('H:i'),
+                                            'end' => \Carbon\Carbon::parse($break->end_time)->format('H:i'),
+                                        ])
+                                        ->values()
+                                        ->all()
+                                    : [];
                             @endphp
 
                             <div
@@ -60,7 +69,53 @@
                                 :class="enabled
                                     ? 'border-purple-300 bg-purple-50 shadow-sm'
                                     : 'border-gray-200 bg-white'"
-                                x-data="{ enabled: {{ $avail ? 'true' : 'false' }} }"
+                                x-data="{
+                                    enabled: {{ $avail ? 'true' : 'false' }},
+                                    breakModalOpen: false,
+                                    breakStart: '',
+                                    breakEnd: '',
+                                    breakError: '',
+                                    breaks: @js(old("breaks.$number")
+                                        ? collect(preg_split('/\r\n|\r|\n/', old("breaks.$number")))
+                                            ->filter()
+                                            ->map(function ($line) {
+                                                [$start, $end] = array_pad(explode('-', $line, 2), 2, '');
+                                                return ['start' => trim($start), 'end' => trim($end)];
+                                            })
+                                            ->values()
+                                            ->all()
+                                        : $breakItems),
+                                    serializedBreaks() {
+                                        return this.breaks.map((item) => `${item.start}-${item.end}`).join('\n');
+                                    },
+                                    removeBreak(index) {
+                                        this.breaks.splice(index, 1);
+                                    },
+                                    addBreak() {
+                                        this.breakError = '';
+                                        if (!this.breakStart || !this.breakEnd) {
+                                            this.breakError = 'Informe inicio e fim da pausa.';
+                                            return;
+                                        }
+
+                                        if (this.breakEnd <= this.breakStart) {
+                                            this.breakError = 'O fim deve ser maior que o inicio.';
+                                            return;
+                                        }
+
+                                        const hasOverlap = this.breaks.some((item) => this.breakStart < item.end && this.breakEnd > item.start);
+                                        if (hasOverlap) {
+                                            this.breakError = 'Essa pausa se sobrepoe a uma pausa existente.';
+                                            return;
+                                        }
+
+                                        this.breaks.push({ start: this.breakStart, end: this.breakEnd });
+                                        this.breaks.sort((a, b) => a.start.localeCompare(b.start));
+                                        this.breakStart = '';
+                                        this.breakEnd = '';
+                                        this.breakModalOpen = false;
+                                    }
+                                }"
                             >
                                 {{-- Day row --}}
                                 <div class="flex items-center justify-between px-5 py-4">
@@ -89,8 +144,8 @@
                                 </div>
 
                                 {{-- Time fields --}}
-                                <div x-show="enabled" x-cloak
-                                     class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 pb-5">
+                                  <div x-show="enabled" x-cloak
+                                      class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 pb-5">
 
                                     <div>
                                         <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1.5">
@@ -133,6 +188,92 @@
                                                 </option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                </div>
+
+                                <div x-show="enabled" x-cloak class="px-5 pb-5">
+                                    <div class="mb-2 flex items-center justify-between gap-2">
+                                        <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest">
+                                            Pausas do Dia
+                                        </label>
+
+                                        <button type="button"
+                                                @click="breakError = ''; breakModalOpen = true"
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 text-[11px] font-semibold text-purple-700 rounded-lg border border-purple-300 bg-white hover:bg-purple-100 transition">
+                                            + Adicionar pausa
+                                        </button>
+                                    </div>
+
+                                    <input
+                                        type="hidden"
+                                        name="breaks[{{ $number }}]"
+                                        :value="serializedBreaks()"
+                                    >
+
+                                    <div class="space-y-2">
+                                        <template x-if="breaks.length === 0">
+                                            <p class="text-xs text-purple-400">Nenhuma pausa adicionada para este dia.</p>
+                                        </template>
+
+                                        <template x-for="(item, idx) in breaks" :key="`${item.start}-${item.end}-${idx}`">
+                                            <div class="flex items-center justify-between gap-3 rounded-xl border border-purple-200 bg-white px-3 py-2">
+                                                <p class="text-sm font-medium text-purple-800" x-text="`${item.start} - ${item.end}`"></p>
+                                                <button type="button"
+                                                        @click="removeBreak(idx)"
+                                                        class="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">
+                                                    Remover
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div x-show="breakModalOpen"
+                                         x-cloak
+                                         @click.self="breakModalOpen = false"
+                                         class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                         style="display:none; background-color: rgba(17, 24, 39, 0.35);">
+                                        <div class="w-full max-w-sm rounded-2xl bg-white border border-purple-200 shadow-xl">
+                                            <div class="flex items-center justify-between px-5 py-4 border-b border-purple-100">
+                                                <h3 class="text-sm font-bold text-purple-900">Adicionar pausa</h3>
+                                                <button type="button"
+                                                        @click="breakModalOpen = false"
+                                                        class="text-purple-400 hover:text-purple-700 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            <div class="px-5 py-4 space-y-3">
+                                                <div class="grid grid-cols-2 gap-3">
+                                                    <div>
+                                                        <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1">Inicio</label>
+                                                        <input type="time" x-model="breakStart"
+                                                               class="w-full rounded-xl border border-purple-200 px-3 py-2 text-sm text-purple-900 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1">Fim</label>
+                                                        <input type="time" x-model="breakEnd"
+                                                               class="w-full rounded-xl border border-purple-200 px-3 py-2 text-sm text-purple-900 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition">
+                                                    </div>
+                                                </div>
+
+                                                <p x-show="breakError" x-text="breakError" class="text-xs text-red-500"></p>
+
+                                                <div class="flex items-center justify-end gap-2 pt-1">
+                                                    <button type="button"
+                                                            @click="breakModalOpen = false"
+                                                            class="px-3 py-2 text-xs font-semibold text-purple-600 border border-purple-200 rounded-xl hover:bg-purple-50 transition">
+                                                        Cancelar
+                                                    </button>
+                                                    <button type="button"
+                                                            @click="addBreak()"
+                                                            class="px-3 py-2 text-xs font-semibold text-white rounded-xl bg-purple-700 hover:bg-purple-800 transition">
+                                                        Adicionar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AppointmentController extends Controller
@@ -31,48 +32,66 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'date' => ['required', 'date', 'after_or_equal:today'],
+            'service_id' => ['required', 'integer', 'exists:services,id'],
         ]);
 
-        $slots = $professional->getAvailableSlotsForDate($request->date);
+        $service = $professional->services()
+            ->whereKey((int) $request->input('service_id'))
+            ->first();
 
-        // Se for hoje, remove os horários que já passaram
-        if ($request->date === now()->toDateString()) {
-            $currentTime = now()->format('H:i');
-            $slots = array_values(array_filter($slots, fn($slot) => $slot > $currentTime));
+        if (!$service) {
+            return response()->json([]);
         }
+
+        $slots = $professional->getAvailableSlotsForDate($request->date, (int) $service->duration);
 
         return response()->json($slots);
     }
 
     public function store(Request $request, Professional $professional, Service $service)
     {
+        if ($service->professional_id !== $professional->id) {
+            abort(404);
+        }
+
         $request->validate([
             'date'  => ['required', 'date', 'after_or_equal:today'],
             'time'  => ['required', 'date_format:H:i'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $scheduledAt = $request->date . ' ' . $request->time . ':00';
-
-        $alreadyBooked = Appointment::where('professional_id', $professional->id)
-            ->where('scheduled_at', $scheduledAt)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->exists();
-
-        if ($alreadyBooked) {
-            return back()->withErrors(['time' => 'Este horário já foi reservado. Escolha outro.']);
+        if (!$professional->isSlotAvailableForService($request->date, $request->time, (int) $service->duration)) {
+            return back()->withErrors(['time' => 'Horário indisponível para este serviço. Escolha outro.']);
         }
 
-        $appointment = Appointment::create([
-            'client_id'       => Auth::id(),
-            'client_name'     => Auth::user()->name,
-            'client_email'    => Auth::user()->email,
-            'professional_id' => $professional->id,
-            'service_id'      => $service->id,
-            'scheduled_at'    => $scheduledAt,
-            'status'          => 'pending',
-            'notes'           => $request->notes,
-        ]);
+        $scheduledAt = null;
+        $appointment = null;
+
+        DB::transaction(function () use ($request, $professional, $service, &$scheduledAt, &$appointment) {
+            Professional::query()
+                ->whereKey($professional->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$professional->fresh()->isSlotAvailableForService($request->date, $request->time, (int) $service->duration)) {
+                throw ValidationException::withMessages([
+                    'time' => 'Este horário acabou de ser ocupado. Escolha outro.',
+                ]);
+            }
+
+            $scheduledAt = $request->date . ' ' . $request->time . ':00';
+
+            $appointment = Appointment::create([
+                'client_id'       => Auth::id(),
+                'client_name'     => Auth::user()->name,
+                'client_email'    => Auth::user()->email,
+                'professional_id' => $professional->id,
+                'service_id'      => $service->id,
+                'scheduled_at'    => $scheduledAt,
+                'status'          => 'pending',
+                'notes'           => $request->notes,
+            ]);
+        });
 
         // Notifica o profissional sobre novo agendamento
         Notification::create([
@@ -135,29 +154,38 @@ class AppointmentController extends Controller
             ->whereKey($validated['service_id'])
             ->firstOrFail();
 
-        $scheduledAt = $validated['date'] . ' ' . $validated['time'] . ':00';
-
-        $alreadyBooked = Appointment::where('professional_id', $professional->id)
-            ->where('scheduled_at', $scheduledAt)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->exists();
-
-        if ($alreadyBooked) {
+        if (!$professional->isSlotAvailableForService($validated['date'], $validated['time'], (int) $service->duration)) {
             return back()
-                ->withErrors(['time' => 'Este horário já foi reservado. Escolha outro.'])
+                ->withErrors(['time' => 'Horário indisponível para este serviço. Escolha outro.'])
                 ->withInput();
         }
 
         $clientPayload = $this->prepareProfessionalClientPayload($validated);
 
-        $appointment = Appointment::create([
-            ...$clientPayload,
-            'professional_id' => $professional->id,
-            'service_id'      => $service->id,
-            'scheduled_at'    => $scheduledAt,
-            'status'          => 'pending',
-            'notes'           => $validated['notes'] ?? null,
-        ]);
+        $appointment = null;
+        DB::transaction(function () use ($professional, $validated, $service, $clientPayload, &$appointment) {
+            Professional::query()
+                ->whereKey($professional->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$professional->fresh()->isSlotAvailableForService($validated['date'], $validated['time'], (int) $service->duration)) {
+                throw ValidationException::withMessages([
+                    'time' => 'Este horário acabou de ser ocupado. Escolha outro.',
+                ]);
+            }
+
+            $scheduledAt = $validated['date'] . ' ' . $validated['time'] . ':00';
+
+            $appointment = Appointment::create([
+                ...$clientPayload,
+                'professional_id' => $professional->id,
+                'service_id'      => $service->id,
+                'scheduled_at'    => $scheduledAt,
+                'status'          => 'pending',
+                'notes'           => $validated['notes'] ?? null,
+            ]);
+        });
 
         if (!empty($appointment->client_id)) {
             Notification::create([
