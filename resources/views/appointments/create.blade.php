@@ -200,7 +200,7 @@
 
                     try {
                         const res = await fetch(
-                            `{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}`
+                            `{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}&service_id={{ $service->id }}`
                         );
                         this.slots = await res.json();
                     } catch (e) {

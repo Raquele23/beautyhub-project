@@ -150,6 +150,7 @@
                                 <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Serviço</label>
                                 <select name="service_id"
                                         x-model="serviceId"
+                                    @change="fetchSlots()"
                                         class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                     <option value="">Selecione...</option>
                                     @foreach($services as $service)
@@ -704,13 +705,17 @@
             },
 
             async fetchSlots() {
-                if (!this.selectedDate) return;
+                if (!this.selectedDate || !this.serviceId) {
+                    this.slots = [];
+                    this.selectedTime = '';
+                    return;
+                }
 
                 this.loading = true;
                 this.slots = [];
 
                 try {
-                    const res = await fetch(`{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}`);
+                    const res = await fetch(`{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}&service_id=${this.serviceId}`);
                     this.slots = await res.json();
 
                     if (this.selectedTime && !this.slots.includes(this.selectedTime)) {

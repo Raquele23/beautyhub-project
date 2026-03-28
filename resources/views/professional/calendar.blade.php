@@ -308,6 +308,7 @@
                                     <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Serviço</label>
                                     <select name="service_id"
                                             x-model="serviceId"
+                                            @change="fetchCreateSlots()"
                                             class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                         <option value="">Selecione...</option>
                                         <template x-for="service in services" :key="service.id">
@@ -577,13 +578,17 @@ init() {
                 },
 
                 async fetchCreateSlots() {
-                    if (!this.createDate) return;
+                    if (!this.createDate || !this.serviceId) {
+                        this.createSlots = [];
+                        this.createTime = '';
+                        return;
+                    }
 
                     this.loadingCreateSlots = true;
                     this.createSlots = [];
 
                     try {
-                        const res = await fetch(`{{ route('appointments.slots', auth()->user()->professional->id) }}?date=${this.createDate}`);
+                        const res = await fetch(`{{ route('appointments.slots', auth()->user()->professional->id) }}?date=${this.createDate}&service_id=${this.serviceId}`);
                         this.createSlots = await res.json();
 
                         if (this.createTime && !this.createSlots.includes(this.createTime)) {
