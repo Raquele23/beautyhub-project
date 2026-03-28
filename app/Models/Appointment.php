@@ -50,15 +50,17 @@ class Appointment extends Model
 
     public function scopeUpcoming($query)
     {
-        return $query->where(function ($q) {
-                        $q->where('scheduled_at', '>=', now())
-                          ->whereNotIn('status', ['cancelled']);
-                    })
-                    ->orWhere(function ($q) {
-                        $q->where('scheduled_at', '<', now())
-                          ->whereIn('status', ['pending', 'confirmed']);
-                    })
-                    ->orderBy('scheduled_at');
+                return $query->where(function ($outer) {
+                                                $outer->where(function ($q) {
+                                                                $q->where('scheduled_at', '>=', now())
+                                                                    ->whereNotIn('status', ['cancelled']);
+                                                        })
+                                                        ->orWhere(function ($q) {
+                                                                $q->where('scheduled_at', '<', now())
+                                                                    ->whereIn('status', ['pending', 'confirmed']);
+                                                        });
+                                        })
+                                        ->orderBy('scheduled_at');
     }
 
     public function scopePast($query)
