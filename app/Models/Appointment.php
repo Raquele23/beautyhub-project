@@ -13,6 +13,9 @@ class Appointment extends Model
 
     protected $fillable = [
         'client_id',
+        'client_name',
+        'client_email',
+        'client_phone',
         'professional_id',
         'service_id',
         'scheduled_at',
@@ -113,4 +116,28 @@ class Appointment extends Model
         return $this->status === 'completed'
             && ! $this->review()->exists();
     }
+
+    public function getDisplayClientNameAttribute(): string
+    {
+        return $this->client?->name
+            ?? $this->client_name
+            ?? 'Cliente externo';
+    }
+
+    public function getDisplayClientEmailAttribute(): ?string
+    {
+        return $this->client?->email
+            ?? $this->client_email;
+    }
+
+    public function getDisplayClientPhoneAttribute(): ?string
+    {
+        return $this->client_phone;
+    }
+
+    public function getIsExternalClientAttribute(): bool
+    {
+        return $this->client_id === null;
+    }
+
 }

@@ -61,6 +61,9 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
     Route::post('/professional/availability', [AvailabilityController::class, 'save'])->name('professional.availability.save');
 
     Route::get('/professional/appointments', [ProfessionalController::class, 'appointments'])->name('professional.appointments');
+    Route::get('/professional/appointments/create', [AppointmentController::class, 'createByProfessional'])->name('professional.appointments.create');
+    Route::post('/professional/appointments', [AppointmentController::class, 'storeByProfessional'])->name('professional.appointments.store');
+    Route::get('/professional/clients/search', [AppointmentController::class, 'searchKnownClients'])->name('professional.clients.search');
     Route::patch('/appointments/{appointment}/confirm', [AppointmentController::class, 'confirm'])->name('appointments.confirm');
     Route::patch('/appointments/{appointment}/complete', [AppointmentController::class, 'complete'])->name('appointments.complete');
 

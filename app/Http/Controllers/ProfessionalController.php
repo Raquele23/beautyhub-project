@@ -471,9 +471,21 @@ class ProfessionalController extends Controller
         ]);
     }
 
-    public function appointments()
+    public function appointments(Request $request)
     {
         $professional = Auth::user()->professional;
+        $services = $professional->services()->orderBy('name')->get();
+
+        $prefillDate = null;
+        if ($request->filled('prefill_date')) {
+            try {
+                $prefillDate = \Illuminate\Support\Carbon::parse($request->string('prefill_date'))->toDateString();
+            } catch (\Throwable $e) {
+                $prefillDate = null;
+            }
+        }
+
+        $openCreateModal = $request->boolean('open_create', false);
 
         if ($professional->auto_complete) {
             AutoCompleteAppointments::dispatchSync();
@@ -512,6 +524,10 @@ class ProfessionalController extends Controller
             ->get();
 
         return view('professional.appointments', compact(
+            'professional',
+            'services',
+            'prefillDate',
+            'openCreateModal',
             'pending',
             'agenda',
             'awaitingComplete',
@@ -524,21 +540,25 @@ class ProfessionalController extends Controller
     {
         $professional = Auth::user()->professional;
 
+        $services = $professional->services()
+            ->orderBy('name')
+            ->get(['id', 'name', 'duration', 'price']);
+
         $appointments = $professional->appointments()
             ->with(['client', 'service'])
-            ->whereIn('status', ['pending', 'confirmed'])
             ->get()
             ->map(fn($a) => [
                 'id'      => $a->id,
                 'date'    => $a->scheduled_at->format('Y-m-d'),
                 'time'    => $a->scheduled_at->format('H:i'),
                 'service' => $a->service->name,
-                'client'  => $a->client->name,
+                'client'  => $a->display_client_name,
                 'status'  => $a->status,
             ]);
 
         return view('professional.calendar', [
             'appointmentsJson' => $appointments->toJson(),
+            'servicesJson'     => $services->toJson(),
         ]);
     }
 

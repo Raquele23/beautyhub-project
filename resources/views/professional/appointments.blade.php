@@ -1,5 +1,20 @@
 <x-app-layout>
 
+    @php
+        $prefillDateValue = old('date', $prefillDate ?? null);
+        $createAppointmentHasErrors = $errors->hasAny([
+            'service_id',
+            'date',
+            'time',
+            'client_mode',
+            'known_client_id',
+            'external_name',
+            'external_email',
+            'external_phone',
+            'notes',
+        ]);
+    @endphp
+
     <div class="max-w-4xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Topo ── --}}
@@ -8,16 +23,185 @@
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Agendamentos</h1>
             </div>
-            <button
-                onclick="window.dispatchEvent(new CustomEvent('open-settings-modal'))"
-                class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                style="background-color: #E3D0F9;"
-                title="Configurações">
-                <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </button>
+            <div class="flex items-center gap-2">
+                <button
+                   type="button"
+                   onclick="window.dispatchEvent(new CustomEvent('open-create-appointment-modal'))"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                   style="background-color: #6A0DAD;">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Novo agendamento
+                </button>
+                <button
+                    onclick="window.dispatchEvent(new CustomEvent('open-settings-modal'))"
+                    class="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    style="background-color: #E3D0F9;"
+                    title="Configurações">
+                    <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div x-data="professionalAppointmentForm()"
+             @open-create-appointment-modal.window="open = true"
+             x-init="init()">
+            <div
+                x-show="open"
+                x-transition:enter="transition ease-out duration-150"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-100"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                @click.self="open = false"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style="display: none; background-color: rgba(146, 64, 204, 0.18);">
+
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-purple-100 max-h-[90vh] overflow-y-auto">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 bg-white">
+                        <h3 class="font-bold text-purple-800">Novo agendamento</h3>
+                        <button @click="open = false" class="text-purple-300 hover:text-purple-600 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('professional.appointments.store') }}" class="p-6 space-y-5">
+                        @csrf
+
+                        <div class="space-y-4">
+                            <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Cliente</p>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <label class="border rounded-xl p-4 cursor-pointer transition-all"
+                                       :class="clientMode === 'known' ? 'border-purple-500 bg-purple-50' : 'border-purple-100 hover:border-purple-300'">
+                                    <input type="radio" name="client_mode" value="known" x-model="clientMode" class="sr-only">
+                                    <p class="text-sm font-semibold text-gray-800">Cliente da plataforma</p>
+                                    <p class="text-xs text-purple-400 mt-1">Busca por nome ou email.</p>
+                                </label>
+                                <label class="border rounded-xl p-4 cursor-pointer transition-all"
+                                       :class="clientMode === 'external' ? 'border-purple-500 bg-purple-50' : 'border-purple-100 hover:border-purple-300'">
+                                    <input type="radio" name="client_mode" value="external" x-model="clientMode" class="sr-only">
+                                    <p class="text-sm font-semibold text-gray-800">Cliente externo</p>
+                                    <p class="text-xs text-purple-400 mt-1">Agende para quem ainda não está na plataforma.</p>
+                                </label>
+                            </div>
+
+                            <div x-show="clientMode === 'known'" class="space-y-3" style="display: none;">
+                                <div class="relative">
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Buscar cliente</label>
+                                    <input type="text"
+                                           x-model="knownSearch"
+                                           @input.debounce.300ms="searchKnownClients()"
+                                           placeholder="Digite nome ou email"
+                                           class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+
+                                    <input type="hidden" name="known_client_id" :value="selectedKnownClientId">
+
+                                    <div x-show="knownResults.length > 0" class="absolute z-20 mt-2 w-full bg-white border border-purple-100 rounded-xl shadow-lg overflow-hidden" style="display:none;">
+                                        <template x-for="client in knownResults" :key="client.id">
+                                            <button type="button"
+                                                    @click="pickKnownClient(client)"
+                                                    class="w-full px-4 py-2.5 text-left hover:bg-purple-50 transition-colors">
+                                                <p class="text-sm font-semibold text-gray-900" x-text="client.name"></p>
+                                                <p class="text-xs text-purple-400" x-text="client.email"></p>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div x-show="selectedKnownClient" class="rounded-xl border border-purple-200 bg-purple-50 px-4 py-3" style="display:none;">
+                                    <p class="text-xs text-purple-500 uppercase tracking-wide font-semibold">Selecionado</p>
+                                    <p class="text-sm font-semibold text-gray-900" x-text="selectedKnownClient?.name"></p>
+                                    <p class="text-xs text-purple-400" x-text="selectedKnownClient?.email"></p>
+                                </div>
+                            </div>
+
+                            <div x-show="clientMode === 'external'" class="grid grid-cols-1 sm:grid-cols-2 gap-3" style="display:none;">
+                                <div class="sm:col-span-2">
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Nome do cliente</label>
+                                    <input type="text" name="external_name" value="{{ old('external_name') }}"
+                                           class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Email (opcional)</label>
+                                    <input type="email" name="external_email" value="{{ old('external_email') }}"
+                                           class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                </div>
+                                <div>
+                                     <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Telefone</label>
+                                     <input type="text" name="external_phone" value="{{ old('external_phone') }}"
+                                           :required="clientMode === 'external'"
+                                           class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 border-t border-purple-50 pt-4">
+                            <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Serviço e data</p>
+
+                            <div>
+                                <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Serviço</label>
+                                <select name="service_id"
+                                        x-model="serviceId"
+                                        class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                    <option value="">Selecione...</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}" {{ (int) old('service_id') === $service->id ? 'selected' : '' }}>
+                                            {{ $service->name }} · {{ $service->duration_formatted }} · R$ {{ number_format($service->price, 2, ',', '.') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Data</label>
+                                    <input type="date"
+                                           name="date"
+                                           x-model="selectedDate"
+                                           @change="fetchSlots()"
+                                           min="{{ now()->toDateString() }}"
+                                           value="{{ $prefillDateValue }}"
+                                           class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Horário</label>
+                                    <select name="time" x-model="selectedTime"
+                                            class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                                        <option value="" x-text="loading ? 'Carregando...' : 'Selecione...'">Selecione...</option>
+                                        <template x-for="slot in slots" :key="slot">
+                                            <option :value="slot" x-text="slot"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-purple-400">Horários ocupados não aparecem para evitar conflito na agenda.</p>
+
+                            <div>
+                                <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Observações (opcional)</label>
+                                <textarea name="notes" rows="3"
+                                          class="mt-1 w-full px-4 py-3 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm resize-none">{{ old('notes') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit"
+                                    class="w-full py-3 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                    style="background-color: #6A0DAD;">
+                                Salvar agendamento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
 
         {{-- ── Modal de Configurações ── --}}
@@ -138,33 +322,17 @@
                 </button>
 
                 <button
-                    @click="tab = 'confirmados'"
-                    :class="tab === 'confirmados'
+                    @click="tab = 'em-andamento'"
+                    :class="tab === 'em-andamento'
                         ? 'bg-purple-700 text-white shadow-lg shadow-purple-200'
                         : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300'"
                     class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200">
-                    Confirmados
-                    @if($agenda->count())
+                    Em andamento
+                    @if(($agenda->count() + $awaitingComplete->count()) > 0)
                         <span
-                            :class="tab === 'confirmados' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'"
+                            :class="tab === 'em-andamento' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'"
                             class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0">
-                            {{ $agenda->count() }}
-                        </span>
-                    @endif
-                </button>
-
-                <button
-                    @click="tab = 'concluir'"
-                    :class="tab === 'concluir'
-                        ? 'bg-purple-700 text-white shadow-lg shadow-purple-200'
-                        : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300'"
-                    class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200">
-                    A concluir
-                    @if($awaitingComplete->count())
-                        <span
-                            :class="tab === 'concluir' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'"
-                            class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0">
-                            {{ $awaitingComplete->count() }}
+                            {{ $agenda->count() + $awaitingComplete->count() }}
                         </span>
                     @endif
                 </button>
@@ -205,7 +373,7 @@
                                 {{-- Info clicável para expandir --}}
                                 <div class="flex-1 min-w-0 cursor-pointer" @click="open = !open">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appointment->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->client->name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
+                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
                                 </div>
 
                                 {{-- Botões + seta --}}
@@ -240,8 +408,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->client->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->client->email }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -263,10 +431,18 @@
                 </div>
             </div>
 
-            {{-- ── ABA: CONFIRMADOS ── --}}
-            <div x-show="tab === 'confirmados'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
-                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-                    @forelse($agenda as $appointment)
+            {{-- ── ABA: EM ANDAMENTO (CONFIRMADOS) ── --}}
+            <div x-show="tab === 'em-andamento'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+                @if($agenda->count() === 0 && $awaitingComplete->count() === 0)
+                    <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+                        <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento em andamento.</div>
+                    </div>
+                @endif
+
+                @if($agenda->count())
+                    <p class="text-xs font-bold tracking-widest uppercase text-purple-400 mb-3">Confirmados</p>
+                    <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+                        @foreach($agenda as $appointment)
                         <div x-data="{ open: false }" class="border-b border-purple-50 last:border-0">
                             <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
                                 <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
@@ -275,7 +451,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appointment->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->client->name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
+                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <span class="text-xs font-semibold px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200">Confirmado</span>
@@ -293,8 +469,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->client->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->client->email }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -313,16 +489,17 @@
                                 </form>
                             </div>
                         </div>
-                    @empty
-                        <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento confirmado futuro.</div>
-                    @endforelse
-                </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
-            {{-- ── ABA: A CONCLUIR ── --}}
-            <div x-show="tab === 'concluir'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
-                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-                    @forelse($awaitingComplete as $appointment)
+            {{-- ── ABA: EM ANDAMENTO (A CONCLUIR) ── --}}
+            <div x-show="tab === 'em-andamento'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+                @if($awaitingComplete->count())
+                    <p class="text-xs font-bold tracking-widest uppercase text-purple-400 mb-3">A concluir</p>
+                    <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+                        @foreach($awaitingComplete as $appointment)
                         <div x-data="{ open: false }" class="border-b border-purple-50 last:border-0">
                             <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
                                 <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
@@ -331,7 +508,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appointment->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->client->name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
+                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <form method="POST" action="{{ route('appointments.complete', $appointment->id) }}" @click.stop>
@@ -352,8 +529,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->client->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->client->email }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -368,10 +545,9 @@
                                 </div>
                             </div>
                         </div>
-                    @empty
-                        <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento a concluir.</div>
-                    @endforelse
-                </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
 
             {{-- ── ABA: CONCLUÍDOS ── --}}
@@ -386,7 +562,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appointment->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->client->name }}</p>
+                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <span class="text-xs font-semibold px-3 py-1 rounded-full border" style="background-color: #E0F7F4; color: #0D9488; border-color: #99E6DE;">Concluído</span>
@@ -404,12 +580,20 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->client->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->client->email }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appointment->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Próximo retorno</p>
+                                        <button type="button"
+                                           onclick="window.dispatchEvent(new CustomEvent('open-create-appointment-modal'))"
+                                           class="text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                            Agendar retorno (+30 dias)
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -437,7 +621,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appointment->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->client->name }}</p>
+                                    <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     <span class="text-xs font-semibold px-3 py-1 bg-red-50 text-red-500 rounded-full border border-red-100">Cancelado</span>
@@ -455,8 +639,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->client->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->client->email }}</p>
+                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -487,3 +671,80 @@
     </div>
 
 </x-app-layout>
+
+<script>
+    function professionalAppointmentForm() {
+        return {
+            open: @json($createAppointmentHasErrors || ($openCreateModal ?? false)),
+            clientMode: '{{ old('client_mode', 'known') }}',
+            serviceId: '{{ old('service_id') }}',
+            selectedDate: '{{ $prefillDateValue }}',
+            selectedTime: '{{ old('time') }}',
+            slots: [],
+            loading: false,
+            knownSearch: '',
+            knownResults: [],
+            selectedKnownClientId: '{{ old('known_client_id') }}',
+            selectedKnownClient: null,
+
+            init() {
+                if (this.selectedDate) {
+                    this.fetchSlots();
+                }
+
+                const selectedClientId = @json(old('known_client_id'));
+                if (selectedClientId) {
+                    this.knownSearch = 'Cliente selecionado';
+                    this.selectedKnownClient = {
+                        id: selectedClientId,
+                        name: 'Cliente selecionado',
+                        email: '',
+                    };
+                }
+            },
+
+            async fetchSlots() {
+                if (!this.selectedDate) return;
+
+                this.loading = true;
+                this.slots = [];
+
+                try {
+                    const res = await fetch(`{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}`);
+                    this.slots = await res.json();
+
+                    if (this.selectedTime && !this.slots.includes(this.selectedTime)) {
+                        this.selectedTime = '';
+                    }
+                } catch (e) {
+                    this.slots = [];
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async searchKnownClients() {
+                const term = this.knownSearch.trim();
+
+                if (term.length < 2) {
+                    this.knownResults = [];
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`{{ route('professional.clients.search') }}?q=${encodeURIComponent(term)}`);
+                    this.knownResults = await res.json();
+                } catch (e) {
+                    this.knownResults = [];
+                }
+            },
+
+            pickKnownClient(client) {
+                this.selectedKnownClient = client;
+                this.selectedKnownClientId = client.id;
+                this.knownSearch = `${client.name} (${client.email})`;
+                this.knownResults = [];
+            },
+        }
+    }
+</script>
