@@ -93,7 +93,7 @@
                     <input type="hidden" name="duration" id="duration" value="{{ old('duration') }}">
                     <div class="grid grid-cols-2 gap-3">
                         <div class="relative">
-                            <input type="number" id="duration_hours" value="0" min="0" max="12"
+                            <input type="number" id="duration_hours" value="0" min="0" max="24"
                                    class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
                                    placeholder="0">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">h</span>
