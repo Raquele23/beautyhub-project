@@ -18,7 +18,7 @@
         }
     </style>
 </head>
-    <body class="bg-[url(assets/img/background.png)] bg-cover bg-center flex items-center justify-center min-h-screen">
+    <body class="bg-[url(assets/img/background.png)] bg-cover bg-center flex items-center justify-center min-h-screen px-4 py-10">
 
         <!-- Botão voltar -->
         <a href="{{ url('/') }}" class="absolute top-8 left-8 flex items-center gap-1 text-sm text-[#6A0DAD] hover:opacity-80 transition">
@@ -28,9 +28,9 @@
             Voltar
         </a>
 
-        <div class="flex flex-col items-center">
+        <div class="w-full flex flex-col items-center">
 
-            <div class="bg-violet-50 rounded-lg shadow-md p-10">
+            <div class="w-full max-w-md lg:max-w-lg bg-violet-50 rounded-xl shadow-md p-8 md:p-10">
                 <x-auth-session-status class="mb-4" :status="session('status')" />
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
@@ -39,11 +39,13 @@
                     <div>
                         <x-input-label for="email" :value="__('Email')" />
                         <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                        <div class="mt-1 min-h-[14px]">
+                            <x-input-error :messages="$errors->get('email')" />
+                        </div>
                     </div>
 
                     <!-- Password -->
-                    <div class="mt-4">
+                    <div class="mt-2">
                         <x-input-label for="password" :value="__('Password')" />
 
                         <x-text-input id="password" class="block mt-1 w-full"
@@ -51,11 +53,13 @@
                                         name="password"
                                         required autocomplete="current-password" />
 
-                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                        <div class="mt-1 min-h-[14px]">
+                            <x-input-error :messages="$errors->get('password')" />
+                        </div>
                     </div>
 
                     <!-- Remember Me -->
-                    <div class="block mt-4">
+                    <div class="block mt-2">
                         <label for="remember_me" class="inline-flex items-center">
                             <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-violet-700 shadow-sm focus:ring-[#A675D6]" name="remember">
                             <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
@@ -63,7 +67,7 @@
                     </div>
 
                     <!-- Botão login e link -->
-                    <div class="mt-4">
+                    <div class="mt-3">
                         <x-primary-button class="w-full justify-center">
                             {{ __('Log in') }}
                         </x-primary-button>
