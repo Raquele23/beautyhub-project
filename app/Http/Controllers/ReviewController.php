@@ -11,24 +11,66 @@ use Illuminate\View\View;
 
 class ReviewController extends Controller
 {
-    public function clientIndex(): View
+    public function clientIndex(Request $request): View
     {
+        $activeTab = $request->query('tab', 'pending');
+
+        if (!in_array($activeTab, ['pending', 'reviewed'], true)) {
+            $activeTab = 'pending';
+        }
+
+        $appointmentsToReview = auth()->user()
+            ->appointments()
+            ->with(['professional.user', 'service'])
+            ->where('status', 'completed')
+            ->whereDoesntHave('review')
+            ->orderByDesc('scheduled_at')
+            ->get();
+
         $reviews = auth()->user()
             ->reviewsGiven()
             ->with(['appointment.professional.user', 'appointment.service'])
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('reviews.client-index', compact('reviews'));
+        return view('reviews.client-index', compact('reviews', 'appointmentsToReview', 'activeTab'));
     }
 
-    public function professionalIndex(): View
+    public function professionalIndex(Request $request): View
     {
-        $reviews = auth()->user()
+        $activeTab = $request->query('tab', 'pending');
+
+        if (!in_array($activeTab, ['pending', 'replied', 'all'], true)) {
+            $activeTab = 'pending';
+        }
+
+        $reviewsQuery = auth()->user()
             ->reviewsReceived()
-            ->with(['client', 'appointment.service'])
+            ->with(['client', 'appointment.service']);
+
+        if ($activeTab === 'pending') {
+            $reviewsQuery->whereNull('professional_reply');
+        } elseif ($activeTab === 'replied') {
+            $reviewsQuery->whereNotNull('professional_reply');
+        }
+
+        $reviews = $reviewsQuery
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
+
+        $pendingRepliesCount = auth()->user()
+            ->reviewsReceived()
+            ->whereNull('professional_reply')
+            ->count();
+
+        $repliedCount = auth()->user()
+            ->reviewsReceived()
+            ->whereNotNull('professional_reply')
+            ->count();
+
+        $totalReviewsCount = $pendingRepliesCount + $repliedCount;
 
         $starCounts = auth()->user()
             ->reviewsReceived()
@@ -37,7 +79,14 @@ class ReviewController extends Controller
             ->pluck('total', 'rating')
             ->toArray();
 
-        return view('reviews.professional-index', compact('reviews', 'starCounts'));
+        return view('reviews.professional-index', compact(
+            'reviews',
+            'starCounts',
+            'activeTab',
+            'pendingRepliesCount',
+            'repliedCount',
+            'totalReviewsCount'
+        ));
     }
 
     public function create(Appointment $appointment): View

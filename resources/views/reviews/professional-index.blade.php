@@ -35,7 +35,39 @@
     @endif
 
     <div class="max-w-4xl mx-auto px-4 sm:px-8 pt-4 pb-10 space-y-4">
-        @if ($reviews->total() > 0)
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-thin-soft">
+            <a href="{{ route('reviews.professional.index', ['tab' => 'all']) }}"
+               class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 {{ $activeTab === 'all' ? 'bg-purple-700 text-white shadow-lg shadow-purple-200' : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300' }}">
+                Todos
+                @if($totalReviewsCount)
+                    <span class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0 {{ $activeTab === 'all' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600' }}">
+                        {{ $totalReviewsCount }}
+                    </span>
+                @endif
+            </a>
+
+            <a href="{{ route('reviews.professional.index', ['tab' => 'pending']) }}"
+               class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 {{ $activeTab === 'pending' ? 'bg-purple-700 text-white shadow-lg shadow-purple-200' : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300' }}">
+                Sem resposta
+                @if($pendingRepliesCount)
+                    <span class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0 {{ $activeTab === 'pending' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600' }}">
+                        {{ $pendingRepliesCount }}
+                    </span>
+                @endif
+            </a>
+
+            <a href="{{ route('reviews.professional.index', ['tab' => 'replied']) }}"
+               class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 {{ $activeTab === 'replied' ? 'bg-purple-700 text-white shadow-lg shadow-purple-200' : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300' }}">
+                Respondidas
+                @if($repliedCount)
+                    <span class="w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold flex-shrink-0 {{ $activeTab === 'replied' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600' }}">
+                        {{ $repliedCount }}
+                    </span>
+                @endif
+            </a>
+        </div>
+
+        @if ($totalReviewsCount > 0)
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 flex items-center gap-6">
 
             {{-- Nota geral --}}
@@ -45,7 +77,7 @@
                 </p>
                 <x-star-rating :rating="auth()->user()->average_rating" size="md" />
                 <p class="text-xs text-purple-400 mt-1.5">
-                    {{ $reviews->total() }} {{ Str::plural('avaliação', $reviews->total()) }}
+                    {{ $totalReviewsCount }} {{ $totalReviewsCount === 1 ? 'avaliação' : 'avaliações' }}
                 </p>
             </div>
 
@@ -56,7 +88,7 @@
                 @for ($star = 5; $star >= 1; $star--)
                     @php
                         $count = $starCounts[$star] ?? 0;
-                        $pct   = $reviews->total() > 0 ? ($count / $reviews->total()) * 100 : 0;
+                        $pct   = $totalReviewsCount > 0 ? ($count / $totalReviewsCount) * 100 : 0;
                     @endphp
                     <div class="flex items-center gap-2 text-xs text-gray-500">
                         <span class="w-3 text-right font-medium">{{ $star }}</span>
@@ -87,7 +119,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-bold text-gray-900">{{ $review->client->name }}</p>
-                            <p class="text-xs text-purple-400 mt-0.5">
+                            <p class="text-xs text-purple-400 mt-1.5">
                                 {{ $review->appointment->service->name }}
                                 <span class="text-purple-300 mx-1">·</span>
                                 {{ $review->appointment->scheduled_at->format('d/m/Y') }}
@@ -158,8 +190,16 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
                     </svg>
                 </div>
-                <p class="text-sm font-medium text-gray-800">Você ainda não recebeu nenhuma avaliação.</p>
-                <p class="text-xs text-purple-400 mt-1">As avaliações dos clientes aparecerão aqui.</p>
+                @if($activeTab === 'pending')
+                    <p class="text-sm font-medium text-gray-800">Você não tem avaliações sem resposta.</p>
+                    <p class="text-xs text-purple-400 mt-1">Quando um cliente avaliar, você poderá responder por aqui.</p>
+                @elseif($activeTab === 'replied')
+                    <p class="text-sm font-medium text-gray-800">Você ainda não respondeu nenhuma avaliação.</p>
+                    <p class="text-xs text-purple-400 mt-1">As avaliações respondidas aparecerão nesta aba.</p>
+                @else
+                    <p class="text-sm font-medium text-gray-800">Você ainda não recebeu nenhuma avaliação.</p>
+                    <p class="text-xs text-purple-400 mt-1">As avaliações dos clientes aparecerão aqui.</p>
+                @endif
             </div>
         </div>
         @endforelse
