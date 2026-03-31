@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\AutoCompleteAppointments;
+use App\Models\Availability;
 use App\Models\Professional;
 use App\Models\PortfolioPhoto;
 use Illuminate\Http\Request;
@@ -464,10 +465,12 @@ class ProfessionalController extends Controller
             ->toArray();
 
         return view('professional.public', [
-            'professional'  => $professional->load(['services', 'portfolioPhotos', 'user']),
+            'professional'  => $professional->load(['services', 'portfolioPhotos', 'user', 'availabilities.breaks']),
             'reviews'       => $reviews,
             'starCounts'    => $starCounts,
             'averageRating' => $professional->user->average_rating,
+            'weekdays'      => Availability::WEEKDAYS,
+            'todayWeekday'  => now()->dayOfWeek,
         ]);
     }
 

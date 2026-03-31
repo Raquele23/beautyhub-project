@@ -218,6 +218,71 @@
         {{-- ── Serviços ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-purple-50">
+                <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Disponibilidade</p>
+            </div>
+
+            @if($professional->availabilities->isNotEmpty())
+                <div class="px-6 py-4 space-y-2.5">
+                    @php
+                        $activeDaysCount = $professional->availabilities->count();
+                        $closedDaysCount = count($weekdays) - $activeDaysCount;
+                    @endphp
+
+                    <div class="flex gap-2.5 overflow-x-auto pb-1 scrollbar-thin-soft">
+                        @foreach($weekdays as $weekdayNumber => $weekdayName)
+                            @php
+                                $dayAvailability = $professional->availabilities->firstWhere('weekday', $weekdayNumber);
+                            @endphp
+
+                            @if(!$dayAvailability)
+                                @continue
+                            @endif
+
+                            <div class="min-w-[170px] rounded-xl border border-purple-100 px-3 py-2.5 bg-white flex-shrink-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-gray-800 truncate">{{ $weekdayName }}</p>
+                                    @if($weekdayNumber === $todayWeekday)
+                                        <span class="text-[10px] font-bold uppercase tracking-wide text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">Hoje</span>
+                                    @endif
+                                </div>
+
+                                <p class="text-xs text-purple-500 mt-1">
+                                    {{ \Carbon\Carbon::parse($dayAvailability->open_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($dayAvailability->close_time)->format('H:i') }}
+                                </p>
+
+                                @if($dayAvailability->breaks->isNotEmpty())
+                                    <p class="text-[11px] text-purple-400 mt-1">
+                                        {{ $dayAvailability->breaks->count() }} {{ \Illuminate\Support\Str::plural('pausa', $dayAvailability->breaks->count()) }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <p class="text-xs text-purple-400 pt-0.5">
+                        {{ $activeDaysCount }} {{ \Illuminate\Support\Str::plural('dia ativo', $activeDaysCount) }}
+                        @if($closedDaysCount > 0)
+                            <span class="text-purple-300 mx-1">·</span>
+                            {{ $closedDaysCount }} {{ \Illuminate\Support\Str::plural('dia fechado', $closedDaysCount) }}
+                        @endif
+                    </p>
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center py-10 text-center px-6">
+                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style="background-color: #EDE4F8;">
+                        <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm font-medium text-gray-800">Disponibilidade ainda não informada.</p>
+                    <p class="text-xs text-purple-300 mt-0.5">Entre em contato com o profissional para confirmar horários.</p>
+                </div>
+            @endif
+        </div>
+
+        {{-- ── Serviços ── --}}
+        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Serviços</p>
             </div>
 
