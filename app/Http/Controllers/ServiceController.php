@@ -76,11 +76,13 @@ class ServiceController extends Controller
             'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'duration' => 'required|integer|min:5',
+            'duration' => 'required|integer|min:5|max:720',
             'price' => 'required|numeric|min:0.01',
             'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
             'cropped_image' => ['nullable', 'string'],
             'original_image_base64' => ['nullable', 'string'],
+        ], [
+            'duration.max' => 'A duração máxima do serviço é de 12 horas.',
         ]);
 
         // Processar imagem do serviço
@@ -123,11 +125,13 @@ class ServiceController extends Controller
             'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'duration' => 'required|integer|min:5',
+            'duration' => 'required|integer|min:5|max:720',
             'price' => 'required|numeric|min:0.01',
             'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
             'cropped_image' => ['nullable', 'string'],
             'original_image_base64' => ['nullable', 'string'],
+        ], [
+            'duration.max' => 'A duração máxima do serviço é de 12 horas.',
         ]);
 
         // Processar nova imagem

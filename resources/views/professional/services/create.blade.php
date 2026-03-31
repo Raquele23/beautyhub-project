@@ -105,7 +105,7 @@
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">min</span>
                         </div>
                     </div>
-                    <p class="mt-2 text-xs text-purple-300">Informe em horas e minutos (mínimo 5 minutos)</p>
+                    <p class="mt-2 text-xs text-purple-300">Informe em horas e minutos (mínimo 5 minutos e máximo 12 horas)</p>
                     @error('duration')
                         <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
                     @enderror
