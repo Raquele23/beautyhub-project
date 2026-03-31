@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Appointment;
+use App\Models\Notification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -27,6 +28,15 @@ class AutoCompleteAppointments implements ShouldQueue
 
                 if ($endsAt->isPast()) {
                     $appointment->update(['status' => 'completed']);
+
+                    if (!empty($appointment->client_id)) {
+                        Notification::create([
+                            'user_id'        => $appointment->client_id,
+                            'type'           => 'appointment_completed',
+                            'message'        => 'Seu atendimento de ' . $appointment->service->name . ' foi concluído. Que tal deixar uma avaliação?',
+                            'appointment_id' => $appointment->id,
+                        ]);
+                    }
                 }
             });
     }
