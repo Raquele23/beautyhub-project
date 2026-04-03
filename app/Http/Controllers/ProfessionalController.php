@@ -556,6 +556,9 @@ class ProfessionalController extends Controller
                 'time'    => $a->scheduled_at->format('H:i'),
                 'service' => $a->service->name,
                 'client'  => $a->display_client_name,
+                'contact' => $a->display_client_contact,
+                'badge'   => $a->client_origin_label,
+                'external' => $a->is_external_client,
                 'status'  => $a->status,
             ]);
 

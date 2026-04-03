@@ -193,8 +193,12 @@
                                             <div :class="appointmentDotClass(appt)"
                                                 class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"></div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
+                                                    <span x-show="appt.external" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200" x-text="appt.badge"></span>
+                                                </div>
                                                 <p class="text-xs text-purple-400" x-text="appt.client"></p>
+                                                <p class="text-xs text-purple-300 mt-0.5" x-text="appt.contact ? appt.contact : 'Sem contato'"></p>
                                                 <p class="text-xs text-purple-300 mt-0.5" x-text="appt.time"></p>
                                             </div>
                                             <span :class="appointmentTagClass(appt)"

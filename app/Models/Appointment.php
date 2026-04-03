@@ -135,6 +135,41 @@ class Appointment extends Model
         return $this->client_phone;
     }
 
+    public function getDisplayClientPhoneFormattedAttribute(): ?string
+    {
+        $phone = preg_replace('/\D+/', '', (string) $this->client_phone);
+
+        if ($phone === '') {
+            return null;
+        }
+
+        if (strlen($phone) === 10) {
+            return sprintf('(%s) %s-%s', substr($phone, 0, 2), substr($phone, 2, 4), substr($phone, 6, 4));
+        }
+
+        if (strlen($phone) === 11) {
+            return sprintf('(%s) %s-%s', substr($phone, 0, 2), substr($phone, 2, 5), substr($phone, 7, 4));
+        }
+
+        return $this->client_phone;
+    }
+
+    public function getDisplayClientContactAttribute(): ?string
+    {
+        if ($this->client?->email) {
+            return $this->client->email;
+        }
+
+        return $this->is_external_client
+            ? $this->display_client_phone_formatted
+            : $this->client_phone;
+    }
+
+    public function getClientOriginLabelAttribute(): string
+    {
+        return $this->is_external_client ? 'Externo' : 'Plataforma';
+    }
+
     public function getIsExternalClientAttribute(): bool
     {
         return $this->client_id === null;

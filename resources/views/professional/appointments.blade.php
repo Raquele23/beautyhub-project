@@ -423,8 +423,13 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                            @if($appointment->is_external_client)
+                                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Externo</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_contact ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -484,8 +489,13 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                            @if($appointment->is_external_client)
+                                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Externo</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_contact ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -544,8 +554,13 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                            @if($appointment->is_external_client)
+                                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Externo</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_contact ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -595,8 +610,13 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                            @if($appointment->is_external_client)
+                                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Externo</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_contact ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
@@ -654,8 +674,13 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Cliente</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_email ?? $appointment->display_client_phone ?? 'Sem contato' }}</p>
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="text-sm font-medium text-gray-800">{{ $appointment->display_client_name }}</p>
+                                            @if($appointment->is_external_client)
+                                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Externo</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appointment->display_client_contact ?? 'Sem contato' }}</p>
                                     </div>
                                     <div>
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
