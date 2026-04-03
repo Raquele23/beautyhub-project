@@ -3,7 +3,7 @@
          x-data="professionalAppointmentForm()"
          x-init="init()">
 
-        <div class="flex items-center justify-between gap-3">
+        <div class="sticky top-0 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-2 flex items-center justify-between gap-3 bg-[#EDE4F8]/95 backdrop-blur border-b border-purple-100">
             <div>
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Novo agendamento</h1>
@@ -146,6 +146,14 @@
                             </template>
                         </select>
                     </div>
+                </div>
+
+                <div x-show="!loading && selectedDate && serviceId && slots.length === 0"
+                     class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                     style="display:none;">
+                    <p class="text-xs font-semibold text-amber-700">
+                        Não há horários disponíveis para essa data. Revise sua disponibilidade para liberar novos horários.
+                    </p>
                 </div>
 
                 <p class="text-xs text-purple-400">Horários ocupados não aparecem para evitar conflito na agenda.</p>

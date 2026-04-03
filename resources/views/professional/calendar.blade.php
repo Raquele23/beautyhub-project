@@ -220,7 +220,7 @@
                      style="display: none; background-color: rgba(146, 64, 204, 0.18);">
 
                     <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-purple-100 max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 bg-white">
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 z-30 bg-white">
                             <h3 class="font-bold text-purple-800">Novo agendamento</h3>
                             <button @click="createOpen = false" class="text-purple-300 hover:text-purple-600 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,7 +235,7 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('professional.appointments.store') }}" class="p-6 space-y-5">
+                        <form method="POST" action="{{ route('professional.appointments.store') }}" class="px-6 pb-6 pt-2 space-y-5">
                             @csrf
                             <input type="hidden" name="source" value="calendar">
 
@@ -345,6 +345,14 @@
                                             </template>
                                         </select>
                                     </div>
+                                </div>
+
+                                <div x-show="!loadingCreateSlots && createDate && serviceId && createSlots.length === 0"
+                                     class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+                                     style="display:none;">
+                                    <p class="text-xs font-semibold text-amber-700">
+                                        Não há horários disponíveis para essa data. Revise sua disponibilidade para liberar novos horários.
+                                    </p>
                                 </div>
 
                                 <div>
