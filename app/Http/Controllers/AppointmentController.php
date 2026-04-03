@@ -144,10 +144,10 @@ class AppointmentController extends Controller
             'time'               => ['required', 'date_format:H:i'],
             'notes'              => ['nullable', 'string', 'max:500'],
             'client_mode'        => ['required', 'in:known,external'],
-            'known_client_id'    => ['nullable', 'integer', 'exists:users,id'],
-            'external_name'      => ['nullable', 'string', 'max:255'],
-            'external_email'     => ['nullable', 'email', 'max:255'],
-            'external_phone'     => ['required_if:client_mode,external', 'string', 'max:20'],
+            'known_client_id'    => ['exclude_unless:client_mode,known', 'required_if:client_mode,known', 'integer', 'exists:users,id'],
+            'external_name'      => ['exclude_unless:client_mode,external', 'required_if:client_mode,external', 'string', 'max:255'],
+            'external_email'     => ['exclude_unless:client_mode,external', 'nullable', 'email', 'max:255'],
+            'external_phone'     => ['exclude_unless:client_mode,external', 'required_if:client_mode,external', 'string', 'max:20'],
         ]);
 
         $service = $professional->services()
@@ -342,10 +342,16 @@ class AppointmentController extends Controller
             ]);
         }
 
-        $phone = trim((string) ($validated['external_phone'] ?? ''));
+        $phone = preg_replace('/\D+/', '', (string) ($validated['external_phone'] ?? ''));
         if ($phone === '') {
             throw ValidationException::withMessages([
                 'external_phone' => 'Informe o telefone do cliente externo.',
+            ]);
+        }
+
+        if (! in_array(strlen($phone), [10, 11], true)) {
+            throw ValidationException::withMessages([
+                'external_phone' => 'O telefone do cliente externo deve ter 10 ou 11 dígitos.',
             ]);
         }
 

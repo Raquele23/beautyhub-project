@@ -81,24 +81,30 @@
                     </div>
                 </div>
 
-                <div x-show="clientMode === 'external'" class="grid grid-cols-1 sm:grid-cols-2 gap-3" style="display:none;">
-                    <div class="sm:col-span-2">
-                        <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Nome do cliente</label>
-                        <input type="text" name="external_name" value="{{ old('external_name', $prefillName) }}"
-                               class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                <template x-if="clientMode === 'external'">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Nome do cliente</label>
+                            <input type="text" name="external_name" value="{{ old('external_name', $prefillName) }}"
+                                   class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Email (opcional)</label>
+                            <input type="email" name="external_email" value="{{ old('external_email', $prefillEmail) }}"
+                                   class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Telefone</label>
+                            <input type="tel" name="external_phone" value="{{ old('external_phone', $prefillPhone) }}"
+                                required
+                                maxlength="15"
+                                placeholder="(11) 99999-9999"
+                                x-init="$el.value = applyPhoneMask($el.value)"
+                                @input="formatPhoneInput($event)"
+                                class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Email (opcional)</label>
-                        <input type="email" name="external_email" value="{{ old('external_email', $prefillEmail) }}"
-                               class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Telefone</label>
-                        <input type="text" name="external_phone" value="{{ old('external_phone', $prefillPhone) }}"
-                               :required="clientMode === 'external'"
-                               class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
-                    </div>
-                </div>
+                </template>
             </div>
 
             <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4">
@@ -238,6 +244,32 @@
                     this.selectedKnownClientId = client.id;
                     this.knownSearch = `${client.name} (${client.email})`;
                     this.knownResults = [];
+                },
+
+                applyPhoneMask(value) {
+                    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+
+                    if (!digits) {
+                        return '';
+                    }
+
+                    if (digits.length <= 2) {
+                        return `(${digits}`;
+                    }
+
+                    if (digits.length <= 6) {
+                        return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+                    }
+
+                    if (digits.length <= 10) {
+                        return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+                    }
+
+                    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+                },
+
+                formatPhoneInput(event) {
+                    event.target.value = this.applyPhoneMask(event.target.value);
                 },
             }
         }
