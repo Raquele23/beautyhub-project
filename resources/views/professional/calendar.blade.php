@@ -147,97 +147,103 @@
                 </div>
 
                 {{-- Modal --}}
-                 <div x-show="dayModalOpen"
-                     x-cloak
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
-                     @click.self="closeSelectedDayModal()"
-                     class="fixed inset-0 bg-purple-900/30 z-50 flex items-end sm:items-center justify-center p-4"
-                     style="display: none;">
+                <template x-teleport="body">
+                    <div x-show="dayModalOpen"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="fixed inset-0 z-50"
+                         style="display: none;">
+                        <div class="absolute inset-0" @click="closeSelectedDayModal()" style="background-color: rgba(146, 64, 204, 0.18);"></div>
 
-                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto border border-purple-100">
-                        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-violet-50">
-                            <h4 class="font-semibold text-purple-900" x-text="selectedDayLabel()"></h4>
-                                <button @click="closeSelectedDayModal()"
-                                    class="w-7 h-7 rounded-lg border border-purple-200 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white hover:border-purple-500 transition duration-150">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="p-4 space-y-2">
-                            <div class="pb-2" x-show="selectedDay && !isPastDate(selectedDay)">
-                                <button type="button"
-                                        @click="openCreateForSelectedDay()"
-                                        class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200">
-                                    Adicionar agendamento nesta data
-                                </button>
-                            </div>
-
-                            <div class="pb-2" x-show="selectedDay && isPastDate(selectedDay)">
-                                <p class="text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2">
-                                    Esta data já passou. Você pode apenas visualizar os agendamentos já registrados.
-                                </p>
-                            </div>
-
-                            <template x-for="appt in appointmentsForDay(selectedDay)" :key="appt.id">
-                                  <div :class="isPastAppointment(appt) ? 'opacity-65' : ''"
-                                      class="flex items-start gap-3 p-3 rounded-xl bg-purple-50/60 border border-purple-100 hover:bg-purple-100/60 hover:border-purple-200 transition duration-150">
-                                     <div :class="appointmentDotClass(appt)"
-                                         class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
-                                        <p class="text-xs text-purple-400" x-text="appt.client"></p>
-                                        <p class="text-xs text-purple-300 mt-0.5" x-text="appt.time"></p>
-                                    </div>
-                                    <span :class="appointmentTagClass(appt)"
-                                          class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0"
-                                        x-text="statusLabel(appt.status)"></span>
+                        <div class="relative h-full flex items-end sm:items-center justify-center p-4">
+                            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] overflow-y-auto border border-purple-100">
+                                <div class="flex items-center justify-between px-6 py-4 border-b border-purple-100 bg-gradient-to-r from-purple-50 to-violet-50">
+                                    <h4 class="font-semibold text-purple-900" x-text="selectedDayLabel()"></h4>
+                                    <button @click="closeSelectedDayModal()"
+                                        class="w-7 h-7 rounded-lg border border-purple-200 text-purple-400 flex items-center justify-center hover:bg-purple-500 hover:text-white hover:border-purple-500 transition duration-150">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 </div>
-                            </template>
-                            <div x-show="appointmentsForDay(selectedDay).length === 0"
-                                 class="text-center text-sm text-purple-300 py-8">
-                                Nenhum agendamento neste dia.
+
+                                <div class="p-4 space-y-2">
+                                    <div class="pb-2" x-show="selectedDay && !isPastDate(selectedDay)">
+                                        <button type="button"
+                                                @click="openCreateForSelectedDay()"
+                                                class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200">
+                                            Adicionar agendamento nesta data
+                                        </button>
+                                    </div>
+
+                                    <div class="pb-2" x-show="selectedDay && isPastDate(selectedDay)">
+                                        <p class="text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2">
+                                            Esta data já passou. Você pode apenas visualizar os agendamentos já registrados.
+                                        </p>
+                                    </div>
+
+                                    <template x-for="appt in appointmentsForDay(selectedDay)" :key="appt.id">
+                                        <div :class="isPastAppointment(appt) ? 'opacity-65' : ''"
+                                            class="flex items-start gap-3 p-3 rounded-xl bg-purple-50/60 border border-purple-100 hover:bg-purple-100/60 hover:border-purple-200 transition duration-150">
+                                            <div :class="appointmentDotClass(appt)"
+                                                class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"></div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-purple-900" x-text="appt.service"></p>
+                                                <p class="text-xs text-purple-400" x-text="appt.client"></p>
+                                                <p class="text-xs text-purple-300 mt-0.5" x-text="appt.time"></p>
+                                            </div>
+                                            <span :class="appointmentTagClass(appt)"
+                                                  class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0"
+                                                x-text="statusLabel(appt.status)"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="appointmentsForDay(selectedDay).length === 0"
+                                         class="text-center text-sm text-purple-300 py-8">
+                                        Nenhum agendamento neste dia.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </template>
 
-                <div x-show="createOpen"
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0"
-                     x-transition:enter-end="opacity-100"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
-                     @click.self="createOpen = false"
-                     class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                     style="display: none; background-color: rgba(146, 64, 204, 0.18);">
+                <template x-teleport="body">
+                    <div x-show="createOpen"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"
+                         class="fixed inset-0 z-50"
+                         style="display: none;">
+                        <div class="absolute inset-0" @click="createOpen = false" style="background-color: rgba(146, 64, 204, 0.18);"></div>
 
-                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-purple-100 max-h-[90vh] overflow-y-auto">
-                        <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 z-30 bg-white">
-                            <h3 class="font-bold text-purple-800">Novo agendamento</h3>
-                            <button @click="createOpen = false" class="text-purple-300 hover:text-purple-600 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
+                        <div class="relative h-full flex items-center justify-center p-4">
+                            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-purple-100 max-h-[90vh] overflow-y-auto">
+                                <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 z-30 bg-white">
+                                    <h3 class="font-bold text-purple-800">Novo agendamento</h3>
+                                    <button @click="createOpen = false" class="text-purple-300 hover:text-purple-600 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
 
-                        @if($errors->any())
-                            <div class="mx-6 mt-4 flex items-center gap-3 px-4 py-3 bg-white border border-red-100 rounded-xl">
-                                <p class="text-sm font-medium text-red-500">{{ $errors->first() }}</p>
-                            </div>
-                        @endif
+                                @if($errors->any())
+                                    <div class="mx-6 mt-4 flex items-center gap-3 px-4 py-3 bg-white border border-red-100 rounded-xl">
+                                        <p class="text-sm font-medium text-red-500">{{ $errors->first() }}</p>
+                                    </div>
+                                @endif
 
-                        <form method="POST" action="{{ route('professional.appointments.store') }}" class="px-6 pb-6 pt-2 space-y-5">
-                            @csrf
-                            <input type="hidden" name="source" value="calendar">
+                                <form method="POST" action="{{ route('professional.appointments.store') }}" class="px-6 pb-6 pt-2 space-y-5">
+                                    @csrf
+                                    <input type="hidden" name="source" value="calendar">
 
                             <div class="space-y-4">
                                 <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Cliente</p>
@@ -362,14 +368,16 @@
                                 </div>
                             </div>
 
-                            <button type="submit"
-                                    class="w-full py-3 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                    style="background-color: #6A0DAD;">
-                                Salvar agendamento
-                            </button>
-                        </form>
+                                    <button type="submit"
+                                            class="w-full py-3 text-white text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                            style="background-color: #6A0DAD;">
+                                        Salvar agendamento
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </template>
 
             </div>
         </div>
@@ -585,10 +593,15 @@ init() {
                         return;
                     }
 
-                    this.createOpen = true;
-                    this.createDate = this.selectedDay;
+                    const selectedDay = this.selectedDay;
+                    this.closeSelectedDayModal();
+                    this.createDate = selectedDay;
                     this.createTime = '';
-                    this.fetchCreateSlots();
+
+                    setTimeout(() => {
+                        this.createOpen = true;
+                        this.fetchCreateSlots();
+                    }, 120);
                 },
 
                 async fetchCreateSlots() {
