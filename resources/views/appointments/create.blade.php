@@ -122,17 +122,25 @@
                         Nenhum horário disponível nesta data.
                     </div>
 
-                    <div x-show="!loading && slots.length > 0" class="flex flex-wrap gap-2 pt-2">
-                        <template x-for="slot in slots" :key="slot">
-                            <label class="cursor-pointer">
-                                <input type="radio" name="time" :value="slot"
-                                       x-on:change="selectedTime = slot; open = false"
-                                       class="peer sr-only">
-                                <span class="slot-pill inline-flex items-center px-4 py-2 rounded-xl border border-purple-100 text-xs font-semibold text-purple-500 bg-white transition-all duration-150 cursor-pointer hover:border-purple-300"
-                                      x-text="slot">
-                                </span>
-                            </label>
-                        </template>
+                    <div x-show="!loading && slots.length > 0" class="pt-2 space-y-3">
+                        <div>
+                            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-thin-soft">
+                                <template x-for="slot in slots" :key="`slot-${slot}`">
+                                    <label class="flex-shrink-0 cursor-pointer">
+                                        <input type="radio"
+                                               name="time"
+                                               :value="slot"
+                                               x-model="selectedTime"
+                                               @change="open = false"
+                                               class="peer sr-only">
+                                        <span class="slot-pill inline-flex items-center px-4 py-2 rounded-xl border border-purple-100 text-xs font-semibold text-purple-500 bg-white transition-all duration-150 cursor-pointer hover:border-purple-300 whitespace-nowrap"
+                                              x-text="slot">
+                                        </span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
                     </div>
                     <x-input-error :messages="$errors->get('time')" class="mt-2 text-xs text-red-400" />
                 </div>
@@ -182,6 +190,7 @@
                 selectedTime: '',
                 slots: [],
                 loading: false,
+                oldTime: '{{ old('time') }}',
 
                 init() {
                     const oldDate = '{{ old('date') }}';
@@ -203,12 +212,18 @@
                             `{{ route('appointments.slots', $professional->id) }}?date=${this.selectedDate}&service_id={{ $service->id }}`
                         );
                         this.slots = await res.json();
+
+                        if (this.oldTime && this.slots.includes(this.oldTime)) {
+                            this.selectedTime = this.oldTime;
+                        }
+                        this.oldTime = '';
                     } catch (e) {
                         this.slots = [];
                     } finally {
                         this.loading = false;
                     }
-                }
+                },
+
             }
         }
     </script>
