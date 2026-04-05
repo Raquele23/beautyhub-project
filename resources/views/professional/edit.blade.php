@@ -520,12 +520,11 @@
             const oldCity             = "{{ old('city', $professional->city) }}";
 
             let cropper = null;
+            let profileRecropSourceBase = oldCroppedProfile || profileInput.dataset.originalSrc || null;
 
-            profileInput.addEventListener('change', function () {
-                const file = this.files && this.files[0];
-                if (!file) return;
-                const objectUrl = URL.createObjectURL(file);
-                cropperImage.src = objectUrl;
+            function openProfileCropperFromSource(src) {
+                if (!src) return;
+                cropperImage.src = src;
                 cropperModal.classList.remove('hidden');
                 if (cropper) { cropper.destroy(); }
                 cropper = new Cropper(cropperImage, {
@@ -536,6 +535,17 @@
                     responsive: true,
                     background: false,
                 });
+            }
+
+            profileInput.addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    profileRecropSourceBase = reader.result;
+                    openProfileCropperFromSource(profileRecropSourceBase);
+                };
+                reader.readAsDataURL(file);
             });
 
             function closeCropper() {
@@ -584,9 +594,22 @@
                 croppedProfileInput.value = '';
                 profileInput.value = '';
                 if (deleteProfileInput) deleteProfileInput.value = '1';
+                profileRecropSourceBase = null;
             }
 
-            if (profileRecropButton) profileRecropButton.addEventListener('click', function () { profileInput.click(); });
+            if (profileRecropButton) {
+                profileRecropButton.addEventListener('click', function () {
+                    const source = profileRecropSourceBase
+                        || croppedProfileInput.value
+                        || profilePreview.getAttribute('src')
+                        || profileInput.dataset.originalSrc;
+                    if (source) {
+                        openProfileCropperFromSource(source);
+                        return;
+                    }
+                    profileInput.click();
+                });
+            }
             if (profileRemoveButton) profileRemoveButton.addEventListener('click', clearProfilePreview);
 
             if (oldCroppedProfile) {
@@ -610,6 +633,7 @@
             const bannerUploadText      = document.getElementById('banner_upload_text');
 
             let bannerCropper = null;
+            const oldBannerBase64 = @js(old('banner_photo_base64'));
 
             // Obtém o componente Alpine.js do banner
             function getBannerAlpine() {
@@ -617,11 +641,12 @@
                 return el ? Alpine.$data(el) : null;
             }
 
-            bannerPhotoInput.addEventListener('change', function () {
-                const file = this.files && this.files[0];
-                if (!file) return;
-                const objectUrl = URL.createObjectURL(file);
-                bannerCropperImage.src = objectUrl;
+            const alpineBanner = getBannerAlpine();
+            let bannerRecropSourceBase = oldBannerBase64 || (alpineBanner ? alpineBanner.bannerPreview : null) || null;
+
+            function openBannerCropperFromSource(src) {
+                if (!src) return;
+                bannerCropperImage.src = src;
                 bannerCropperModal.classList.remove('hidden');
                 if (bannerCropper) { bannerCropper.destroy(); }
                 bannerCropper = new Cropper(bannerCropperImage, {
@@ -632,6 +657,17 @@
                     responsive: true,
                     background: false,
                 });
+            }
+
+            bannerPhotoInput.addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    bannerRecropSourceBase = reader.result;
+                    openBannerCropperFromSource(bannerRecropSourceBase);
+                };
+                reader.readAsDataURL(file);
             });
 
             function closeBannerCropper() {
@@ -669,7 +705,17 @@
             bannerCropperBackdrop.addEventListener('click', closeBannerCropper);
 
             if (bannerRecropButton) {
-                bannerRecropButton.addEventListener('click', function () { bannerPhotoInput.click(); });
+                bannerRecropButton.addEventListener('click', function () {
+                    const alpine = getBannerAlpine();
+                    const source = bannerRecropSourceBase
+                        || bannerPhotoBase64.value
+                        || (alpine ? alpine.bannerPreview : null);
+                    if (source) {
+                        openBannerCropperFromSource(source);
+                        return;
+                    }
+                    bannerPhotoInput.click();
+                });
             }
 
             if (bannerRemoveButton) {
@@ -681,11 +727,11 @@
                     if (bannerUploadText)   bannerUploadText.style.display = '';
                     if (bannerRecropButton) bannerRecropButton.classList.add('hidden');
                     if (bannerRemoveButton) bannerRemoveButton.classList.add('hidden');
+                    bannerRecropSourceBase = null;
                 });
             }
 
             // Restaura estado dos botões do banner após validação falhar (old())
-            const oldBannerBase64 = @js(old('banner_photo_base64'));
             if (oldBannerBase64 && bannerUploadText) {
                 bannerUploadText.style.display = 'none';
                 if (bannerRecropButton) bannerRecropButton.classList.remove('hidden');
