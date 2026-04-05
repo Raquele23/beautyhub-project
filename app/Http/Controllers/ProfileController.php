@@ -35,7 +35,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit')->with('status', 'Perfil atualizado com sucesso!');
     }
 
     /**
@@ -44,19 +44,27 @@ class ProfileController extends Controller
     public function updatePhoto(Request $request): RedirectResponse
     {
         $request->validate([
-            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'cropped_photo' => ['required', 'string'],
         ]);
 
         $user = $request->user();
 
+        // Remove foto antiga
         if ($user->profile_photo_path) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
 
-        $path = $request->file('photo')->store('profile-photos', 'public');
-        $user->update(['profile_photo_path' => $path]);
+        // Decodifica o base64 e salva
+        $base64 = $request->input('cropped_photo');
+        $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $base64);
+        $imageData = base64_decode($base64);
 
-        return Redirect::route('profile.edit')->with('status', 'photo-updated');
+        $filename = 'profile-photos/' . $user->id . '_' . time() . '.jpg';
+        Storage::disk('public')->put($filename, $imageData);
+
+        $user->update(['profile_photo_path' => $filename]);
+
+        return Redirect::route('profile.edit')->with('status', 'Foto de perfil atualizada!');
     }
 
     /**
@@ -71,7 +79,7 @@ class ProfileController extends Controller
             $user->update(['profile_photo_path' => null]);
         }
 
-        return Redirect::route('profile.edit')->with('status', 'photo-removed');
+        return Redirect::route('profile.edit')->with('status', 'Foto de perfil removida.');
     }
 
     /**
