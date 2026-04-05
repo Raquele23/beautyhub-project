@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Notification;
 use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -111,11 +112,21 @@ class ReviewController extends Controller
             'comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $appointment->review()->create([
+        $review = $appointment->review()->create([
             ...$validated,
             'client_id'       => auth()->id(),
             'professional_id' => $appointment->professional->user_id,
         ]);
+
+        // ── Notificação para o profissional ──────────────────────────────
+        Notification::create([
+            'user_id'        => $appointment->professional->user_id,
+            'type'           => 'review_received',
+            'message'        => auth()->user()->name . ' avaliou o serviço "' . $appointment->service->name . '".',
+            'appointment_id' => $appointment->id,
+            'review_id'      => $review->id,
+        ]);
+        // ─────────────────────────────────────────────────────────────────
 
         return redirect()
             ->route('reviews.client.index')
@@ -134,6 +145,16 @@ class ReviewController extends Controller
             ...$validated,
             'replied_at' => now(),
         ]);
+
+        // ── Notificação para o cliente ────────────────────────────────────
+        Notification::create([
+            'user_id'        => $review->client_id,
+            'type'           => 'review_reply_received',
+            'message'        => auth()->user()->name . ' respondeu à sua avaliação de "' . $review->appointment->service->name . '".',
+            'appointment_id' => $review->appointment_id,
+            'review_id'      => $review->id,
+        ]);
+        // ─────────────────────────────────────────────────────────────────
 
         return back()->with('success', 'Resposta publicada!');
     }
