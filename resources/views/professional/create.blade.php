@@ -2,9 +2,9 @@
     <x-slot name="header"></x-slot>
 
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
     <style>
         * { font-family: 'Poppins', sans-serif !important; }
-        @import url('https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css');
     </style>
 
     <div class="min-h-screen" style="background-color: #EDE4F8;">
@@ -38,41 +38,48 @@
 
                     <div class="flex items-center gap-5">
                         {{-- Preview circular --}}
-                        <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-purple-100 flex-shrink-0 flex items-center justify-center text-2xl font-bold text-purple-300"
-                             style="background-color: #EDE4F8;">
-                            <img id="profile_preview_img" class="w-full h-full object-cover hidden" alt="Prévia da foto de perfil recortada">
-                            <span id="profile_initial">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
-                        </div>
+                        <div class="relative flex-shrink-0">
+                            <div class="w-20 h-20 rounded-full p-0.5" style="background: linear-gradient(135deg, #6A0DAD, #A675D6);">
+                                <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center" style="background-color: #EDE4F8;">
+                                    <img id="profile_preview_img"
+                                         class="w-full h-full object-cover hidden"
+                                         alt="Prévia da foto de perfil recortada">
+                                    <span id="profile_initial" class="text-2xl font-bold text-purple-300">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </span>
+                                </div>
+                            </div>
 
-                        {{-- Upload --}}
-                        <label class="flex-1 flex flex-col items-center justify-center gap-2 h-20 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200">
-                            <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <span id="profile_upload_text" class="text-xs text-purple-400 font-medium">Clique para adicionar uma foto</span>
                             <input type="file"
                                    name="profile_photo"
                                    id="profile_photo_input"
                                    accept="image/*"
-                                   class="sr-only"
-                                   data-crop-target="profile"
-                                   data-preview-img="profile_preview_img"
-                                   data-hidden-input="cropped_profile_photo">
-                        </label>
-                    </div>
+                                   class="hidden">
+                        </div>
 
-                    <div class="mt-3 flex items-center gap-3">
-                        <button type="button"
-                                id="profile_recrop_button"
-                                data-recrop-input="profile_photo_input"
-                                class="hidden text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
-                            Recortar novamente
-                        </button>
-                        <button type="button"
-                                id="profile_remove_button"
-                                class="hidden text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">
-                            Remover foto
-                        </button>
+                        {{-- Upload label e botões --}}
+                        <div class="flex-1 space-y-2">
+                            <label for="profile_photo_input"
+                                   class="flex flex-col items-center justify-center gap-2 h-20 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200">
+                                <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span id="profile_upload_text" class="text-xs text-purple-400 font-medium">Clique para adicionar uma foto</span>
+                            </label>
+
+                            <div class="flex items-center gap-3">
+                                <button type="button"
+                                        id="profile_recrop_button"
+                                        class="hidden text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                    Recortar novamente
+                                </button>
+                                <button type="button"
+                                        id="profile_remove_button"
+                                        class="hidden text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">
+                                    Remover foto
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <input type="hidden" name="cropped_profile_photo" id="cropped_profile_photo" value="{{ old('cropped_profile_photo') }}">
@@ -83,7 +90,7 @@
                 </div>
 
                 {{-- ── Banner da loja ── --}}
-                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4"
+                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-4"
                      x-data="{ bannerStyle: '{{ old('banner_style', 'color') }}', bannerPreview: @js(old('banner_photo_base64')), selectedColor: '{{ old('banner_color', '#6A0DAD') }}', showAllColors: false }">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Banner da loja</p>
                     <p class="text-xs text-purple-300">Escolha uma cor ou envie uma foto para o topo do seu perfil.</p>
@@ -160,12 +167,24 @@
 
                     <div x-show="bannerStyle === 'photo'" class="space-y-3">
                         <label class="block text-xs font-semibold text-gray-500">Foto do banner</label>
-                        <label class="w-full h-28 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200 flex items-center justify-center text-xs text-purple-400 font-medium">
-                            <span x-show="!bannerPreview">Clique para selecionar uma foto</span>
+                        <label id="banner_upload_label"
+                               class="w-full h-28 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200 flex items-center justify-center text-xs text-purple-400 font-medium overflow-hidden">
+                            <span id="banner_upload_text" x-show="!bannerPreview">Clique para selecionar uma foto</span>
                             <img x-show="bannerPreview" :src="bannerPreview" class="w-full h-full rounded-xl object-cover">
-                            <input type="file" name="banner_photo" id="banner_photo_input" accept="image/*" class="sr-only"
-                                   @change="bannerPreview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null">
+                            <input type="file" name="banner_photo" id="banner_photo_input" accept="image/*" class="sr-only">
                         </label>
+                        <div class="flex items-center gap-3">
+                            <button type="button"
+                                    id="banner_recrop_button"
+                                    class="hidden text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                Recortar novamente
+                            </button>
+                            <button type="button"
+                                    id="banner_remove_button"
+                                    class="hidden text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">
+                                Remover foto
+                            </button>
+                        </div>
                         <input type="hidden" name="banner_photo_base64" id="banner_photo_base64" value="{{ old('banner_photo_base64') }}">
                         @error('banner_photo')
                             <p class="text-xs text-red-400">{{ $message }}</p>
@@ -177,7 +196,6 @@
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-5">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Identidade</p>
 
-                    {{-- Nome --}}
                     <div>
                         <label for="name" class="block text-xs font-semibold text-gray-500 mb-2">Seu nome</label>
                         <input type="text" name="name" id="name" value="{{ old('name', Auth::user()->name) }}"
@@ -188,7 +206,6 @@
                         @enderror
                     </div>
 
-                    {{-- Nome do estabelecimento --}}
                     <div>
                         <label for="establishment_name" class="block text-xs font-semibold text-gray-500 mb-2">
                             Nome do estabelecimento
@@ -203,7 +220,6 @@
                         @enderror
                     </div>
 
-                    {{-- Descrição --}}
                     <div>
                         <label for="description" class="block text-xs font-semibold text-gray-500 mb-2">Descrição</label>
                         <textarea name="description" id="description" rows="3"
@@ -219,7 +235,6 @@
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-5">
                     <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Contato</p>
 
-                    {{-- Telefone --}}
                     <div>
                         <label for="phone" class="block text-xs font-semibold text-gray-500 mb-2">Telefone</label>
                         <div class="relative">
@@ -230,7 +245,7 @@
                             </div>
                             <input type="tel" name="phone" id="phone" value="{{ old('phone') }}"
                                    placeholder="(11) 99999-9999"
-                                maxlength="15"
+                                   maxlength="15"
                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                         </div>
                         @error('phone')
@@ -238,7 +253,6 @@
                         @enderror
                     </div>
 
-                    {{-- Instagram --}}
                     <div>
                         <label for="instagram" class="block text-xs font-semibold text-gray-500 mb-2">
                             Instagram
@@ -330,14 +344,14 @@
                 </button>
 
             </form>
-
         </div>
     </div>
 
+    {{-- ── Modal Cropper (Perfil) ── --}}
     <div id="cropper_modal" class="fixed inset-0 z-[80] hidden">
         <div class="absolute inset-0 bg-black/70" id="cropper_backdrop"></div>
         <div class="relative z-10 min-h-full flex items-center justify-center p-4">
-            <div class="w-full max-w-3xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <div class="w-full max-w-lg bg-white rounded-2xl overflow-hidden shadow-2xl">
                 <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
                     <h3 class="text-base font-bold text-purple-800">Ajustar foto de perfil</h3>
                     <button type="button" id="cropper_close" class="text-purple-300 hover:text-purple-600 transition-colors">
@@ -347,16 +361,53 @@
                     </button>
                 </div>
                 <div class="p-5">
-                    <div class="w-full max-h-[65vh] overflow-hidden rounded-xl bg-gray-100">
+                    <div class="w-full max-h-[55vh] overflow-hidden rounded-xl bg-gray-100">
                         <img id="cropper_image" alt="Imagem para recorte" class="max-w-full block">
                     </div>
-                    <p class="mt-3 text-xs text-purple-400">Arraste e ajuste a área para escolher o recorte.</p>
+                    <p class="mt-3 text-xs text-purple-400">Arraste e ajuste para enquadrar sua foto.</p>
                 </div>
                 <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
-                    <button type="button" id="cropper_cancel" class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                    <button type="button" id="cropper_cancel"
+                            class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
                         Cancelar
                     </button>
-                    <button type="button" id="cropper_confirm" class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200" style="background-color: #6A0DAD;">
+                    <button type="button" id="cropper_confirm"
+                            class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200"
+                            style="background-color: #6A0DAD;">
+                        Usar recorte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Modal Cropper (Banner) ── --}}
+    <div id="banner_cropper_modal" class="fixed inset-0 z-[80] hidden">
+        <div class="absolute inset-0 bg-black/70" id="banner_cropper_backdrop"></div>
+        <div class="relative z-10 min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl">
+                <div class="px-5 py-4 border-b border-purple-100 flex items-center justify-between">
+                    <h3 class="text-base font-bold text-purple-800">Ajustar foto do banner</h3>
+                    <button type="button" id="banner_cropper_close" class="text-purple-300 hover:text-purple-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-5">
+                    <div class="w-full max-h-[55vh] overflow-hidden rounded-xl bg-gray-100">
+                        <img id="banner_cropper_image" alt="Imagem para recorte do banner" class="max-w-full block">
+                    </div>
+                    <p class="mt-3 text-xs text-purple-400">Arraste e ajuste para enquadrar o banner (proporção 16:9).</p>
+                </div>
+                <div class="px-5 py-4 border-t border-purple-100 flex justify-end gap-2">
+                    <button type="button" id="banner_cropper_cancel"
+                            class="px-4 py-2.5 rounded-xl border border-purple-100 text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" id="banner_cropper_confirm"
+                            class="px-4 py-2.5 rounded-xl text-white text-xs font-semibold shadow-lg shadow-purple-200"
+                            style="background-color: #6A0DAD;">
                         Usar recorte
                     </button>
                 </div>
@@ -367,47 +418,40 @@
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const phoneInput = document.getElementById('phone');
-            const stateSelect = document.getElementById('state');
-            const citySelect = document.getElementById('city');
-            const profileInput = document.getElementById('profile_photo_input');
-            const profilePreview = document.getElementById('profile_preview_img');
-            const profileInitial = document.getElementById('profile_initial');
-            const profileUploadText = document.getElementById('profile_upload_text');
+
+            // ════════════════════════════════════════════
+            // CROPPER — FOTO DE PERFIL
+            // ════════════════════════════════════════════
+            const profileInput        = document.getElementById('profile_photo_input');
+            const profilePreview      = document.getElementById('profile_preview_img');
+            const profileInitial      = document.getElementById('profile_initial');
+            const profileUploadText   = document.getElementById('profile_upload_text');
             const profileRecropButton = document.getElementById('profile_recrop_button');
             const profileRemoveButton = document.getElementById('profile_remove_button');
             const croppedProfileInput = document.getElementById('cropped_profile_photo');
-            const cropperModal = document.getElementById('cropper_modal');
-            const cropperImage = document.getElementById('cropper_image');
-            const cropperClose = document.getElementById('cropper_close');
-            const cropperCancel = document.getElementById('cropper_cancel');
-            const cropperConfirm = document.getElementById('cropper_confirm');
-            const cropperBackdrop = document.getElementById('cropper_backdrop');
-            const bannerPhotoInput = document.getElementById('banner_photo_input');
-            const bannerPhotoBase64Input = document.getElementById('banner_photo_base64');
-            const oldCroppedProfile = @js(old('cropped_profile_photo'));
+            const cropperModal        = document.getElementById('cropper_modal');
+            const cropperImage        = document.getElementById('cropper_image');
+            const cropperClose        = document.getElementById('cropper_close');
+            const cropperCancel       = document.getElementById('cropper_cancel');
+            const cropperConfirm      = document.getElementById('cropper_confirm');
+            const cropperBackdrop     = document.getElementById('cropper_backdrop');
+            const stateSelect         = document.getElementById('state');
+            const citySelect          = document.getElementById('city');
+            const phoneInput          = document.getElementById('phone');
+            const oldCroppedProfile   = @js(old('cropped_profile_photo'));
+            const oldState            = "{{ old('state') }}";
+            const oldCity             = "{{ old('city') }}";
 
-            const oldState = "{{ old('state') }}";
-            const oldCity = "{{ old('city') }}";
             let cropper = null;
-            let activeInput = null;
-            const selectedFiles = new window.Map();
 
-            function openCropper(file, input) {
-                if (!file) {
-                    return;
-                }
-
-                activeInput = input;
+            profileInput.addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
                 const objectUrl = URL.createObjectURL(file);
                 cropperImage.src = objectUrl;
                 cropperModal.classList.remove('hidden');
-
-                if (cropper) {
-                    cropper.destroy();
-                }
-
-                cropper = new window.Cropper(cropperImage, {
+                if (cropper) { cropper.destroy(); }
+                cropper = new Cropper(cropperImage, {
                     aspectRatio: 1,
                     viewMode: 1,
                     dragMode: 'move',
@@ -415,277 +459,170 @@
                     responsive: true,
                     background: false,
                 });
-            }
+            });
 
-            function closeCropper(clearPendingSelection) {
-                if (cropper) {
-                    cropper.destroy();
-                    cropper = null;
-                }
-
+            function closeCropper() {
+                if (cropper) { cropper.destroy(); cropper = null; }
                 cropperModal.classList.add('hidden');
                 cropperImage.removeAttribute('src');
-
-                if (clearPendingSelection && activeInput) {
-                    activeInput.value = '';
-                }
-
-                activeInput = null;
+                profileInput.value = '';
             }
 
-            function applyProfilePreview(src) {
-                if (!profilePreview || !profileInitial) {
-                    return;
-                }
+            cropperConfirm.addEventListener('click', function () {
+                if (!cropper) return;
+                const canvas = cropper.getCroppedCanvas({ width: 900, height: 900, imageSmoothingQuality: 'high' });
+                if (!canvas) { closeCropper(); return; }
+                canvas.toBlob(function (blob) {
+                    const reader = new FileReader();
+                    reader.onloadend = function () {
+                        croppedProfileInput.value = reader.result;
+                        applyProfilePreview(URL.createObjectURL(blob));
+                        closeCropper();
+                    };
+                    reader.readAsDataURL(blob);
+                }, 'image/jpeg', 0.92);
+            });
 
+            cropperClose.addEventListener('click', closeCropper);
+            cropperCancel.addEventListener('click', closeCropper);
+            cropperBackdrop.addEventListener('click', closeCropper);
+
+            function applyProfilePreview(src) {
                 profilePreview.src = src;
                 profilePreview.classList.remove('hidden');
                 profileInitial.classList.add('hidden');
-
-                if (profileUploadText) {
-                    profileUploadText.textContent = 'Clique para trocar a foto';
-                }
-                if (profileRecropButton) {
-                    profileRecropButton.classList.remove('hidden');
-                }
-                if (profileRemoveButton) {
-                    profileRemoveButton.classList.remove('hidden');
-                }
+                if (profileUploadText)   profileUploadText.textContent = 'Clique para trocar a foto';
+                if (profileRecropButton) profileRecropButton.classList.remove('hidden');
+                if (profileRemoveButton) profileRemoveButton.classList.remove('hidden');
             }
 
             function clearProfilePreview() {
-                if (!profilePreview || !profileInitial) {
-                    return;
-                }
-
                 profilePreview.removeAttribute('src');
                 profilePreview.classList.add('hidden');
                 profileInitial.classList.remove('hidden');
-
-                if (profileUploadText) {
-                    profileUploadText.textContent = 'Clique para adicionar uma foto';
-                }
-                if (profileRecropButton) {
-                    profileRecropButton.classList.add('hidden');
-                }
-                if (profileRemoveButton) {
-                    profileRemoveButton.classList.add('hidden');
-                }
-                if (croppedProfileInput) {
-                    croppedProfileInput.value = '';
-                }
-
-                selectedFiles.delete('profile_photo_input');
+                if (profileUploadText)   profileUploadText.textContent = 'Clique para adicionar uma foto';
+                if (profileRecropButton) profileRecropButton.classList.add('hidden');
+                if (profileRemoveButton) profileRemoveButton.classList.add('hidden');
+                croppedProfileInput.value = '';
+                profileInput.value = '';
             }
 
-            function fileToDataUrl(file) {
-                return new window.Promise(function (resolve, reject) {
-                    const reader = new window.FileReader();
-                    reader.onloadend = function () { resolve(reader.result); };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-            }
+            if (profileRecropButton) profileRecropButton.addEventListener('click', function () { profileInput.click(); });
+            if (profileRemoveButton) profileRemoveButton.addEventListener('click', clearProfilePreview);
 
-            if (profileInput) {
-                profileInput.addEventListener('change', function (event) {
-                    const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
-                    if (!file) {
-                        return;
-                    }
-
-                    selectedFiles.set(profileInput.id, file);
-                    openCropper(file, profileInput);
-                });
-            }
-
-            if (profileRecropButton) {
-                profileRecropButton.addEventListener('click', function () {
-                    let fileToUse = selectedFiles.get('profile_photo_input');
-
-                    if (!fileToUse && profileInput && profileInput.files && profileInput.files[0]) {
-                        fileToUse = profileInput.files[0];
-                        selectedFiles.set('profile_photo_input', fileToUse);
-                    }
-
-                    if (fileToUse) {
-                        openCropper(fileToUse, profileInput);
-                    } else if (profileInput) {
-                        profileInput.click();
-                    }
-                });
-            }
-
-            if (profileRemoveButton) {
-                profileRemoveButton.addEventListener('click', function () {
-                    clearProfilePreview();
-                    if (profileInput) {
-                        profileInput.value = '';
-                    }
-                });
-            }
-
-            if (oldCroppedProfile && croppedProfileInput) {
+            if (oldCroppedProfile) {
                 croppedProfileInput.value = oldCroppedProfile;
                 applyProfilePreview(oldCroppedProfile);
             }
 
-            if (bannerPhotoInput && bannerPhotoBase64Input) {
-                bannerPhotoInput.addEventListener('change', async function (event) {
-                    const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
-                    if (!file) {
-                        bannerPhotoBase64Input.value = '';
-                        return;
-                    }
+            // ════════════════════════════════════════════
+            // CROPPER — BANNER
+            // ════════════════════════════════════════════
+            const bannerPhotoInput      = document.getElementById('banner_photo_input');
+            const bannerPhotoBase64     = document.getElementById('banner_photo_base64');
+            const bannerCropperModal    = document.getElementById('banner_cropper_modal');
+            const bannerCropperImage    = document.getElementById('banner_cropper_image');
+            const bannerCropperClose    = document.getElementById('banner_cropper_close');
+            const bannerCropperCancel   = document.getElementById('banner_cropper_cancel');
+            const bannerCropperConfirm  = document.getElementById('banner_cropper_confirm');
+            const bannerCropperBackdrop = document.getElementById('banner_cropper_backdrop');
+            const bannerRecropButton    = document.getElementById('banner_recrop_button');
+            const bannerRemoveButton    = document.getElementById('banner_remove_button');
+            const bannerUploadText      = document.getElementById('banner_upload_text');
 
-                    try {
-                        bannerPhotoBase64Input.value = await fileToDataUrl(file);
-                    } catch (error) {
-                        console.error('Falha ao preparar banner para persistencia:', error);
-                        bannerPhotoBase64Input.value = '';
-                    }
-                });
+            let bannerCropper = null;
+
+            // Obtém o componente Alpine.js do banner
+            function getBannerAlpine() {
+                const el = document.querySelector('[x-data*="bannerPreview"]');
+                return el ? Alpine.$data(el) : null;
             }
 
-            function handleCropConfirm() {
-                if (!cropper || !activeInput) {
-                    closeCropper(true);
-                    return;
-                }
-
-                const canvas = cropper.getCroppedCanvas({
-                    width: 900,
-                    height: 900,
-                    imageSmoothingQuality: 'high',
+            bannerPhotoInput.addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+                const objectUrl = URL.createObjectURL(file);
+                bannerCropperImage.src = objectUrl;
+                bannerCropperModal.classList.remove('hidden');
+                if (bannerCropper) { bannerCropper.destroy(); }
+                bannerCropper = new Cropper(bannerCropperImage, {
+                    aspectRatio: 16 / 9,
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 1,
+                    responsive: true,
+                    background: false,
                 });
+            });
 
-                if (!canvas) {
-                    closeCropper(true);
-                    return;
-                }
+            function closeBannerCropper() {
+                if (bannerCropper) { bannerCropper.destroy(); bannerCropper = null; }
+                bannerCropperModal.classList.add('hidden');
+                bannerCropperImage.removeAttribute('src');
+                bannerPhotoInput.value = '';
+            }
 
+            bannerCropperConfirm.addEventListener('click', function () {
+                if (!bannerCropper) return;
+                const canvas = bannerCropper.getCroppedCanvas({ width: 1600, height: 900, imageSmoothingQuality: 'high' });
+                if (!canvas) { closeBannerCropper(); return; }
                 canvas.toBlob(function (blob) {
-                    if (!blob) {
-                        closeCropper(true);
-                        return;
-                    }
-
-                    const reader = new window.FileReader();
+                    const previewUrl = URL.createObjectURL(blob);
+                    // Atualiza o preview no Alpine.js
+                    const alpine = getBannerAlpine();
+                    if (alpine) alpine.bannerPreview = previewUrl;
+                    // Atualiza o texto de upload
+                    if (bannerUploadText) bannerUploadText.style.display = 'none';
+                    if (bannerRecropButton) bannerRecropButton.classList.remove('hidden');
+                    if (bannerRemoveButton) bannerRemoveButton.classList.remove('hidden');
+                    // Salva base64 no campo hidden
+                    const reader = new FileReader();
                     reader.onloadend = function () {
-                        if (croppedProfileInput) {
-                            croppedProfileInput.value = reader.result;
-                        }
-
-                        applyProfilePreview(URL.createObjectURL(blob));
-
-                        if (activeInput) {
-                            activeInput.value = '';
-                        }
-                        closeCropper(false);
+                        if (bannerPhotoBase64) bannerPhotoBase64.value = reader.result;
                     };
                     reader.readAsDataURL(blob);
+                    closeBannerCropper();
                 }, 'image/jpeg', 0.92);
+            });
+
+            bannerCropperClose.addEventListener('click', closeBannerCropper);
+            bannerCropperCancel.addEventListener('click', closeBannerCropper);
+            bannerCropperBackdrop.addEventListener('click', closeBannerCropper);
+
+            if (bannerRecropButton) {
+                bannerRecropButton.addEventListener('click', function () { bannerPhotoInput.click(); });
             }
 
-            if (cropperConfirm) {
-                cropperConfirm.addEventListener('click', handleCropConfirm);
-            }
-            if (cropperClose) {
-                cropperClose.addEventListener('click', function () { closeCropper(true); });
-            }
-            if (cropperCancel) {
-                cropperCancel.addEventListener('click', function () { closeCropper(true); });
-            }
-            if (cropperBackdrop) {
-                cropperBackdrop.addEventListener('click', function () { closeCropper(true); });
-            }
-
-            async function loadStates(selectedState) {
-                stateSelect.disabled = true;
-                setSelectPlaceholder(stateSelect, 'Carregando estados...');
-
-                try {
-                    const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
-                    const states = await response.json();
-
-                    setSelectPlaceholder(stateSelect, 'Selecione');
-                    states.forEach(function (state) {
-                        const option = document.createElement('option');
-                        option.value = state.sigla;
-                        option.textContent = state.nome + ' (' + state.sigla + ')';
-                        stateSelect.appendChild(option);
-                    });
-
-                    stateSelect.disabled = false;
-
-                    if (selectedState) {
-                        stateSelect.value = selectedState;
-                    }
-                } catch (error) {
-                    setSelectPlaceholder(stateSelect, 'Nao foi possivel carregar os estados');
-                }
+            if (bannerRemoveButton) {
+                bannerRemoveButton.addEventListener('click', function () {
+                    const alpine = getBannerAlpine();
+                    if (alpine) alpine.bannerPreview = null;
+                    if (bannerPhotoBase64)  bannerPhotoBase64.value  = '';
+                    if (bannerPhotoInput)   bannerPhotoInput.value   = '';
+                    if (bannerUploadText)   bannerUploadText.style.display = '';
+                    if (bannerRecropButton) bannerRecropButton.classList.add('hidden');
+                    if (bannerRemoveButton) bannerRemoveButton.classList.add('hidden');
+                });
             }
 
-            function setSelectPlaceholder(select, placeholder) {
-                select.innerHTML = '';
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = placeholder;
-                select.appendChild(option);
+            // Restaura preview do banner após validação falhar (old())
+            const oldBannerBase64 = @js(old('banner_photo_base64'));
+            if (oldBannerBase64 && bannerUploadText) {
+                bannerUploadText.style.display = 'none';
+                if (bannerRecropButton) bannerRecropButton.classList.remove('hidden');
+                if (bannerRemoveButton) bannerRemoveButton.classList.remove('hidden');
             }
 
-            async function loadCities(uf, selectedCity) {
-                citySelect.disabled = true;
-                setSelectPlaceholder(citySelect, 'Carregando cidades...');
-
-                if (!uf) {
-                    citySelect.disabled = true;
-                    setSelectPlaceholder(citySelect, 'Selecione um estado primeiro');
-                    return;
-                }
-
-                try {
-                    const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + uf + '/municipios');
-                    const cities = await response.json();
-
-                    setSelectPlaceholder(citySelect, 'Selecione');
-                    cities.forEach(function (city) {
-                        const option = document.createElement('option');
-                        option.value = city.nome;
-                        option.textContent = city.nome;
-                        citySelect.appendChild(option);
-                    });
-
-                    citySelect.disabled = false;
-
-                    if (selectedCity) {
-                        citySelect.value = selectedCity;
-                    }
-                } catch (error) {
-                    setSelectPlaceholder(citySelect, 'Nao foi possivel carregar as cidades');
-                }
-            }
-
+            // ════════════════════════════════════════════
+            // MÁSCARA DE TELEFONE
+            // ════════════════════════════════════════════
             function applyPhoneMask(value) {
-                const digits = value.replace(/\D/g, '').slice(0, 11);
-
-                if (!digits) {
-                    return '';
-                }
-
-                if (digits.length <= 2) {
-                    return '(' + digits;
-                }
-
-                if (digits.length <= 6) {
-                    return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
-                }
-
-                if (digits.length <= 10) {
-                    return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
-                }
-
-                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
+                const d = value.replace(/\D/g, '').slice(0, 11);
+                if (!d) return '';
+                if (d.length <= 2)  return '(' + d;
+                if (d.length <= 6)  return '(' + d.slice(0,2) + ') ' + d.slice(2);
+                if (d.length <= 10) return '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6);
+                return '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7);
             }
 
             if (phoneInput) {
@@ -695,14 +632,61 @@
                 });
             }
 
-            stateSelect.addEventListener('change', function () {
-                loadCities(stateSelect.value, '');
-            });
+            // ════════════════════════════════════════════
+            // ESTADO / CIDADE (IBGE)
+            // ════════════════════════════════════════════
+            function setSelectPlaceholder(select, text) {
+                select.innerHTML = '';
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = text;
+                select.appendChild(opt);
+            }
 
-            loadStates(oldState).then(function () {
-                if (oldState) {
-                    loadCities(oldState, oldCity);
+            async function loadStates(selectedState) {
+                stateSelect.disabled = true;
+                setSelectPlaceholder(stateSelect, 'Carregando estados...');
+                try {
+                    const res    = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                    const states = await res.json();
+                    setSelectPlaceholder(stateSelect, 'Selecione');
+                    states.forEach(function (s) {
+                        const opt = document.createElement('option');
+                        opt.value = s.sigla;
+                        opt.textContent = s.nome + ' (' + s.sigla + ')';
+                        stateSelect.appendChild(opt);
+                    });
+                    stateSelect.disabled = false;
+                    if (selectedState) stateSelect.value = selectedState;
+                } catch (e) {
+                    setSelectPlaceholder(stateSelect, 'Não foi possível carregar os estados');
                 }
+            }
+
+            async function loadCities(uf, selectedCity) {
+                citySelect.disabled = true;
+                setSelectPlaceholder(citySelect, 'Carregando cidades...');
+                if (!uf) { setSelectPlaceholder(citySelect, 'Selecione um estado primeiro'); return; }
+                try {
+                    const res    = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + uf + '/municipios');
+                    const cities = await res.json();
+                    setSelectPlaceholder(citySelect, 'Selecione');
+                    cities.forEach(function (c) {
+                        const opt = document.createElement('option');
+                        opt.value = c.nome;
+                        opt.textContent = c.nome;
+                        citySelect.appendChild(opt);
+                    });
+                    citySelect.disabled = false;
+                    if (selectedCity) citySelect.value = selectedCity;
+                } catch (e) {
+                    setSelectPlaceholder(citySelect, 'Não foi possível carregar as cidades');
+                }
+            }
+
+            stateSelect.addEventListener('change', function () { loadCities(stateSelect.value, ''); });
+            loadStates(oldState).then(function () {
+                if (oldState) loadCities(oldState, oldCity);
             });
         });
     </script>
