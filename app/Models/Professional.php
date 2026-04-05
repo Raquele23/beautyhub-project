@@ -30,6 +30,7 @@ class Professional extends Model
         'latitude',
         'longitude',
         'auto_complete',
+        'preparation_time_minutes',
     ];
 
     public function user(): BelongsTo
@@ -156,8 +157,7 @@ class Professional extends Model
             return false;
         }
 
-        $minutesFromOpen = $open->diffInMinutes($slotStart, false);
-        if ($minutesFromOpen < 0 || $minutesFromOpen % (int) $availability->slot_interval !== 0) {
+        if ((int) $slotStart->format('i') % Availability::GRID_STEP_MINUTES !== 0 || (int) $slotStart->format('s') !== 0) {
             return false;
         }
 
@@ -208,10 +208,12 @@ class Professional extends Model
             ->whereIn('status', ['pending', 'confirmed'])
             ->get();
 
+        $preparationTimeMinutes = max((int) ($this->preparation_time_minutes ?? 15), 0);
+
         foreach ($appointments as $appointment) {
             $serviceDuration = max((int) ($appointment->service->duration ?? 0), 0);
             $start = $appointment->scheduled_at->copy();
-            $end = $start->copy()->addMinutes($serviceDuration);
+            $end = $start->copy()->addMinutes($serviceDuration + $preparationTimeMinutes);
             $ranges[] = [$start, $end];
         }
 

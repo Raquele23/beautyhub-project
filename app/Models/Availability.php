@@ -12,12 +12,13 @@ class Availability extends Model
 {
     use HasFactory;
 
+    public const GRID_STEP_MINUTES = 5;
+
     protected $fillable = [
         'professional_id',
         'weekday',
         'open_time',
         'close_time',
-        'slot_interval',
     ];
 
     // Nomes dos dias da semana para exibição
@@ -62,13 +63,13 @@ class Availability extends Model
             return [];
         }
 
-        $current = $open->copy();
+        $current = $this->alignToGrid($open->copy());
         while ($current->lessThan($close)) {
             $slotStart = $current->copy();
             $slotEnd = $slotStart->copy()->addMinutes($serviceDurationMinutes);
 
             if ($slotEnd->greaterThan($close)) {
-                $current->addMinutes($this->slot_interval);
+                $current->addMinutes(self::GRID_STEP_MINUTES);
                 continue;
             }
 
@@ -84,9 +85,22 @@ class Availability extends Model
                 $slots[] = $slotStart->format('H:i');
             }
 
-            $current->addMinutes($this->slot_interval);
+            $current->addMinutes(self::GRID_STEP_MINUTES);
         }
 
         return $slots;
+    }
+
+    private function alignToGrid(Carbon $time): Carbon
+    {
+        $remainder = $time->minute % self::GRID_STEP_MINUTES;
+
+        if ($remainder === 0 && (int) $time->second === 0) {
+            return $time->startOfMinute();
+        }
+
+        $minutesToAdd = self::GRID_STEP_MINUTES - $remainder;
+
+        return $time->addMinutes($minutesToAdd)->startOfMinute();
     }
 }

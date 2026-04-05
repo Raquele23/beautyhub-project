@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Availability;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -15,6 +16,7 @@ class AvailabilityController extends Controller
         $availabilities = $professional->availabilities()->with('breaks')->get()->keyBy('weekday');
 
         return view('professional.availability', [
+            'professional' => $professional,
             'availabilities' => $availabilities,
             'weekdays' => Availability::WEEKDAYS,
         ]);
@@ -24,6 +26,18 @@ class AvailabilityController extends Controller
     {
         $professional = Auth::user()->professional;
 
+        if ($request->has('preparation_time_minutes') && !$request->has('days')) {
+            $validated = Validator::make($request->all(), [
+                'preparation_time_minutes' => ['required', 'integer', 'min:5', 'max:240'],
+            ])->validate();
+
+            $professional->preparation_time_minutes = (int) $validated['preparation_time_minutes'];
+            $professional->save();
+
+            return redirect()->route('professional.availability')
+                ->with('status', 'Tempo de preparação atualizado com sucesso!');
+        }
+
         $validator = Validator::make($request->all(), [
             'days' => ['nullable', 'array'],
             'days.*' => ['in:0,1,2,3,4,5,6'],
@@ -31,8 +45,6 @@ class AvailabilityController extends Controller
             'open_time.*' => ['nullable', 'date_format:H:i'],
             'close_time' => ['nullable', 'array'],
             'close_time.*' => ['nullable', 'date_format:H:i'],
-            'slot_interval' => ['nullable', 'array'],
-            'slot_interval.*' => ['nullable', 'integer', 'min:15', 'max:240'],
             'breaks' => ['nullable', 'array'],
             'breaks.*' => ['nullable', 'string'],
         ]);
@@ -43,10 +55,9 @@ class AvailabilityController extends Controller
             foreach ($selectedDays as $weekday) {
                 $open = $request->input("open_time.$weekday");
                 $close = $request->input("close_time.$weekday");
-                $slotInterval = $request->input("slot_interval.$weekday");
 
-                if (!$open || !$close || !$slotInterval) {
-                    $validator->errors()->add("open_time.$weekday", 'Preencha abertura, fechamento e intervalo para os dias ativos.');
+                if (!$open || !$close) {
+                    $validator->errors()->add("open_time.$weekday", 'Preencha abertura e fechamento para os dias ativos.');
                     continue;
                 }
 
@@ -84,37 +95,38 @@ class AvailabilityController extends Controller
 
         $validator->validate();
 
-        $selectedDays = $request->input('days', []);
+        DB::transaction(function () use ($professional, $request) {
+            $selectedDays = $request->input('days', []);
 
-        // Remove dias que foram desmarcados
-        $professional->availabilities()
-            ->whereNotIn('weekday', $selectedDays)
-            ->delete();
+            // Remove dias que foram desmarcados
+            $professional->availabilities()
+                ->whereNotIn('weekday', $selectedDays)
+                ->delete();
 
-        // Salva ou atualiza os dias selecionados
-        foreach ($selectedDays as $weekday) {
-            $availability = $professional->availabilities()->updateOrCreate(
-                ['weekday' => $weekday],
-                [
-                    'open_time'     => $request->input("open_time.$weekday"),
-                    'close_time'    => $request->input("close_time.$weekday"),
-                    'slot_interval' => $request->input("slot_interval.$weekday"),
-                ]
-            );
+            // Salva ou atualiza os dias selecionados
+            foreach ($selectedDays as $weekday) {
+                $availability = $professional->availabilities()->updateOrCreate(
+                    ['weekday' => $weekday],
+                    [
+                        'open_time'  => $request->input("open_time.$weekday"),
+                        'close_time' => $request->input("close_time.$weekday"),
+                    ]
+                );
 
-            $parsed = $this->parseBreakLines((string) $request->input("breaks.$weekday", ''));
-            $parsedBreaks = $parsed['breaks'];
+                $parsed = $this->parseBreakLines((string) $request->input("breaks.$weekday", ''));
+                $parsedBreaks = $parsed['breaks'];
 
-            $availability->breaks()->delete();
-            if (!empty($parsedBreaks)) {
-                $availability->breaks()->createMany(array_map(function (array $break) {
-                    return [
-                        'start_time' => $break['start'],
-                        'end_time' => $break['end'],
-                    ];
-                }, $parsedBreaks));
+                $availability->breaks()->delete();
+                if (!empty($parsedBreaks)) {
+                    $availability->breaks()->createMany(array_map(function (array $break) {
+                        return [
+                            'start_time' => $break['start'],
+                            'end_time' => $break['end'],
+                        ];
+                    }, $parsedBreaks));
+                }
             }
-        }
+        });
 
         return redirect()->route('professional.availability')
             ->with('status', 'Disponibilidade atualizada com sucesso!');

@@ -41,11 +41,47 @@
                 </div>
             </div>
 
-            {{-- Main card --}}
-            <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden p-6">
+            <form method="POST" action="{{ route('professional.availability.save') }}" class="mb-6">
+                @csrf
 
-                <form method="POST" action="{{ route('professional.availability.save') }}">
-                    @csrf
+                <div class="rounded-2xl border border-purple-200 bg-purple-50 px-5 py-4">
+                    <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1">
+                        Tempo de preparação entre agendamentos
+                    </label>
+                    <p class="mb-2 text-[11px] text-purple-400">
+                        Tempo reservado entre um atendimento e outro para organização, limpeza ou deslocamento.
+                    </p>
+                    <div class="flex flex-col gap-4">
+                        <select
+                            name="preparation_time_minutes"
+                            class="w-full sm:w-80 rounded-xl border border-purple-200 bg-white text-purple-900 text-sm px-3 py-1.5 shadow-sm focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition"
+                        >
+                            @foreach([5, 10, 15, 20, 30, 45, 60, 90, 120] as $minutes)
+                                <option
+                                    value="{{ $minutes }}"
+                                    {{ old('preparation_time_minutes', $professional->preparation_time_minutes ?? 15) == $minutes ? 'selected' : '' }}
+                                >
+                                    {{ $minutes }} min
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <button
+                            type="submit"
+                            class="inline-flex items-center justify-center gap-2 self-start px-4 py-2 text-white text-xs font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 hover:-translate-y-0.5"
+                            style="background-color: #6A0DAD;"
+                        >
+                            Salvar tempo de preparação
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            {{-- Main card --}}
+            <form method="POST" action="{{ route('professional.availability.save') }}">
+                @csrf
+
+                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden p-6">
 
                     <div class="space-y-3">
                         @foreach($weekdays as $number => $name)
@@ -145,7 +181,7 @@
 
                                 {{-- Time fields --}}
                                   <div x-show="enabled" x-cloak
-                                      class="grid grid-cols-1 sm:grid-cols-3 gap-3 px-5 pb-5">
+                                      class="grid grid-cols-1 sm:grid-cols-2 gap-3 px-5 pb-5">
 
                                     <div>
                                         <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1.5">
@@ -153,6 +189,7 @@
                                         </label>
                                         <input
                                             type="time"
+                                            step="300"
                                             name="open_time[{{ $number }}]"
                                             value="{{ $openTime }}"
                                             class="w-full rounded-xl border border-purple-200 bg-white text-purple-900 text-sm px-3 py-2 shadow-sm focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition"
@@ -165,29 +202,11 @@
                                         </label>
                                         <input
                                             type="time"
+                                            step="300"
                                             name="close_time[{{ $number }}]"
                                             value="{{ $closeTime }}"
                                             class="w-full rounded-xl border border-purple-200 bg-white text-purple-900 text-sm px-3 py-2 shadow-sm focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition"
                                         >
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-[10px] text-purple-500 uppercase font-bold tracking-widest mb-1.5">
-                                            Intervalo
-                                        </label>
-                                        <select
-                                            name="slot_interval[{{ $number }}]"
-                                            class="w-full rounded-xl border border-purple-200 bg-white text-purple-900 text-sm px-3 py-2 shadow-sm focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition"
-                                        >
-                                            @foreach([15, 30, 45, 60, 90, 120] as $interval)
-                                                <option
-                                                    value="{{ $interval }}"
-                                                    {{ ($avail?->slot_interval ?? 60) == $interval ? 'selected' : '' }}
-                                                >
-                                                    {{ $interval }} min
-                                                </option>
-                                            @endforeach
-                                        </select>
                                     </div>
                                 </div>
 
@@ -294,8 +313,8 @@
                             Salvar disponibilidade
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
 
         </div>
     </div>
