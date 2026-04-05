@@ -12,6 +12,7 @@ class Notification extends Model
         'type',
         'message',
         'appointment_id',
+        'review_id',
         'read_at',
     ];
 
@@ -27,6 +28,11 @@ class Notification extends Model
     public function appointment(): BelongsTo
     {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function review(): BelongsTo
+    {
+        return $this->belongsTo(Review::class);
     }
 
     public function isUnread(): bool
