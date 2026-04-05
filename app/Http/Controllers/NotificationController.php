@@ -15,6 +15,17 @@ class NotificationController extends Controller
 
         $notification->update(['read_at' => now()]);
 
+        // ── Profissional recebeu uma avaliação ───────────────────────────
+        if ($notification->type === 'review_received') {
+            return redirect()->route('reviews.professional.index');
+        }
+
+        // ── Cliente recebeu resposta do profissional ─────────────────────
+        if ($notification->type === 'review_reply_received') {
+            return redirect()->route('reviews.client.index', ['tab' => 'reviewed']);
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         if (Auth::user()->isProfessional()) {
             return redirect()->route('professional.appointments');
         }
