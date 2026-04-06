@@ -108,8 +108,9 @@ class AvailabilityController extends Controller
                 $availability = $professional->availabilities()->updateOrCreate(
                     ['weekday' => $weekday],
                     [
-                        'open_time'  => $request->input("open_time.$weekday"),
-                        'close_time' => $request->input("close_time.$weekday"),
+                        'open_time'     => $request->input("open_time.$weekday"),
+                        'close_time'    => $request->input("close_time.$weekday"),
+                        'slot_interval' => $professional->preparation_time_minutes ?? 15,
                     ]
                 );
 

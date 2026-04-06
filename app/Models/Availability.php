@@ -19,6 +19,7 @@ class Availability extends Model
         'weekday',
         'open_time',
         'close_time',
+        'slot_interval',
     ];
 
     // Nomes dos dias da semana para exibição
