@@ -367,6 +367,19 @@
             <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6 space-y-5">
                 <p class="text-xs font-bold text-purple-400 uppercase tracking-wide">Endereço</p>
 
+                <div>
+                    <label for="zip_code" class="block text-xs font-semibold text-gray-500 mb-2">CEP</label>
+                    <input type="text" name="zip_code" id="zip_code" value="{{ old('zip_code', $professional->zip_code) }}"
+                           placeholder="00000-000"
+                           maxlength="9"
+                           class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                           data-mask="00000-000">
+                    <p id="zip_code_feedback" class="mt-1.5 text-xs text-red-400 min-h-[1rem]"></p>
+                    @error('zip_code')
+                        <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label for="state" class="block text-xs font-semibold text-gray-500 mb-2">Estado (UF)</label>
@@ -813,6 +826,86 @@
             loadStates(oldState).then(function () {
                 if (oldState) loadCities(oldState, oldCity);
             });
+
+            // ════════════════════════════════════════════
+            // ViaCEP API — BUSCAR ENDEREÇO POR CEP
+            // ════════════════════════════════════════════
+            const zipCodeInput = document.getElementById('zip_code');
+            const zipCodeFeedback = document.getElementById('zip_code_feedback');
+            const streetInput = document.getElementById('street');
+            const stateInput = document.getElementById('state');
+            const cityInput = document.getElementById('city');
+            let zipCodeLookupTimer = null;
+
+            if (zipCodeInput) {
+                const setZipCodeFeedback = function (message) {
+                    if (zipCodeFeedback) {
+                        zipCodeFeedback.textContent = message || '';
+                    }
+                };
+
+                const setZipCodeState = function (isError) {
+                    zipCodeInput.classList.toggle('border-red-300', isError);
+                    zipCodeInput.classList.toggle('focus:ring-red-300', isError);
+                    zipCodeInput.classList.toggle('border-purple-100', !isError);
+                    zipCodeInput.classList.toggle('focus:ring-purple-300', !isError);
+                };
+
+                const lookupZipCode = async function () {
+                    let cep = zipCodeInput.value.replace(/\D/g, '');
+                    
+                    if (cep.length !== 8) {
+                        setZipCodeFeedback('Digite um CEP completo para consultar.');
+                        setZipCodeState(true);
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                        const data = await response.json();
+
+                        if (data.erro) {
+                            setZipCodeFeedback('CEP não encontrado. Verifique o número informado.');
+                            setZipCodeState(true);
+                            return;
+                        }
+
+                        setZipCodeFeedback('');
+                        setZipCodeState(false);
+
+                        // Preencher os campos
+                        streetInput.value = data.logradouro || '';
+                        
+                        // Buscar e selecionar o estado
+                        const stateUF = data.uf;
+                        stateInput.value = stateUF;
+                        
+                        // Carregar as cidades do estado
+                        await loadCities(stateUF, data.localidade);
+                        
+                    } catch (error) {
+                        console.error('Erro ao buscar CEP:', error);
+                        setZipCodeFeedback('Não foi possível consultar o CEP agora. Tente novamente.');
+                        setZipCodeState(true);
+                    }
+                };
+
+                // Formatar CEP enquanto digita
+                zipCodeInput.addEventListener('input', function () {
+                    setZipCodeFeedback('');
+                    let value = zipCodeInput.value.replace(/\D/g, '');
+                    if (value.length <= 5) {
+                        zipCodeInput.value = value;
+                    } else {
+                        zipCodeInput.value = value.substring(0, 5) + '-' + value.substring(5, 8);
+                    }
+
+                    clearTimeout(zipCodeLookupTimer);
+                    if (value.length === 8) {
+                        zipCodeLookupTimer = setTimeout(lookupZipCode, 450);
+                    }
+                });
+            }
         });
     </script>
 </x-app-layout>
