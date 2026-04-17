@@ -23,6 +23,7 @@ class Professional extends Model
         'city',
         'street',
         'house_number',
+        'zip_code',
         'instagram',
         'profile_photo',
         'banner_color',
