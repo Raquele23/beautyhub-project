@@ -30,7 +30,7 @@
 
         <div class="w-full flex flex-col items-center">
 
-            <div class="w-full max-w-md lg:max-w-lg bg-violet-50 rounded-xl shadow-md p-8 md:p-10">
+            <div class="w-full max-w-lg bg-violet-50 rounded-xl shadow-md p-8 md:p-10">
                 <x-auth-session-status class="mb-4" :status="session('status')" />
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
