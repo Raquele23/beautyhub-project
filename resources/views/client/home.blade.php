@@ -173,8 +173,8 @@
                             </a>
                         @empty
                             <div class="rounded-xl border border-dashed border-purple-200 px-4 py-6 text-center">
-                                <p class="text-sm font-semibold text-gray-700">Ainda não há sugestões próximas.</p>
-                                <p class="text-xs text-purple-400 mt-1">Complete os perfis de profissionais para aparecerem aqui.</p>
+                                <p class="text-sm font-semibold text-gray-700">Ainda não encontramos profissionais perto de você.</p>
+                                <p class="text-xs text-purple-400 mt-1">Tente novamente em alguns minutos ou explore profissionais de outras regiões.</p>
                             </div>
                         @endforelse
                     </div>
