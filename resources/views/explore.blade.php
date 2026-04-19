@@ -24,6 +24,8 @@
                 @if(request('category'))
                     <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
+                <input id="explore-lat" type="hidden" name="lat" value="{{ request('lat') }}">
+                <input id="explore-lon" type="hidden" name="lon" value="{{ request('lon') }}">
             </div>
             <button type="submit"
                 class="px-6 py-2.5 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
@@ -213,6 +215,51 @@
     </div>
 
     <script>
+        function parseCoordinate(value) {
+            const parsed = parseFloat(value);
+            return Number.isNaN(parsed) ? null : parsed;
+        }
+
+        function getCurrentSearchParams() {
+            return new window.URLSearchParams(window.location.search);
+        }
+
+        function syncHiddenCoordinates(lat, lon) {
+            const latInput = document.getElementById('explore-lat');
+            const lonInput = document.getElementById('explore-lon');
+
+            if (latInput) {
+                latInput.value = lat ?? '';
+            }
+
+            if (lonInput) {
+                lonInput.value = lon ?? '';
+            }
+        }
+
+        function updateUrlWithCoordinates(lat, lon) {
+            const params = getCurrentSearchParams();
+            params.set('lat', lat.toFixed(6));
+            params.set('lon', lon.toFixed(6));
+            window.location.replace(`${window.location.pathname}?${params.toString()}`);
+        }
+
+        function clearCoordinatesFromUrlIfNeeded() {
+            const params = getCurrentSearchParams();
+            const hadCoordinates = params.has('lat') || params.has('lon');
+
+            if (!hadCoordinates) {
+                return;
+            }
+
+            params.delete('lat');
+            params.delete('lon');
+
+            const nextQuery = params.toString();
+            const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
+            window.location.replace(nextUrl);
+        }
+
         function haversine(lat1, lon1, lat2, lon2) {
             const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -224,48 +271,106 @@
         }
 
         function formatDistance(km) {
-            if (km < 1) return Math.round(km * 1000) + ' m';
-            return km.toFixed(1) + ' km';
+            let distance;
+            if (km < 1) distance = Math.round(km * 1000) + ' m';
+            else distance = km.toFixed(1) + ' km';
+            return 'Aprox. ' + distance;
+        }
+
+        function getGeolocationErrorLabel(error) {
+            if (!error) {
+                return 'Não foi possível acessar sua localização no momento.';
+            }
+
+            if (error.code === error.PERMISSION_DENIED) {
+                return 'Ative a localização no navegador para ver distâncias aproximadas.';
+            }
+
+            if (error.code === error.TIMEOUT) {
+                return 'Sua localização demorou para responder. Mostrando lista sem distância.';
+            }
+
+            return 'Não foi possível acessar sua localização no momento.';
+        }
+
+        function updateLocationBarMessage(message) {
+            const bar = document.getElementById('location-bar');
+            const text = document.getElementById('location-text');
+
+            if (!bar || !text) {
+                return;
+            }
+
+            bar.classList.remove('hidden');
+            bar.classList.add('flex');
+            text.textContent = message;
+        }
+
+        function renderDistances(userLat, userLon) {
+            const cards = Array.from(document.querySelectorAll('.professional-card'));
+
+            cards.forEach(card => {
+                const lat = parseFloat(card.dataset.lat);
+                const lon = parseFloat(card.dataset.lon);
+                const id  = card.dataset.id;
+
+                if (Number.isNaN(lat) || Number.isNaN(lon)) {
+                    return;
+                }
+
+                const dist = haversine(userLat, userLon, lat, lon);
+                const badge = document.querySelector(`.distance-badge-${id}`);
+
+                if (badge) {
+                    badge.textContent = formatDistance(dist);
+                    badge.classList.remove('hidden');
+                }
+            });
         }
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const userLat = position.coords.latitude;
                 const userLon = position.coords.longitude;
+                const params = getCurrentSearchParams();
+                const currentLat = parseCoordinate(params.get('lat'));
+                const currentLon = parseCoordinate(params.get('lon'));
 
-                const bar = document.getElementById('location-bar');
-                bar.classList.remove('hidden');
-                bar.classList.add('flex');
-                document.getElementById('location-text').textContent = 'Apresentando profissionais próximos a você';
+                syncHiddenCoordinates(userLat.toFixed(6), userLon.toFixed(6));
 
-                const cards = Array.from(document.querySelectorAll('.professional-card'));
+                renderDistances(userLat, userLon);
 
-                cards.forEach(card => {
-                    const lat = parseFloat(card.dataset.lat);
-                    const lon = parseFloat(card.dataset.lon);
-                    const id  = card.dataset.id;
+                const hasBackendCoordinates = currentLat !== null && currentLon !== null;
+                const coordinatesChanged = !hasBackendCoordinates
+                    || Math.abs(currentLat - userLat) > 0.0002
+                    || Math.abs(currentLon - userLon) > 0.0002;
 
-                    if (lat && lon) {
-                        const dist = haversine(userLat, userLon, lat, lon);
-                        card.dataset.distance = dist;
+                if (coordinatesChanged) {
+                    updateLocationBarMessage('Aplicando ordenação por proximidade...');
+                    updateUrlWithCoordinates(userLat, userLon);
+                    return;
+                }
 
-                        const badge = document.querySelector(`.distance-badge-${id}`);
-                        if (badge) {
-                            badge.textContent = formatDistance(dist);
-                            badge.classList.remove('hidden');
-                        }
-                    } else {
-                        card.dataset.distance = 999999;
-                    }
-                });
+                updateLocationBarMessage('Profissionais ordenados por proximidade.');
 
-                const grid = document.getElementById('professionals-grid');
-                cards.sort((a, b) => parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance));
-                cards.forEach(card => grid.appendChild(card));
+            }, function(error) {
+                syncHiddenCoordinates('', '');
 
-            }, function() {
-                // Usuário negou ou erro — mantém ordem original
+                if (error && error.code === error.PERMISSION_DENIED) {
+                    clearCoordinatesFromUrlIfNeeded();
+                    return;
+                }
+
+                updateLocationBarMessage(getGeolocationErrorLabel(error));
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000
             });
+        } else {
+            syncHiddenCoordinates('', '');
+            clearCoordinatesFromUrlIfNeeded();
+            updateLocationBarMessage('Seu navegador não oferece suporte à localização.');
         }
     </script>
 

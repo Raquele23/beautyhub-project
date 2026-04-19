@@ -12,7 +12,19 @@ class ExploreController extends Controller
     {
         $validCategories = array_keys(Service::categoryOptions());
 
-        $professionals = Professional::with(['services', 'user'])
+        $validated = $request->validate([
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lon' => ['nullable', 'numeric', 'between:-180,180'],
+        ]);
+
+        $userLat = isset($validated['lat']) ? (float) $validated['lat'] : null;
+        $userLon = isset($validated['lon']) ? (float) $validated['lon'] : null;
+        $hasUserCoordinates = $userLat !== null && $userLon !== null;
+
+        $professionalsQuery = Professional::query()
+            ->with(['services', 'user'])
+            ->leftJoin('users', 'users.id', '=', 'professionals.user_id')
+            ->select('professionals.*')
             ->when($request->search, function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
                     $q->where('city', 'like', "%{$request->search}%")
@@ -34,8 +46,19 @@ class ExploreController extends Controller
                 $query->whereHas('services', function ($q) use ($request) {
                     $q->where('category', $request->category);
                 });
-            })
-            ->get();
+            });
+
+        if ($hasUserCoordinates) {
+            $distanceSql = '(6371 * ACOS(COS(RADIANS(?)) * COS(RADIANS(professionals.latitude)) * COS(RADIANS(professionals.longitude) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(professionals.latitude))))';
+
+            $professionalsQuery
+                ->orderByRaw('CASE WHEN professionals.latitude IS NULL OR professionals.longitude IS NULL THEN 1 ELSE 0 END ASC')
+                ->orderByRaw($distanceSql . ' ASC', [$userLat, $userLon, $userLat]);
+        } else {
+            $professionalsQuery->orderByRaw("LOWER(COALESCE(NULLIF(professionals.establishment_name, ''), users.name)) ASC");
+        }
+
+        $professionals = $professionalsQuery->get();
 
         return view('explore', compact('professionals'));
     }
