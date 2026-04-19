@@ -478,6 +478,34 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
 
+        function getGeolocationErrorLabel(error) {
+            if (!error) {
+                return 'Distância indisponível no momento';
+            }
+
+            if (error.code === error.PERMISSION_DENIED) {
+                return 'Ative sua localização para ver a distância';
+            }
+
+            if (error.code === error.TIMEOUT) {
+                return 'A localização demorou para responder';
+            }
+
+            return 'Distância indisponível no momento';
+        }
+
+        function updateDistanceLabel(message) {
+            const label = document.getElementById('distance-label');
+            const text  = document.getElementById('distance-text');
+
+            if (!label || !text) {
+                return;
+            }
+
+            text.textContent = message;
+            label.classList.remove('hidden');
+        }
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 const dist = haversine(
@@ -486,13 +514,23 @@
                     {{ $professional->latitude }},
                     {{ $professional->longitude }}
                 );
-                const label = document.getElementById('distance-label');
-                const text  = document.getElementById('distance-text');
-                text.textContent = dist < 1
-                    ? Math.round(dist * 1000) + ' m de você'
-                    : dist.toFixed(1) + ' km de você';
-                label.classList.remove('hidden');
+
+                let distanceText;
+                if (dist < 1) {
+                    distanceText = 'Aprox. ' + Math.round(dist * 1000) + ' m de você';
+                } else {
+                    distanceText = 'Aprox. ' + dist.toFixed(1) + ' km de você';
+                }
+                updateDistanceLabel(distanceText);
+            }, function(error) {
+                updateDistanceLabel(getGeolocationErrorLabel(error));
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000
             });
+        } else {
+            updateDistanceLabel('Seu navegador não suporta geolocalização');
         }
     </script>
     @endif

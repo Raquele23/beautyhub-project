@@ -139,6 +139,10 @@
                         <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Sugestões próximas de você</p>
                     </div>
 
+                    <div id="nearby-location-bar" class="hidden px-6 py-2 border-b border-purple-50">
+                        <p id="nearby-location-text" class="text-xs text-purple-400"></p>
+                    </div>
+
                     <div id="nearby-list" class="p-4 space-y-3">
                         @forelse($nearbyRecommendations as $professional)
                             @php
@@ -185,11 +189,30 @@
 
     <script>
         function toDistanceLabel(km) {
+            let distance;
             if (km < 1) {
-                return Math.round(km * 1000) + ' m';
+                distance = Math.round(km * 1000) + ' m';
+            } else {
+                distance = km.toFixed(1).replace('.', ',') + ' km';
             }
 
-            return km.toFixed(1).replace('.', ',') + ' km';
+            return 'Aprox. ' + distance;
+        }
+
+        function getGeolocationErrorLabel(error) {
+            if (!error) {
+                return 'Não foi possível identificar sua localização agora.';
+            }
+
+            if (error.code === error.PERMISSION_DENIED) {
+                return 'Ative a localização no navegador para ver a distância.';
+            }
+
+            if (error.code === error.TIMEOUT) {
+                return 'Sua localização demorou para responder. Tente novamente.';
+            }
+
+            return 'Não foi possível identificar sua localização agora.';
         }
 
         function haversine(lat1, lon1, lat2, lon2) {
@@ -205,6 +228,8 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             const list = document.getElementById('nearby-list');
+            const locationBar = document.getElementById('nearby-location-bar');
+            const locationText = document.getElementById('nearby-location-text');
 
             if (!list) {
                 return;
@@ -215,7 +240,30 @@
                 return;
             }
 
+            function showLocationMessage(message) {
+                if (!locationBar || !locationText) {
+                    return;
+                }
+
+                locationText.textContent = message;
+                locationBar.classList.remove('hidden');
+            }
+
+            function showFallbackBadge(text) {
+                cards.forEach(function (card) {
+                    const badge = card.querySelector('.js-distance');
+                    if (!badge) {
+                        return;
+                    }
+
+                    badge.textContent = text;
+                    badge.classList.remove('hidden');
+                });
+            }
+
             if (!navigator.geolocation) {
+                showLocationMessage('Seu navegador não oferece suporte à localização.');
+                showFallbackBadge('Distância indisponível');
                 return;
             }
 
@@ -228,15 +276,17 @@
                     const lon = parseFloat(card.dataset.lon);
                     const fallback = parseFloat(card.dataset.fallback || '999999');
                     let distance = fallback;
+                    const badge = card.querySelector('.js-distance');
 
                     if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
                         distance = haversine(userLat, userLon, lat, lon);
+                    }
 
-                        const badge = card.querySelector('.js-distance');
-                        if (badge) {
-                            badge.textContent = toDistanceLabel(distance);
-                            badge.classList.remove('hidden');
-                        }
+                    if (badge) {
+                        badge.textContent = distance === fallback
+                            ? 'Distância indisponível'
+                            : toDistanceLabel(distance);
+                        badge.classList.remove('hidden');
                     }
 
                     card.dataset.distance = String(distance);
@@ -250,7 +300,16 @@
                         list.appendChild(card);
                     });
 
-            }, function () {});
+                showLocationMessage('Profissionais ordenados por proximidade.');
+
+            }, function (error) {
+                showLocationMessage(getGeolocationErrorLabel(error));
+                showFallbackBadge('Ative localização');
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000
+            });
         });
     </script>
 </x-app-layout>
