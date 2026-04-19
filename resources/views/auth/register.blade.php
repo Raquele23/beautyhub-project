@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
+    <title>BeautyHub</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,7 +30,7 @@
 
         <div class="w-full flex flex-col items-center">
 
-            <div class="w-full max-w-md lg:max-w-lg bg-violet-50 rounded-xl shadow-md p-8 md:p-10">
+            <div class="w-full max-w-lg bg-violet-50 rounded-xl shadow-md p-8 md:p-10">
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
 
