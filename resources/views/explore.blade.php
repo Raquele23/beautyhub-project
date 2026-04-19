@@ -48,13 +48,13 @@
         <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-thin-soft">
             @php
                 $categories = [
-                    'todos'       => ['label' => 'Todos',            'emoji' => '✨'],
-                    'cabelo'      => ['label' => 'Cuidados Capilares','emoji' => '✂️'],
-                    'manicure'    => ['label' => 'Manicure & Pedicure','emoji' => '💅'],
-                    'depilacao'   => ['label' => 'Depilação',         'emoji' => '🌿'],
-                    'sobrancelha' => ['label' => 'Sobrancelhas',      'emoji' => '🪮'],
-                    'maquiagem'   => ['label' => 'Maquiagem',         'emoji' => '💄'],
-                    'tratamentos' => ['label' => 'Tratamentos',       'emoji' => '🧖'],
+                    'todos'       => ['label' => 'Todos'],
+                    'cabelo'      => ['label' => 'Cuidados Capilares'],
+                    'manicure'    => ['label' => 'Manicure & Pedicure'],
+                    'depilacao'   => ['label' => 'Depilação'],
+                    'sobrancelha' => ['label' => 'Sobrancelhas'],
+                    'maquiagem'   => ['label' => 'Maquiagem'],
+                    'tratamentos' => ['label' => 'Tratamentos'],
                 ];
                 $activeCategory = request('category', 'todos');
             @endphp
@@ -66,7 +66,6 @@
                            ? 'text-white shadow-lg shadow-purple-200'
                            : 'bg-white text-purple-500 border border-purple-100 hover:border-purple-300' }}"
                    @if($activeCategory === $key) style="background-color: #6A0DAD;" @endif>
-                    <span>{{ $cat['emoji'] }}</span>
                     {{ $cat['label'] }}
                 </a>
             @endforeach
