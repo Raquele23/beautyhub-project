@@ -9,7 +9,7 @@
                     {{ $professional->establishment_name ?? $professional->user->name }}
                 </h1>
             </div>
-            <a href="{{ route('explore') }}"
+            <a href="{{ request('return_to', route('explore')) }}"
                class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                style="background-color: #E3D0F9;">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -464,6 +464,30 @@
             </div>
         </div>
     </div>
+
+    {{-- ── Script de rastreamento de visitação ── --}}
+    <script>
+        if (window.BEAUTY_HUB_VISITOR) {
+            window.BEAUTY_HUB_VISITOR.save({
+                id: {{ $professional->id }},
+                name: @json($professional->user->name),
+                photo: @json($professional->profile_photo ? asset('storage/' . $professional->profile_photo) : ''),
+                establishmentName: @json($professional->establishment_name ?? $professional->user->name),
+                latitude: @json($professional->latitude),
+                longitude: @json($professional->longitude),
+                categories: @json(
+                    $professional->services
+                        ->pluck('category')
+                        ->filter()
+                        ->unique()
+                        ->map(function ($category) {
+                            return \App\Models\Service::categoryOptions()[$category] ?? $category;
+                        })
+                        ->values()
+                ),
+            });
+        }
+    </script>
 
     {{-- ── Script de distância ── --}}
     @if($professional->latitude && $professional->longitude)

@@ -1,6 +1,9 @@
 <x-app-layout>
 
     <div class="max-w-5xl mx-auto px-4 sm:px-8 py-10 space-y-6">
+        @php
+            $returnTo = request()->fullUrl();
+        @endphp
 
         {{-- ── Topo ── --}}
         <div>
@@ -87,7 +90,7 @@
         @if($professionals->count())
             <div id="professionals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach($professionals as $professional)
-                    <a href="{{ route('professional.public', $professional->id) }}"
+                          <a href="{{ route('professional.public', ['professional' => $professional->id, 'return_to' => $returnTo]) }}"
                        class="professional-card bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 block"
                        data-lat="{{ $professional->latitude }}"
                        data-lon="{{ $professional->longitude }}"
@@ -133,7 +136,7 @@
                                     <div class="flex-shrink-0">
                                         <img src="{{ Storage::url($photo->photo) }}"
                                              alt="{{ $photo->description ?? '' }}"
-                                            @click.prevent.stop="window.location.href='{{ route('professional.public', $professional->id) }}#portfolio'"
+                                            @click.prevent.stop="window.location.href='{{ route('professional.public', ['professional' => $professional->id, 'return_to' => $returnTo]) }}#portfolio'"
                                              class="w-12 h-12 rounded-lg object-cover hover:scale-110 transition-transform cursor-pointer shadow-sm">
                                     </div>
                                     @endforeach

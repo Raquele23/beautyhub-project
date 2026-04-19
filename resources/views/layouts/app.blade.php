@@ -102,6 +102,81 @@
             };
 
             window.BEAUTY_HUB_GEO.enhanceExploreLinks();
+
+            window.BEAUTY_HUB_VISITOR_KEYS = {
+                visited: 'beautyhub:visited-professionals',
+            };
+
+            window.BEAUTY_HUB_VISITOR = {
+                save(visitor) {
+                    try {
+                        const visited = this.getRecent(100) || [];
+
+                        if (!visitor || !visitor.id) {
+                            return;
+                        }
+
+                        // Remove se já existe (para atualizar data)
+                        const filtered = visited.filter(v => v.id !== visitor.id);
+
+                        const categories = Array.isArray(visitor.categories)
+                            ? visitor.categories.filter(Boolean).map(function (category) {
+                                return String(category).trim();
+                            }).filter(Boolean)
+                            : [];
+
+                        // Adiciona no início com timestamp atual
+                        filtered.unshift({
+                            id: visitor.id,
+                            name: visitor.name || '',
+                            establishmentName: visitor.establishmentName || visitor.name || '',
+                            photo: visitor.photo || '',
+                            latitude: visitor.latitude !== null && visitor.latitude !== undefined && visitor.latitude !== '' ? parseFloat(visitor.latitude) : null,
+                            longitude: visitor.longitude !== null && visitor.longitude !== undefined && visitor.longitude !== '' ? parseFloat(visitor.longitude) : null,
+                            categories: categories.filter(function (category, index, list) {
+                                return list.indexOf(category) === index;
+                            }),
+                            timestamp: Date.now(),
+                        });
+
+                        // Mantém apenas os últimos 20
+                        const limited = filtered.slice(0, 20);
+
+                        localStorage.setItem(
+                            window.BEAUTY_HUB_VISITOR_KEYS.visited,
+                            JSON.stringify(limited)
+                        );
+                    } catch (error) {
+                        // Ignora falhas de storage.
+                    }
+                },
+
+                getRecent(limit = 8) {
+                    try {
+                        const data = localStorage.getItem(window.BEAUTY_HUB_VISITOR_KEYS.visited);
+                        if (!data) {
+                            return [];
+                        }
+
+                        const visited = JSON.parse(data);
+                        if (!Array.isArray(visited)) {
+                            return [];
+                        }
+
+                        return visited.slice(0, limit || visited.length);
+                    } catch (error) {
+                        return [];
+                    }
+                },
+
+                clear() {
+                    try {
+                        localStorage.removeItem(window.BEAUTY_HUB_VISITOR_KEYS.visited);
+                    } catch (error) {
+                        // Ignora falhas de storage.
+                    }
+                },
+            };
         </script>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])

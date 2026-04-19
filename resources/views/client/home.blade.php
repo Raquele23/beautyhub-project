@@ -136,58 +136,28 @@
             <div>
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                     <div class="px-6 py-4 border-b border-purple-50 flex items-center justify-between gap-3">
-                        <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Sugestões próximas de você</p>
+                        <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Visitados Recentemente</p>
                     </div>
 
-                    <div id="nearby-location-bar" class="hidden px-6 py-2 border-b border-purple-50">
-                        <p id="nearby-location-text" class="text-xs text-purple-400"></p>
-                    </div>
-
-                    <div id="nearby-list" class="p-4 space-y-3">
-                        @forelse($nearbyRecommendations as $professional)
-                            @php
-                                $summary = $ratingSummary->get($professional->user_id);
-                            @endphp
-                            <a href="{{ route('professional.public', $professional) }}"
-                               class="js-nearby-card flex items-center gap-3 rounded-xl border border-purple-100 px-4 py-3 hover:border-purple-300 transition-colors"
-                               data-lat="{{ $professional->latitude }}"
-                               data-lon="{{ $professional->longitude }}"
-                               data-fallback="999999">
-                                @if($professional->profile_photo)
-                                    <img src="{{ asset('storage/' . $professional->profile_photo) }}"
-                                         alt="{{ $professional->user->name }}"
-                                         class="w-12 h-12 rounded-full object-cover flex-shrink-0">
-                                @else
-                                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-extrabold text-purple-700 flex-shrink-0"
-                                         style="background-color: #E3D0F9;">
-                                        {{ strtoupper(substr($professional->user->name, 0, 1)) }}
-                                    </div>
-                                @endif
-
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $professional->establishment_name ?? $professional->user->name }}</p>
-                                    <p class="text-xs text-purple-400 truncate">{{ $professional->city }}, {{ $professional->state }}</p>
-                                    @if($summary)
-                                        <p class="text-[11px] text-gray-500 mt-0.5">⭐ {{ number_format((float) $summary->avg_rating, 1, ',', '.') }} ({{ $summary->ratings_count }})</p>
-                                    @endif
-                                </div>
-
-                                <span class="js-distance hidden text-xs font-semibold px-2.5 py-1 rounded-full"
-                                      style="background-color: #F3EBFD; color: #6A0DAD;"></span>
-                            </a>
-                        @empty
-                            <div class="rounded-xl border border-dashed border-purple-200 px-4 py-6 text-center">
-                                <p class="text-sm font-semibold text-gray-700">Ainda não encontramos profissionais perto de você.</p>
-                                <p class="text-xs text-purple-400 mt-1">Tente novamente em alguns minutos ou explore profissionais de outras regiões.</p>
-                            </div>
-                        @endforelse
+                    <div id="recent-list" class="p-4 space-y-3">
+                        <!-- Preenchido via JavaScript -->
                     </div>
                 </div>
             </div>
+
+
         </div>
     </div>
 
     <script>
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
         function toDistanceLabel(km) {
             let distance;
             if (km < 1) {
@@ -195,125 +165,108 @@
             } else {
                 distance = km.toFixed(1).replace('.', ',') + ' km';
             }
-
             return 'Aprox. ' + distance;
         }
 
-        function getGeolocationErrorLabel(error) {
-            if (!error) {
-                return 'Não foi possível identificar sua localização agora.';
+        function toRelativeVisitLabel(timestamp) {
+            if (!timestamp) {
+                return 'Visitado recentemente';
             }
 
-            if (error.code === error.PERMISSION_DENIED) {
-                return 'Ative a localização no navegador para ver a distância.';
+            const diffMs = Date.now() - timestamp;
+            const diffMinutes = Math.floor(diffMs / 60000);
+
+            if (diffMinutes < 1) {
+                return 'Visitado agora';
             }
 
-            if (error.code === error.TIMEOUT) {
-                return 'Sua localização demorou para responder. Tente novamente.';
+            if (diffMinutes < 60) {
+                return 'Visitado há ' + diffMinutes + ' min';
             }
 
-            return 'Não foi possível identificar sua localização agora.';
-        }
+            const diffHours = Math.floor(diffMinutes / 60);
 
-        function haversine(lat1, lon1, lat2, lon2) {
-            const earth = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) ** 2
-                + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
-                * Math.sin(dLon / 2) ** 2;
+            if (diffHours < 24) {
+                return 'Visitado há ' + diffHours + ' h';
+            }
 
-            return earth * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (diffDays < 7) {
+                return 'Visitado há ' + diffDays + ' dia' + (diffDays > 1 ? 's' : '');
+            }
+
+            return 'Visitado recentemente';
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            const list = document.getElementById('nearby-list');
-            const locationBar = document.getElementById('nearby-location-bar');
-            const locationText = document.getElementById('nearby-location-text');
+            const recentList = document.getElementById('recent-list');
+            const returnToHome = @json(route('client.home') . '#recent-list');
 
-            if (!list) {
+            if (!recentList || !window.BEAUTY_HUB_VISITOR) {
                 return;
             }
 
-            const cards = Array.from(list.querySelectorAll('.js-nearby-card'));
-            if (!cards.length) {
+            const visited = window.BEAUTY_HUB_VISITOR.getRecent(5);
+
+            if (!visited.length) {
+                recentList.innerHTML = `
+                    <div class="rounded-xl border border-dashed border-purple-200 px-4 py-6 text-center">
+                        <p class="text-sm font-semibold text-gray-700">Nenhum profissional visitado ainda.</p>
+                        <p class="text-xs text-purple-400 mt-1">Quando você visitar um perfil, ele aparecerá aqui.</p>
+                    </div>
+                `;
                 return;
             }
 
-            function showLocationMessage(message) {
-                if (!locationBar || !locationText) {
-                    return;
-                }
+            function renderRecent(visitedList, userLat = null, userLon = null) {
+                recentList.innerHTML = visitedList.map(v => {
+                    const categories = Array.isArray(v.categories) ? v.categories.filter(Boolean) : [];
+                    const categoriesHtml = categories.length
+                        ? `<div class="mt-1 flex flex-wrap gap-1.5">
+                                ${categories.map(function (category) {
+                                    return `<span class="text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap" style="background-color: #F3EBFD; color: #6A0DAD;">${category}</span>`;
+                                }).join('')}
+                           </div>`
+                        : '';
 
-                locationText.textContent = message;
-                locationBar.classList.remove('hidden');
+                    return `
+                        <a href="/professional/${v.id}?return_to=${encodeURIComponent(returnToHome)}"
+                           class="flex items-start gap-3 rounded-xl border border-purple-100 px-4 py-3 hover:border-purple-300 transition-colors">
+                            ${v.photo
+                                ? `<img src="${v.photo}" alt="${v.name}" class="w-12 h-12 rounded-full object-cover flex-shrink-0">`
+                                : `<div class="w-12 h-12 rounded-full flex items-center justify-center text-lg font-extrabold text-purple-700 flex-shrink-0" style="background-color: #E3D0F9;">
+                                    ${v.name.charAt(0).toUpperCase()}
+                                  </div>`
+                            }
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-bold text-gray-900 truncate">${v.establishmentName}</p>
+                                <p class="text-xs text-purple-400 truncate">${toRelativeVisitLabel(v.timestamp)}</p>
+                                ${categoriesHtml}
+                            </div>
+                        </a>
+                    `;
+                }).join('');
             }
 
-            function showFallbackBadge(text) {
-                cards.forEach(function (card) {
-                    const badge = card.querySelector('.js-distance');
-                    if (!badge) {
-                        return;
-                    }
-
-                    badge.textContent = text;
-                    badge.classList.remove('hidden');
+            // Tentar pegar geolocalização
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    const userLat = position.coords.latitude;
+                    const userLon = position.coords.longitude;
+                    renderRecent(visited, userLat, userLon);
+                }, function (error) {
+                    // Se falhar, renderiza sem distância
+                    renderRecent(visited);
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 300000
                 });
+            } else {
+                // Navegador sem geolocalização
+                renderRecent(visited);
             }
-
-            if (!navigator.geolocation) {
-                showLocationMessage('Seu navegador não oferece suporte à localização.');
-                showFallbackBadge('Distância indisponível');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(function (position) {
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
-
-                if (window.BEAUTY_HUB_GEO) {
-                    window.BEAUTY_HUB_GEO.save(userLat.toFixed(6), userLon.toFixed(6));
-                }
-
-                cards.forEach(function (card) {
-                    const lat = parseFloat(card.dataset.lat);
-                    const lon = parseFloat(card.dataset.lon);
-                    const fallback = parseFloat(card.dataset.fallback || '999999');
-                    let distance = fallback;
-                    const badge = card.querySelector('.js-distance');
-
-                    if (!Number.isNaN(lat) && !Number.isNaN(lon)) {
-                        distance = haversine(userLat, userLon, lat, lon);
-                    }
-
-                    if (badge) {
-                        badge.textContent = distance === fallback
-                            ? 'Distância indisponível'
-                            : toDistanceLabel(distance);
-                        badge.classList.remove('hidden');
-                    }
-
-                    card.dataset.distance = String(distance);
-                });
-
-                cards
-                    .sort(function (a, b) {
-                        return parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance);
-                    })
-                    .forEach(function (card) {
-                        list.appendChild(card);
-                    });
-
-                showLocationMessage('Profissionais ordenados por proximidade.');
-
-            }, function (error) {
-                showLocationMessage(getGeolocationErrorLabel(error));
-                showFallbackBadge('Ative localização');
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000
-            });
         });
     </script>
 </x-app-layout>
