@@ -338,6 +338,10 @@
 
                 syncHiddenCoordinates(userLat.toFixed(6), userLon.toFixed(6));
 
+                if (window.BEAUTY_HUB_GEO) {
+                    window.BEAUTY_HUB_GEO.save(userLat.toFixed(6), userLon.toFixed(6));
+                }
+
                 renderDistances(userLat, userLon);
 
                 const hasBackendCoordinates = currentLat !== null && currentLon !== null;

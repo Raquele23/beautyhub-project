@@ -271,6 +271,10 @@
                 const userLat = position.coords.latitude;
                 const userLon = position.coords.longitude;
 
+                if (window.BEAUTY_HUB_GEO) {
+                    window.BEAUTY_HUB_GEO.save(userLat.toFixed(6), userLon.toFixed(6));
+                }
+
                 cards.forEach(function (card) {
                     const lat = parseFloat(card.dataset.lat);
                     const lon = parseFloat(card.dataset.lon);

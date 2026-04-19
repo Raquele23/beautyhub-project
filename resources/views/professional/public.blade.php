@@ -508,6 +508,10 @@
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
+                if (window.BEAUTY_HUB_GEO) {
+                    window.BEAUTY_HUB_GEO.save(position.coords.latitude.toFixed(6), position.coords.longitude.toFixed(6));
+                }
+
                 const dist = haversine(
                     position.coords.latitude,
                     position.coords.longitude,
