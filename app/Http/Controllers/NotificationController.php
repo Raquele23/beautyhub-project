@@ -24,6 +24,11 @@ class NotificationController extends Controller
         if ($notification->type === 'review_reply_received') {
             return redirect()->route('reviews.client.index', ['tab' => 'reviewed']);
         }
+
+        // ── Serviço concluído → leva o cliente direto para avaliar ───────
+        if ($notification->type === 'appointment_completed' && $notification->appointment_id) {
+            return redirect()->route('reviews.create', ['appointment' => $notification->appointment_id]);
+        }
         // ─────────────────────────────────────────────────────────────────
 
         if (Auth::user()->isProfessional()) {
