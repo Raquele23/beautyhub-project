@@ -7,7 +7,7 @@
     <div class="max-w-6xl mx-auto px-4 sm:px-8 py-10 space-y-6">
 
         {{-- ── Topo ── --}}
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between max-w-[980px] mx-auto w-full">
             <div>
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Portfólio</h1>
@@ -49,7 +49,7 @@
             </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start max-w-[980px] mx-auto">
 
         {{-- ── Adicionar foto ── --}}
         @if($professional->portfolioPhotos()->count() < 10)
@@ -102,10 +102,10 @@
                     <input type="text" name="description"
                            placeholder="Descrição (opcional)"
                               maxlength="30"
-                           class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                           class="w-full max-w-[240px] mx-auto block px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
 
                     <button type="submit"
-                            class="w-full py-2.5 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                            class="w-full max-w-[240px] mx-auto block py-2.5 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
                             style="background-color: #6A0DAD;">
                         Adicionar foto
                     </button>
@@ -131,7 +131,7 @@
 
             <div id="photos-scroll" class="p-6 flex-1 overflow-y-auto scrollbar-thin-soft">
                 @if($professional->portfolioPhotos->count() > 0)
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                     @foreach($professional->portfolioPhotos as $photo)
                     <div class="group relative"
                         x-data="{ editOpen: false, editPreview: @js(Storage::url($photo->photo)), editDescription: @js($photo->description ?? '') }">
