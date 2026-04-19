@@ -13,13 +13,16 @@ class ProfessionalObserver
 
     public function updated(Professional $professional): void
     {
-        // Só re-geocodifica se o endereço mudou
-        if (
+        $addressChanged =
             $professional->wasChanged('street') ||
             $professional->wasChanged('house_number') ||
             $professional->wasChanged('city') ||
-            $professional->wasChanged('state')
-        ) {
+            $professional->wasChanged('state');
+
+        $missingCoordinates = !$professional->latitude || !$professional->longitude;
+
+        // Re-geocodifica quando o endereço mudar ou quando ainda estiver sem coordenadas.
+        if ($addressChanged || $missingCoordinates) {
             $professional->geocode();
         }
     }

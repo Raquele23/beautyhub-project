@@ -64,24 +64,204 @@ class Professional extends Model
         return "{$this->street}, {$this->house_number} - {$this->city}, {$this->state}";
     }
 
-    // Chama OpenStreetMap para converter endereço em coordenadas
+    // Chama múltiplas APIs para converter endereço em coordenadas
+    // Fallback: ViaCEP → Google Maps → Photon → Nominatim
     public function geocode(): void
     {
         try {
-            $query = urlencode("{$this->street}, {$this->house_number}, {$this->city}, {$this->state}, Brasil");
+            // ===== ESTRATÉGIA 1: ViaCEP (valida endereço) =====
+            if (!empty($this->zip_code)) {
+                $cleanZip = preg_replace('/\D/', '', $this->zip_code);
+                if (strlen($cleanZip) === 8) {
+                    // ViaCEP valida e retorna endereço formatado
+                    $viacepResult = $this->validateViaCEP($cleanZip);
+                    if ($viacepResult) {
+                        // Se ViaCEP validou, tenta geocodificar o endereço validado
+                        if ($this->geocodeGoogle()) {
+                            return;
+                        }
+                    }
+                }
+            }
 
-            $response = Http::withHeaders([
-            'User-Agent' => 'AgendaApp/1.0'
-            ])->withoutVerifying()->get("https://nominatim.openstreetmap.org/search?q={$query}&format=json&limit=1");
+            // ===== ESTRATÉGIA 2: Google Maps Geocoding =====
+            if ($this->geocodeGoogle()) {
+                return;
+            }
+
+            // ===== ESTRATÉGIA 3: Photon =====
+            if ($this->geocodePhoton()) {
+                return;
+            }
+
+            // ===== ESTRATÉGIA 4: Nominatim (fallback final) =====
+            if ($this->geocodeNominatim()) {
+                return;
+            }
+
+            Log::info('Geocoding fallback to city center for professional ' . $this->id, [
+                'address' => $this->full_address,
+                'zip_code' => $this->zip_code,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Geocoding failed for professional ' . $this->id . ': ' . $e->getMessage());
+        }
+    }
+
+    private function validateViaCEP(string $cleanZip): bool
+    {
+        try {
+            $zip = substr($cleanZip, 0, 5) . '-' . substr($cleanZip, 5);
+
+            $response = Http::withoutVerifying()
+                ->timeout(10)
+                ->retry(2, 300)
+                ->get("https://viacep.com.br/ws/{$zip}/json/");
+
+            $result = $response->json();
+
+            if (!empty($result['logradouro']) && empty($result['erro'])) {
+                $this->street = $result['logradouro'];
+                $this->city = $result['localidade'];
+                $this->state = $result['uf'];
+                return true;
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::debug('ViaCEP validation failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function geocodeGoogle(): bool
+    {
+        try {
+            $key = config('services.google.maps_key');
+            if (empty($key)) {
+                return false;
+            }
+
+            $address = trim("{$this->street}, {$this->house_number}, {$this->city}, {$this->state}, Brasil", " ,");
+            if (empty($address)) {
+                return false;
+            }
+
+            $response = Http::withoutVerifying()
+                ->timeout(10)
+                ->retry(2, 300)
+                ->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                    'address' => $address,
+                    'key' => $key,
+                    'region' => 'br',
+                    'language' => 'pt-BR',
+                ]);
+
+            $result = $response->json();
+
+            if ($result['status'] === 'OK' && !empty($result['results'][0]['geometry']['location'])) {
+                $loc = $result['results'][0]['geometry']['location'];
+                $this->latitude = $loc['lat'];
+                $this->longitude = $loc['lng'];
+                $this->saveQuietly();
+                Log::debug('Geocoded via Google Maps for professional ' . $this->id);
+                return true;
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::debug('Google Maps geocoding failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function geocodePhoton(): bool
+    {
+        try {
+            $query = trim("{$this->street}, {$this->city}, {$this->state}, Brasil", " ,");
+            if (empty($query)) {
+                return false;
+            }
+
+            $response = Http::withoutVerifying()
+                ->timeout(10)
+                ->retry(2, 300)
+                ->get('https://photon.komoot.io/api/', [
+                    'q' => $query,
+                    'limit' => 1,
+                    'lang' => 'pt',
+                ]);
+
+            $result = $response->json();
+
+            if (!empty($result['features'][0]['geometry']['coordinates'])) {
+                $coords = $result['features'][0]['geometry']['coordinates'];
+                $this->longitude = $coords[0];
+                $this->latitude = $coords[1];
+                $this->saveQuietly();
+                return true;
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::debug('Photon geocoding failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function geocodeNominatim(): bool
+    {
+        try {
+            $queries = [];
+
+            // Query 1: Rua + Cidade + Estado (prioridade)
+            $streetCityStateAddress = trim("{$this->street}, {$this->city}, {$this->state}, Brasil", " ,");
+            if (!empty($streetCityStateAddress)) {
+                $queries[] = $streetCityStateAddress;
+            }
+
+            // Query 2: Completo com número + CEP
+            $fullAddress = trim("{$this->street}, {$this->house_number}, {$this->city}, {$this->state}, {$this->zip_code}, Brasil", " ,");
+            if (!empty($fullAddress) && $fullAddress !== $streetCityStateAddress) {
+                $queries[] = $fullAddress;
+            }
+
+            // Query 3: Apenas Cidade + Estado (fallback genérico)
+            $cityStateAddress = trim("{$this->city}, {$this->state}, Brasil", " ,");
+            if (!empty($cityStateAddress) && $cityStateAddress !== $streetCityStateAddress) {
+                $queries[] = $cityStateAddress;
+            }
+
+            foreach ($queries as $query) {
+                $response = Http::withHeaders([
+                    'User-Agent' => 'BeautyHub/1.0 (contato@beautyhub.local)',
+                    'Accept-Language' => 'pt-BR,pt;q=0.9,en;q=0.8',
+                ])
+                    ->withoutVerifying()
+                    ->timeout(10)
+                    ->retry(2, 300)
+                    ->get('https://nominatim.openstreetmap.org/search', [
+                        'q' => $query,
+                        'format' => 'json',
+                        'limit' => 1,
+                        'countrycodes' => 'br',
+                        'addressdetails' => 0,
+                    ]);
+
                 $results = $response->json();
 
-            if (!empty($results)) {
-                $this->latitude  = $results[0]['lat'];
-                $this->longitude = $results[0]['lon'];
-                $this->saveQuietly();
+                if (!empty($results[0]['lat']) && !empty($results[0]['lon'])) {
+                    $this->latitude = $results[0]['lat'];
+                    $this->longitude = $results[0]['lon'];
+                    $this->saveQuietly();
+                    return true;
+                }
             }
-        } catch (\Exception $e) {
-            Log::warning('Geocoding failed for professional ' . $this->id . ': ' . $e->getMessage());
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::debug('Nominatim geocoding failed: ' . $e->getMessage());
+            return false;
         }
     }
 
