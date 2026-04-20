@@ -140,6 +140,9 @@
                                  alt="{{ $photo->description ?? '' }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         </div>
+                        @if($photo->description)
+                            <p class="text-sm text-center mt-1 text-gray-700">{{ $photo->description }}</p>
+                        @endif
                         {{-- Overlay de ações --}}
                         <div class="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col items-center justify-center gap-2">
                             <button @click="editOpen = true"
@@ -161,10 +164,7 @@
                                 </button>
                             </form>
                         </div>
-                        @if($photo->description)
-                            <p class="mt-1 text-xs font-medium text-gray-600 leading-snug break-words">{{ $photo->description }}</p>
-                        @endif
-
+                        
                         {{-- Modal de edição --}}
                             <div x-show="editOpen"
                                 x-cloak
