@@ -14,7 +14,7 @@ return new class extends Migration
             $table->tinyInteger('weekday'); // 0 = domingo, 1 = segunda, ..., 6 = sábado
             $table->time('open_time');
             $table->time('close_time');
-            $table->unsignedSmallInteger('slot_interval'); // em minutos (ex: 30, 60)
+            $table->smallInteger('slot_interval'); // em minutos (ex: 30, 60)
             $table->timestamps();
 
             $table->unique(['professional_id', 'weekday']); // um registro por dia por profissional

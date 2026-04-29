@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('professional_id')->constrained()->cascadeOnDelete();
             $table->foreignId('service_id')->constrained()->cascadeOnDelete();
             $table->dateTime('scheduled_at');
-            $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
+            $table->string('status')->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
