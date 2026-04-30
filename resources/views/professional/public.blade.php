@@ -28,7 +28,7 @@
             {{-- Banner com foto centrada --}}
             @php
                 $bannerStyle = $professional->banner_photo
-                    ? 'background-image: url(' . asset('storage/' . $professional->banner_photo) . '); background-size: cover; background-position: center;'
+                    ? 'background-image: url(' . Storage::url($professional->banner_photo) . '); background-size: cover; background-position: center;'
                     : 'background-color: ' . ($professional->banner_color ?? '#6A0DAD') . ';';
             @endphp
             <div class="relative h-36 w-full" style="{{ $bannerStyle }}">
@@ -387,10 +387,16 @@
                 <div class="py-4 border-b border-purple-50 last:border-0">
                     <div class="flex items-start justify-between gap-3 mb-2">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-purple-500"
-                                 style="background-color: #EDE4F8;">
-                                {{ strtoupper(substr($review->client->name, 0, 1)) }}
-                            </div>
+                            @if($review->client->profile_photo_path)
+                                <img src="{{ Storage::url($review->client->profile_photo_path) }}"
+                                     alt="{{ $review->client->name }}"
+                                     class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+                            @else
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-purple-500"
+                                     style="background-color: #EDE4F8;">
+                                    {{ strtoupper(substr($review->client->name, 0, 1)) }}
+                                </div>
+                            @endif
                             <div>
                                 <p class="text-sm font-semibold text-gray-800">{{ $review->client->name }}</p>
                                 <p class="text-xs text-purple-300">{{ $review->created_at->diffForHumans() }}</p>

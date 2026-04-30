@@ -99,7 +99,7 @@
 
             @php
                 $bannerStyle = $professional->banner_photo
-                    ? 'background-image: url(' . asset('storage/' . $professional->banner_photo) . '); background-size: cover; background-position: center;'
+                    ? 'background-image: url(' . Storage::url($professional->banner_photo) . '); background-size: cover; background-position: center;'
                     : 'background-color: ' . ($professional->banner_color ?? '#6A0DAD') . ';';
             @endphp
             <div class="relative h-36 w-full" style="{{ $bannerStyle }}">
