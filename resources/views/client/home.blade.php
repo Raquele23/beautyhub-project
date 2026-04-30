@@ -30,7 +30,7 @@
                     <div class="relative h-24 w-full" style="background: linear-gradient(135deg, #6A0DAD 0%, #9333EA 100%);">
                         <div class="absolute left-1/2 -bottom-10 -translate-x-1/2 w-20 h-20 rounded-full border-4 border-white shadow-lg overflow-hidden" style="background-color: #EDE4F8;">
                             @if(auth()->user()->profile_photo_path)
-                                <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}"
+                                <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
                                      alt="Foto de perfil"
                                      class="w-full h-full object-cover">
                             @else

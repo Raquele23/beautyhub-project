@@ -303,7 +303,7 @@
             {{-- Avatar + info no menu mobile --}}
             <div class="px-2 mb-2 flex items-center gap-3">
                 @if(Auth::user()->profile_photo_path)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
+                    <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
                          alt="Foto"
                          class="w-10 h-10 rounded-full object-cover ring-2 ring-purple-300">
                 @else
