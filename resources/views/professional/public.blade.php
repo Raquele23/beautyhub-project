@@ -468,10 +468,10 @@
     {{-- ── Script de rastreamento de visitação ── --}}
     <script>
         if (window.BEAUTY_HUB_VISITOR) {
-            window.BEAUTY_HUB_VISITOR.save({
+                window.BEAUTY_HUB_VISITOR.save({
                 id: {{ $professional->id }},
                 name: @json($professional->user->name),
-                photo: @json($professional->profile_photo ? asset('storage/' . $professional->profile_photo) : ''),
+                photo: @json($professional->profile_photo ? Storage::url($professional->profile_photo) : ''),
                 establishmentName: @json($professional->establishment_name ?? $professional->user->name),
                 latitude: @json($professional->latitude),
                 longitude: @json($professional->longitude),
