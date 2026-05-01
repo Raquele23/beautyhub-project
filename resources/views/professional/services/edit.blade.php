@@ -86,22 +86,22 @@
             </div>
 
             {{-- ── Duração + Preço ── --}}
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
                     <label for="duration" class="block text-xs font-bold text-purple-400 uppercase tracking-wide mb-3">
                         Duração <span class="text-red-400">*</span>
                     </label>
                     <input type="hidden" name="duration" id="duration" value="{{ old('duration', $service->duration) }}">
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="relative">
-                            <input type="number" id="duration_hours" value="0" min="0" max="12"
-                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                            <input type="number" id="duration_hours" value="0" min="0" max="12" inputmode="numeric"
+                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 text-center focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
                                    placeholder="0">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">h</span>
                         </div>
                         <div class="relative">
-                            <input type="number" id="duration_minutes" value="0" min="0" max="59"
-                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
+                            <input type="number" id="duration_minutes" value="0" min="0" max="59" inputmode="numeric"
+                                   class="w-full px-4 py-2.5 pr-10 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 text-center focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm"
                                    placeholder="0">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-purple-300">min</span>
                         </div>
