@@ -68,6 +68,9 @@
                        min="{{ now()->toDateString() }}"
                        value="{{ old('date') }}"
                        class="w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
+                <div x-show="selectedDate && !loading && slots.length === 0" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3" style="display:none;">
+                    <p class="text-xs font-semibold text-amber-700">O profissional não está disponível nessa data. Selecione outro dia.</p>
+                </div>
                 <x-input-error :messages="$errors->get('date')" class="mt-2 text-xs text-red-400" />
             </div>
 
