@@ -349,9 +349,9 @@
                 </div>
 
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $service->name }}</p>
+                    <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal">{{ $service->name }}</p>
                     @if($service->description)
-                        <p class="text-xs text-purple-300 mt-0.5 truncate">{{ $service->description }}</p>
+                        <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
                     @endif
                     <div class="flex items-center gap-3 mt-1">
                         <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
