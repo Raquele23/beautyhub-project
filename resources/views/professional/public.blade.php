@@ -315,26 +315,26 @@
                             <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
                             <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
                         </div>
-                    </div>
-                </div>
 
-                {{-- Botão Agendar alinhado com início/fim das infos --}}
-                <div class="w-full sm:w-auto pl-[72px] sm:pl-0 mt-2 sm:mt-0">
-                    @auth
-                        @if(auth()->user()->isClient())
-                            <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
-                               class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                               style="background-color: #6A0DAD;">
-                                Agendar
-                            </a>
-                        @endif
-                    @else
-                        <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
-                                class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                style="background-color: #6A0DAD;">
-                            Agendar
-                        </button>
-                    @endauth
+                        {{-- Botão Agendar --}}
+                        <div class="mt-3 w-full sm:w-auto">
+                            @auth
+                                @if(auth()->user()->isClient())
+                                    <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
+                                       class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                       style="background-color: #6A0DAD;">
+                                        Agendar
+                                    </a>
+                                @endif
+                            @else
+                                <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
+                                        class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                        style="background-color: #6A0DAD;">
+                                    Agendar
+                                </button>
+                            @endauth
+                        </div>
+                    </div>
                 </div>
 
             </div>
