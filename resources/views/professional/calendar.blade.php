@@ -13,8 +13,8 @@
                 class="space-y-4"
             >
                 {{-- Controles --}}
-                <div class="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm">
-                    <div class="flex items-center gap-2">
+                <div class="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl px-4 py-4 sm:px-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between shadow-sm">
+                    <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
                         <button @click="prev()"
                                 class="w-8 h-8 rounded-lg border border-purple-300 text-purple-800 flex items-center justify-center hover:bg-purple-100 hover:text-purple-700 transition duration-150 active:scale-95">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,21 +30,21 @@
                             </svg>
                         </button>
                         <button @click="goToday()"
-                                class="text-xs font-semibold text-purple-800 border border-purple-300 px-3 py-1.5 rounded-lg ml-1 hover:bg-purple-800 hover:text-white transition duration-150">
+                                class="text-xs font-semibold text-purple-800 border border-purple-300 px-3 py-1.5 rounded-lg ml-1 hover:bg-purple-800 hover:text-white transition duration-150 shrink-0">
                             Hoje
                         </button>
                     </div>
 
                     {{-- Toggle --}}
-                    <div class="flex rounded-xl overflow-hidden border border-purple-300 self-start sm:self-auto">
+                    <div class="flex rounded-xl overflow-hidden border border-purple-300 self-stretch sm:self-auto w-full sm:w-auto">
                         <button @click="view = 'month'"
                                 :class="view === 'month' ? 'bg-purple-800 text-white' : 'bg-white text-purple-500 hover:bg-purple-100'"
-                                class="px-4 py-2 text-xs font-semibold transition duration-150">
+                                class="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold transition duration-150">
                             Mensal
                         </button>
                         <button @click="view = 'week'"
                                 :class="view === 'week' ? 'bg-purple-800 text-white' : 'bg-white text-purple-500 hover:bg-purple-100'"
-                                class="px-4 py-2 text-xs font-semibold transition duration-150 border-l border-purple-300">
+                                class="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold transition duration-150 border-l border-purple-300">
                             Semanal
                         </button>
                     </div>
