@@ -54,42 +54,40 @@
                 {{-- Imagem --}}
                 <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
                     @if($service->image)
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-b border-purple-50 last:border-0">
+                        <img src="{{ Storage::url($service->image) }}"
                              alt="{{ $service->name }}"
                              class="w-full h-full object-cover">
                     @else
-                                {{-- Imagem --}}
-                                <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
-                                    @if($service->image)
-                                        <img src="{{ Storage::url($service->image) }}"
-                                             alt="{{ $service->name }}"
-                                             class="w-full h-full object-cover">
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center">
-                                            <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                            </svg>
-                                        </div>
-                                    @endif
-                                </div>
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Info --}}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal">{{ $service->name }}</p>
+                    @if($service->description)
+                        <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
+                    @endif
                     <div class="mt-1 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
-                                {{-- Info --}}
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal leading-tight">{{ $service->name }}</p>
-                                    @if($service->description)
-                                        <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
-                                    @endif
-                                    <div class="mt-1 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
-                                        <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
-                                        <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
-                                    </div>
+                        <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
+                        <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
+                    </div>
+                </div>
+
+                {{-- Ações --}}
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <a href="{{ route('services.edit', $service) }}"
+                       class="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
                        style="background-color: #EDE4F8; color: #6A0DAD;">
-                            </div>
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {{-- Ações --}}
-                            <div class="flex items-center gap-2 flex-shrink-0 self-start sm:self-center w-full sm:w-auto">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
                         Editar
-                                   class="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+                    </a>
                     <form method="POST" action="{{ route('services.destroy', $service) }}"
                           onsubmit="return confirm('Tem certeza que deseja excluir este serviço?')">
                         @csrf
@@ -101,7 +99,7 @@
                             </svg>
                             Excluir
                         </button>
-                                            class="inline-flex flex-1 sm:flex-none items-center justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl bg-red-50 text-red-400 hover:bg-red-100 transition-all duration-200 hover:-translate-y-0.5">
+                    </form>
                 </div>
 
             </div>
