@@ -3,7 +3,7 @@
     nav, nav * { font-family: 'Poppins', sans-serif !important; }
 </style>
 
-<nav x-data="{ open: false }" style="background-color: #EDE4F8;" class="border-b-2 border-purple-300 shadow-md">
+<nav x-data="{ open: false }" style="background-color: #EDE4F8;" class="relative border-b-2 border-purple-300 shadow-md">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             @php $unread = auth()->check() ? auth()->user()->unreadNotificationsCount() : 0; @endphp
@@ -132,7 +132,6 @@
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                 </span>
                                             @elseif(in_array($notification->type, ['review_received', 'review_reply_received']))
-                                                {{-- ★ Ícone de estrela VAZADO para avaliações --}}
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69l1.519-4.674z" />
@@ -237,7 +236,7 @@
                             </div>
 
                             <div class="max-h-80 overflow-y-auto divide-y divide-purple-50">
-                                @forelse(Auth::user()->notifications()->take(10)->get() as $notification)
+                                @forelse(auth()->user()->notifications()->take(10)->get() as $notification)
                                     <a href="{{ route('notifications.open', $notification->id) }}"
                                        @click.stop
                                        class="flex items-start gap-3 px-4 py-3 {{ $notification->isUnread() ? 'bg-purple-50' : '' }} hover:bg-purple-50 transition">
@@ -295,104 +294,111 @@
     </div>
 
     {{-- ── Responsive menu ── --}}
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-purple-200">
-        <div class="pt-2 pb-3 space-y-1 px-3">
-
-            @if(auth()->check() && auth()->user()->isProfessional() && auth()->user()->professional)
-                <x-responsive-nav-link :href="route('professional.dashboard')" :active="request()->routeIs('professional.dashboard')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Dashboard') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('professional.show')" :active="request()->routeIs('professional.show') || request()->routeIs('professional.edit')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Meu Perfil') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services*')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Meus Serviços') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('professional.availability')" :active="request()->routeIs('professional.availability')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Disponibilidade') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Agendamentos') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('professional.calendar')" :active="request()->routeIs('professional.calendar')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Calendário') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Avaliações') }}
-                </x-responsive-nav-link>
-            @endif
-
-            @if(auth()->check() && auth()->user()->isClient())
-                <x-responsive-nav-link :href="route('client.home')" :active="request()->routeIs('client.home')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Início') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('explore')" :active="request()->routeIs('explore')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Explorar') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('client.appointments')" :active="request()->routeIs('client.appointments')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Meus Agendamentos') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')"
-                    class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                    {{ __('Minhas Avaliações') }}
-                </x-responsive-nav-link>
-            @endif
-
-        </div>
-
-        @auth
-        <div class="pt-3 pb-3 border-t border-purple-200 px-3">
-            <div class="rounded-2xl border border-purple-100 bg-white/70 px-3 py-3 shadow-sm shadow-purple-100/60 backdrop-blur-sm">
-                <div class="min-w-0">
-                    <div class="font-semibold text-sm text-purple-900">{{ auth()->user()->name }}</div>
-                    <div class="text-xs text-purple-400">{{ auth()->user()->email }}</div>
-                </div>
-
-                <div class="mt-3 grid grid-cols-2 gap-2">
-                    <x-responsive-nav-link :href="route('profile.edit')"
-                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3 !py-2 !border-0 !bg-purple-50 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                        <span>{{ __('Minha conta') }}</span>
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+        <div
+            x-show="open"
+            @click.outside="open = false"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+            class="absolute right-3 top-full z-50 mt-2 w-64 max-w-[calc(100vw-1.5rem)] origin-top-right max-h-[calc(100vh-5.5rem)] overflow-y-auto rounded-2xl border border-purple-100 bg-white/95 p-3 shadow-2xl backdrop-blur-md"
+            style="display: none;"
+        >
+            <div class="space-y-1">
+                @if(auth()->check() && auth()->user()->isProfessional() && auth()->user()->professional)
+                    <x-responsive-nav-link :href="route('professional.dashboard')" :active="request()->routeIs('professional.dashboard')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Dashboard') }}
                     </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('professional.show')" :active="request()->routeIs('professional.show') || request()->routeIs('professional.edit')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Meu Perfil') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('services.index')" :active="request()->routeIs('services*')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Meus Serviços') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('professional.availability')" :active="request()->routeIs('professional.availability')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Disponibilidade') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('professional.appointments')" :active="request()->routeIs('professional.appointments')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Agendamentos') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('professional.calendar')" :active="request()->routeIs('professional.calendar')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Calendário') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('reviews.professional.index')" :active="request()->routeIs('reviews.professional.index')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Avaliações') }}
+                    </x-responsive-nav-link>
+                @endif
 
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <x-responsive-nav-link :href="route('logout')"
-                                onclick="event.preventDefault(); this.closest('form').submit();"
-                                class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3 !py-2 !border-0 !bg-purple-50 flex items-center justify-center gap-2 w-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                            <span>{{ __('Log Out') }}</span>
-                        </x-responsive-nav-link>
-                    </form>
-                </div>
+                @if(auth()->check() && auth()->user()->isClient())
+                    <x-responsive-nav-link :href="route('client.home')" :active="request()->routeIs('client.home')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Início') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('explore')" :active="request()->routeIs('explore')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Explorar') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('client.appointments')" :active="request()->routeIs('client.appointments')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Meus Agendamentos') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('reviews.client.index')" :active="request()->routeIs('reviews.client.index')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Minhas Avaliações') }}
+                    </x-responsive-nav-link>
+                @endif
             </div>
-        </div>
 
-        @else
-        <div class="pt-3 pb-3 border-t border-purple-200 px-5 space-y-2">
-            <x-responsive-nav-link :href="route('login')"
-                class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                {{ __('Entrar') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('register')"
-                class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
-                {{ __('Cadastrar') }}
-            </x-responsive-nav-link>
+            @auth
+                <div class="pt-3 pb-3 border-t border-purple-200">
+                    <div class="space-y-1">
+                        <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.edit')"
+                            class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                            <span class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 4H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                                <span>{{ __('Minha conta') }}</span>
+                            </span>
+                        </x-responsive-nav-link>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-responsive-nav-link :href="route('logout')"
+                                onclick="event.preventDefault(); this.closest('form').submit();"
+                                class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                                <span class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    <span>{{ __('Log Out') }}</span>
+                                </span>
+                            </x-responsive-nav-link>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <div class="pt-3 pb-3 border-t border-purple-200 px-5 space-y-2">
+                    <x-responsive-nav-link :href="route('login')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Entrar') }}
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('register')"
+                        class="!text-purple-800 !font-medium hover:!bg-purple-100 !rounded-xl !px-3">
+                        {{ __('Cadastrar') }}
+                    </x-responsive-nav-link>
+                </div>
+            @endauth
         </div>
-        @endauth
     </div>
 </nav>
