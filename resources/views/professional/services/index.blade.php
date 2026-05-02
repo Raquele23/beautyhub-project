@@ -82,7 +82,7 @@
                 </div>
 
                 {{-- Ações --}}
-                <div class="flex items-center gap-2 flex-shrink-0 self-start sm:self-center w-full sm:w-auto">
+                <div class="flex items-center gap-2 flex-shrink-0 self-start sm:self-center w-full sm:w-auto pl-[72px] sm:pl-0">
                     <a href="{{ route('services.edit', $service) }}"
                        class="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 flex-1 sm:flex-none"
                        style="background-color: #EDE4F8; color: #6A0DAD;">
