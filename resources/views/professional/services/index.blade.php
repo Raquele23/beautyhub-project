@@ -19,7 +19,7 @@
         </div>
 
         {{-- ── Toast ── --}}
-        @if(Session::get('status'))
+        @if(session('status'))
             <div
                 x-data="{ show: true }"
                 x-show="show"
@@ -36,7 +36,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <p class="text-sm font-semibold text-purple-800">{{ Session::get('status') }}</p>
+                <p class="text-sm font-semibold text-purple-800">{{ session('status') }}</p>
                 <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-600 transition-colors flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -72,7 +72,7 @@
                     @if($service->description)
                         <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
                     @endif
-                    <div class="flex items-center gap-3 mt-1">
+                    <div class="mt-1 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
                         <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
                         <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
                     </div>
