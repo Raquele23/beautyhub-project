@@ -28,13 +28,13 @@
             {{-- Banner com foto centrada --}}
             @php
                 $bannerStyle = $professional->banner_photo
-                    ? 'background-image: url(' . \Illuminate\Support\Facades\Storage::url($professional->banner_photo) . '); background-size: cover; background-position: center;'
+                    ? 'background-image: url(' . Storage::url($professional->banner_photo) . '); background-size: cover; background-position: center;'
                     : 'background-color: ' . ($professional->banner_color ?? '#6A0DAD') . ';';
             @endphp
             <div class="relative h-36 w-full" style="{{ $bannerStyle }}">
                 <div class="absolute left-1/2 -bottom-16 -translate-x-1/2 w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden" style="background-color: #EDE4F8;">
-                        @if($professional->profile_photo)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($professional->profile_photo) }}"
+                    @if($professional->profile_photo)
+                        <img src="{{ Storage::url($professional->profile_photo) }}"
                              alt="Foto de perfil"
                              class="w-full h-full object-cover">
                     @else
@@ -132,7 +132,7 @@
                    photoModal: false,
                    currentIndex: 0,
                    photos: @js($professional->portfolioPhotos->map(fn($photo) => [
-                       'url' => \Illuminate\Support\Facades\Storage::url($photo->photo),
+                       'url' => Storage::url($photo->photo),
                        'description' => $photo->description ?? 'Sem descrição para esta foto.',
                    ])->values()),
                    get selectedPhoto() {
@@ -164,7 +164,7 @@
                              @click="openPhoto({{ $loop->index }})"
                              class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer">
                     </div>
-                        @if($photo->description)
+                    @if($photo->description)
                         <p class="mt-1 text-xs font-medium text-gray-600 leading-snug break-words">{{ $photo->description }}</p>
                     @endif
                 </div>
@@ -172,7 +172,7 @@
             </div>
 
             {{-- Modal de ampliação --}}
-              <div x-show="photoModal" x-cloak @click="photoModal = false"
+            <div x-show="photoModal" x-cloak @click="photoModal = false"
                  @keydown.right.window="if (photoModal) nextPhoto()"
                  @keydown.left.window="if (photoModal) prevPhoto()"
                  class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
@@ -215,7 +215,7 @@
         </div>
         @endif
 
-        {{-- ── Serviços ── --}}
+        {{-- ── Disponibilidade ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Disponibilidade</p>
@@ -287,54 +287,71 @@
             </div>
 
             @forelse($professional->services as $service)
-            <div class="flex flex-col sm:flex-row gap-4 px-6 py-4 border-b border-purple-50 last:border-0">
+            <div class="flex items-center gap-4 px-6 py-4 border-b border-purple-50 last:border-0">
 
-                <div class="flex items-start gap-4 min-w-0">
-                    {{-- Imagem do serviço --}}
-                    <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
-                        @if($service->image)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($service->image) }}"
-                                 alt="{{ $service->name }}"
-                                 class="w-full h-full object-cover">
-                        @else
-                            <div class="w-full h-full flex items-center justify-center">
-                                <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
-                                </svg>
-                            </div>
-                        @endif
+                {{-- Imagem do serviço --}}
+                <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
+                    @if($service->image)
+                        <img src="{{ Storage::url($service->image) }}"
+                             alt="{{ $service->name }}"
+                             class="w-full h-full object-cover">
+                    @else
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Info --}}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal">{{ $service->name }}</p>
+                    @if($service->description)
+                        <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
+                    @endif
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
+                        <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
                     </div>
 
-                    {{-- Info --}}
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal">{{ $service->name }}</p>
-                        @if($service->description)
-                            <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
-                        @endif
-                        <div class="flex items-center gap-3 mt-1">
-                            <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
-                            <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
-                        </div>
-
-                        {{-- Botão Agendar --}}
-                        <div class="mt-3 w-full sm:w-auto">
-                            @auth
-                                @if(auth()->user()->isClient())
-                                    <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
-                                       class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                       style="background-color: #6A0DAD;">
-                                        Agendar
-                                    </a>
-                                @endif
-                            @else
-                                <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
-                                        class="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                        style="background-color: #6A0DAD;">
+                    {{-- Botão Agendar: visível só no mobile (abaixo das infos) --}}
+                    <div class="mt-3 sm:hidden">
+                        @auth
+                            @if(auth()->user()->isClient())
+                                <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
+                                   class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                   style="background-color: #6A0DAD;">
                                     Agendar
-                                </button>
-                            @endauth
-                        </div>
+                                </a>
+                            @endif
+                        @else
+                            <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
+                                    class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                    style="background-color: #6A0DAD;">
+                                Agendar
+                            </button>
+                        @endauth
                     </div>
+                </div>
+
+                {{-- Botão Agendar: visível só no desktop (à direita) --}}
+                <div class="hidden sm:flex flex-shrink-0">
+                    @auth
+                        @if(auth()->user()->isClient())
+                            <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200 whitespace-nowrap"
+                               style="background-color: #6A0DAD;">
+                                Agendar
+                            </a>
+                        @endif
+                    @else
+                        <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
+                                class="inline-flex items-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200 whitespace-nowrap"
+                                style="background-color: #6A0DAD;">
+                            Agendar
+                        </button>
+                    @endauth
                 </div>
 
             </div>
@@ -391,7 +408,7 @@
                     <div class="flex items-start justify-between gap-3 mb-2">
                         <div class="flex items-center gap-3">
                             @if($review->client->profile_photo_path)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($review->client->profile_photo_path) }}"
+                                <img src="{{ Storage::url($review->client->profile_photo_path) }}"
                                      alt="{{ $review->client->name }}"
                                      class="w-9 h-9 rounded-full object-cover flex-shrink-0">
                             @else
@@ -480,7 +497,7 @@
                 window.BEAUTY_HUB_VISITOR.save({
                 id: {{ $professional->id }},
                 name: @json($professional->user->name),
-                photo: @json($professional->profile_photo ? \Illuminate\Support\Facades\Storage::url($professional->profile_photo) : ''),
+                photo: @json($professional->profile_photo ? Storage::url($professional->profile_photo) : ''),
                 establishmentName: @json($professional->establishment_name ?? $professional->user->name),
                 latitude: @json($professional->latitude),
                 longitude: @json($professional->longitude),
