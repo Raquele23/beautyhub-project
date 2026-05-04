@@ -57,7 +57,7 @@
                         <div class="relative flex-shrink-0">
                             <div class="w-20 h-20 rounded-full p-0.5" style="background: linear-gradient(135deg, #6A0DAD, #A675D6);">
                                 @if(Auth::user()->profile_photo_path)
-                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}"
+                                    <img src="{{ Storage::url(Auth::user()->profile_photo_path) }}"
                                          alt="Foto de perfil"
                                          class="w-full h-full rounded-full object-cover">
                                 @else

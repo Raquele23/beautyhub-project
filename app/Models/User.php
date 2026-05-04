@@ -23,7 +23,7 @@ class User extends Authenticatable
     ];
 
     protected $attributes = [
-        'role' => 'client',
+        'role' => 'professional',
         'profile_completed' => false,
     ];
 

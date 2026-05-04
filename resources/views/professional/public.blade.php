@@ -28,7 +28,7 @@
             {{-- Banner com foto centrada --}}
             @php
                 $bannerStyle = $professional->banner_photo
-                    ? 'background-image: url(' . asset('storage/' . $professional->banner_photo) . '); background-size: cover; background-position: center;'
+                    ? 'background-image: url(' . Storage::url($professional->banner_photo) . '); background-size: cover; background-position: center;'
                     : 'background-color: ' . ($professional->banner_color ?? '#6A0DAD') . ';';
             @endphp
             <div class="relative h-36 w-full" style="{{ $bannerStyle }}">
@@ -172,7 +172,7 @@
             </div>
 
             {{-- Modal de ampliação --}}
-              <div x-show="photoModal" x-cloak @click="photoModal = false"
+            <div x-show="photoModal" x-cloak @click="photoModal = false"
                  @keydown.right.window="if (photoModal) nextPhoto()"
                  @keydown.left.window="if (photoModal) prevPhoto()"
                  class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
@@ -215,7 +215,7 @@
         </div>
         @endif
 
-        {{-- ── Serviços ── --}}
+        {{-- ── Disponibilidade ── --}}
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Disponibilidade</p>
@@ -306,18 +306,37 @@
 
                 {{-- Info --}}
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $service->name }}</p>
+                    <p class="text-sm font-semibold text-gray-900 break-words whitespace-normal">{{ $service->name }}</p>
                     @if($service->description)
-                        <p class="text-xs text-purple-300 mt-0.5 truncate">{{ $service->description }}</p>
+                        <p class="text-xs text-purple-300 mt-0.5 break-words whitespace-normal">{{ $service->description }}</p>
                     @endif
                     <div class="flex items-center gap-3 mt-1">
                         <span class="text-xs font-bold text-purple-700">R$ {{ number_format($service->price, 2, ',', '.') }}</span>
                         <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
                     </div>
+
+                    {{-- Botão Agendar: visível só no mobile (abaixo das infos) --}}
+                    <div class="mt-3 sm:hidden">
+                        @auth
+                            @if(auth()->user()->isClient())
+                                <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
+                                   class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                   style="background-color: #6A0DAD;">
+                                    Agendar
+                                </a>
+                            @endif
+                        @else
+                            <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
+                                    class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                                    style="background-color: #6A0DAD;">
+                                Agendar
+                            </button>
+                        @endauth
+                    </div>
                 </div>
 
-                {{-- Botão Agendar --}}
-                <div class="flex-shrink-0">
+                {{-- Botão Agendar: visível só no desktop (à direita) --}}
+                <div class="hidden sm:flex flex-shrink-0">
                     @auth
                         @if(auth()->user()->isClient())
                             <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
@@ -334,6 +353,7 @@
                         </button>
                     @endauth
                 </div>
+
             </div>
 
             @empty
@@ -387,10 +407,16 @@
                 <div class="py-4 border-b border-purple-50 last:border-0">
                     <div class="flex items-start justify-between gap-3 mb-2">
                         <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-purple-500"
-                                 style="background-color: #EDE4F8;">
-                                {{ strtoupper(substr($review->client->name, 0, 1)) }}
-                            </div>
+                            @if($review->client->profile_photo_path)
+                                <img src="{{ Storage::url($review->client->profile_photo_path) }}"
+                                     alt="{{ $review->client->name }}"
+                                     class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+                            @else
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold text-purple-500"
+                                     style="background-color: #EDE4F8;">
+                                    {{ strtoupper(substr($review->client->name, 0, 1)) }}
+                                </div>
+                            @endif
                             <div>
                                 <p class="text-sm font-semibold text-gray-800">{{ $review->client->name }}</p>
                                 <p class="text-xs text-purple-300">{{ $review->created_at->diffForHumans() }}</p>
@@ -468,10 +494,10 @@
     {{-- ── Script de rastreamento de visitação ── --}}
     <script>
         if (window.BEAUTY_HUB_VISITOR) {
-            window.BEAUTY_HUB_VISITOR.save({
+                window.BEAUTY_HUB_VISITOR.save({
                 id: {{ $professional->id }},
                 name: @json($professional->user->name),
-                photo: @json($professional->profile_photo ? asset('storage/' . $professional->profile_photo) : ''),
+                photo: @json($professional->profile_photo ? Storage::url($professional->profile_photo) : ''),
                 establishmentName: @json($professional->establishment_name ?? $professional->user->name),
                 latitude: @json($professional->latitude),
                 longitude: @json($professional->longitude),

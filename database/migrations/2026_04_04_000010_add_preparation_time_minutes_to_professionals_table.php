@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('professionals', function (Blueprint $table) {
-            $table->unsignedSmallInteger('preparation_time_minutes')->default(15)->after('auto_complete');
+            $table->smallInteger('preparation_time_minutes')->default(15)->after('auto_complete');
         });
 
         $professionals = DB::table('professionals')->select('id')->get();

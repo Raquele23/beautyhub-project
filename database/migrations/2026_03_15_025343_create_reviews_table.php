@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('appointment_id')->unique()->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('professional_id')->constrained('users')->cascadeOnDelete();
-            $table->unsignedTinyInteger('rating'); // 1–5
+            $table->tinyInteger('rating'); // 1–5
             $table->text('comment')->nullable();
             $table->text('professional_reply')->nullable();
             $table->timestamp('replied_at')->nullable();

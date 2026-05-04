@@ -24,15 +24,28 @@
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Agendamentos</h1>
             </div>
             <div class="flex items-center gap-2">
+                <!-- Desktop: botão com texto -->
                 <button
-                   type="button"
-                   onclick="window.dispatchEvent(new CustomEvent('open-create-appointment-modal'))"
-                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                   style="background-color: #6A0DAD;">
+                    type="button"
+                    onclick="window.dispatchEvent(new CustomEvent('open-create-appointment-modal'))"
+                    class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
+                    style="background-color: #6A0DAD;">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                     </svg>
                     Novo agendamento
+                </button>
+
+                <!-- Mobile: ícone apenas -->
+                <button
+                    type="button"
+                    onclick="window.dispatchEvent(new CustomEvent('open-create-appointment-modal'))"
+                    class="inline-flex sm:hidden w-10 h-10 rounded-xl items-center justify-center transition-all duration-200 hover:-translate-y-0.5 shadow-sm"
+                    style="background-color: #6A0DAD;"
+                    title="Novo agendamento">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                    </svg>
                 </button>
                 <button
                     onclick="window.dispatchEvent(new CustomEvent('open-settings-modal'))"
@@ -391,8 +404,8 @@
                                     <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
                                 </div>
 
-                                {{-- Botões + seta --}}
-                                <div class="flex items-center gap-2 flex-shrink-0">
+                                {{-- Ações: inline no desktop, empilhadas no mobile --}}
+                                <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
                                     <form method="POST" action="{{ route('appointments.confirm', $appointment->id) }}">
                                         @csrf @method('PATCH')
                                         <button type="submit" class="flex items-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5" style="background-color: #6A0DAD;">
@@ -402,14 +415,35 @@
                                     </form>
                                     <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl border transition-all duration-200 hover:-translate-y-0.5" style="background-color: #EDE4F8; color: #6A0DAD; border-color: #C4A8E8;">
+                                        <button type="submit" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl border transition-all duration-200" style="background-color: #EDE4F8; color: #6A0DAD; border-color: #C4A8E8;">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                                             Recusar
                                         </button>
                                     </form>
-                                    <svg class="w-4 h-4 text-purple-300 flex-shrink-0 transition-transform duration-200 cursor-pointer" :class="open ? 'rotate-180' : ''" @click="open = !open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                </div>
+
+                                {{-- Seta para expandir detalhes --}}
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <svg class="w-4 h-4 text-purple-300 transition-transform duration-200 cursor-pointer" :class="open ? 'rotate-180' : ''" @click="open = !open" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
+                                </div>
+                            </div>
+
+                            <div class="px-6 pb-4 sm:hidden">
+                                <div class="flex items-center gap-2">
+                                    <form method="POST" action="{{ route('appointments.confirm', $appointment->id) }}">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="w-28 text-center px-3 py-1.5 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-sm" style="background-color: #6A0DAD;">
+                                            Confirmar
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="w-28 text-center px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all duration-200" style="background-color: #EDE4F8; color: #6A0DAD; border-color: #C4A8E8;">
+                                            Recusar
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
 
@@ -442,6 +476,8 @@
                                     </div>
                                     @endif
                                 </div>
+
+                                
                             </div>
 
                         </div>

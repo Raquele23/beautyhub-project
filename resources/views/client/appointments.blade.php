@@ -8,13 +8,24 @@
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Meus Agendamentos</h1>
             </div>
+            <!-- Desktop: botão com texto -->
             <a href="{{ route('explore') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+               class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                style="background-color: #E3D0F9;">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                 </svg>
                 Novo agendamento
+            </a>
+
+            <!-- Mobile: ícone apenas -->
+            <a href="{{ route('explore') }}"
+               class="inline-flex sm:hidden w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+               style="background-color: #E3D0F9;"
+               title="Novo agendamento">
+                <svg class="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
             </a>
         </div>
 
