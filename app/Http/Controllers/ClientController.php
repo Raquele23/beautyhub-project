@@ -19,7 +19,6 @@ class ClientController extends Controller
 
         $pendingAppointmentsCount = $user->appointments()
             ->where('status', 'pending')
-            ->where('scheduled_at', '>=', now())
             ->count();
 
         return view('client.home', compact(
@@ -43,7 +42,6 @@ class ClientController extends Controller
         $pendingAppointments = $user->appointments()
             ->with(['service', 'professional.user'])
             ->where('status', 'pending')
-            ->where('scheduled_at', '>=', now())
             ->orderBy('scheduled_at')
             ->get();
 
