@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
-    Route::delete('/profile/photo', [ProfileController::class, 'removePhoto'])->name('profile.photo.remove'); // <-- ADICIONADO
+    Route::delete('/profile/photo', [ProfileController::class, 'removePhoto'])->name('profile.photo.remove');
 
     Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
         ->name('appointments.cancel');
@@ -84,9 +84,10 @@ Route::middleware(['auth', 'verified', 'professional'])->group(function () {
     });
 });
 
-Route::middleware(['auth', 'verified', 'client'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/client/home', [ClientController::class, 'home'])->name('client.home');
     Route::get('/client/appointments', [ClientController::class, 'appointments'])->name('client.appointments');
+    Route::get('/client/calendar', [ClientController::class, 'calendar'])->name('client.calendar');
 
     Route::get('/professional/{professional}/book/{service}', [AppointmentController::class, 'create'])->name('appointments.create');
     Route::post('/professional/{professional}/book/{service}', [AppointmentController::class, 'store'])->name('appointments.store');

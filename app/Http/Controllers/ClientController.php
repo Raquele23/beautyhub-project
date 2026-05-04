@@ -32,7 +32,6 @@ class ClientController extends Controller
     {
         $user = Auth::user();
 
-        // Roda o job de auto complete ao abrir a página
         AutoCompleteAppointments::dispatchSync();
 
         $nextAppointment = $user->appointments()
@@ -66,5 +65,33 @@ class ClientController extends Controller
             'upcomingAppointments',
             'pastAppointments'
         ));
+    }
+
+    public function calendar()
+    {
+        $user = Auth::user();
+
+        AutoCompleteAppointments::dispatchSync();
+
+        $appointmentsJson = $user->appointments()
+            ->with(['service', 'professional.user'])
+            ->orderBy('scheduled_at')
+            ->get()
+            ->map(function ($a) {
+                $dt = $a->scheduled_at;
+                return [
+                    'id'           => $a->id,
+                    'date'         => $dt->format('Y-m-d'),
+                    'time'         => $dt->format('H:i'),
+                    'service'      => $a->service->name ?? 'Serviço',
+                    'professional' => $a->professional->user->name ?? '',
+                    'price'        => $a->service->price
+                                        ? number_format($a->service->price, 2, ',', '.')
+                                        : null,
+                    'status'       => $a->status,
+                ];
+            });
+
+        return view('client.calendar', compact('appointmentsJson'));
     }
 }
