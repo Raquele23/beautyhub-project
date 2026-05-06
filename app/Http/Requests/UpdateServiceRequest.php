@@ -33,8 +33,8 @@ class UpdateServiceRequest extends FormRequest
             'duration' => 'required|integer|min:5|max:720',
             'price' => 'required|numeric|min:0.01',
             'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_image' => ['nullable', 'string'],
-            'original_image_base64' => ['nullable', 'string'],
+            'cropped_image' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
+            'original_image_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
         ];
     }
 
@@ -50,6 +50,8 @@ class UpdateServiceRequest extends FormRequest
             'duration.integer' => 'A duração do serviço deve ser um número inteiro.',
             'duration.min' => 'A duração mínima do serviço é de 5 minutos.',
             'duration.max' => 'A duração máxima do serviço é de 12 horas.',
+            'cropped_image.regex' => 'A imagem recortada deve ser PNG, JPG, JPEG ou WEBP.',
+            'original_image_base64.regex' => 'A imagem original deve ser PNG, JPG, JPEG ou WEBP.',
         ];
     }
 }

@@ -24,10 +24,23 @@ class UpdatePortfolioPhotoRequest extends FormRequest
     {
         return [
             'photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_photo' => ['nullable', 'string'],
+            'cropped_photo' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'original_photo' => ['nullable', File::image()->max(10 * 1024)],
-            'original_photo_base64' => ['nullable', 'string'],
+            'original_photo_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'description' => 'nullable|string|max:30',
+        ];
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'cropped_photo.regex' => 'A imagem recortada deve ser PNG, JPG, JPEG ou WEBP.',
+            'original_photo_base64.regex' => 'A imagem original deve ser PNG, JPG, JPEG ou WEBP.',
         ];
     }
 }

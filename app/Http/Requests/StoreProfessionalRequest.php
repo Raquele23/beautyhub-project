@@ -34,11 +34,11 @@ class StoreProfessionalRequest extends FormRequest
             'zip_code' => 'nullable|string|regex:/^\d{5}-?\d{3}$/',
             'instagram' => 'nullable|string|max:255',
             'profile_photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
-            'cropped_profile_photo' => ['nullable', 'string'],
+            'cropped_profile_photo' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'banner_style' => 'nullable|in:color,photo',
             'banner_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'banner_photo' => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
-            'banner_photo_base64' => ['nullable', 'string'],
+            'banner_photo_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'portfolio_photos' => 'nullable|array|max:10',
             'portfolio_photos.*' => [File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
             'auto_complete' => 'boolean',
@@ -55,6 +55,8 @@ class StoreProfessionalRequest extends FormRequest
         return [
             'house_number.required' => 'O número da casa é obrigatório.',
             'house_number.max' => 'O número da casa deve ter no máximo 10 caracteres.',
+            'cropped_profile_photo.regex' => 'A foto de perfil recortada deve ser PNG, JPG, JPEG ou WEBP.',
+            'banner_photo_base64.regex' => 'A foto do banner deve ser PNG, JPG, JPEG ou WEBP.',
         ];
     }
 }
