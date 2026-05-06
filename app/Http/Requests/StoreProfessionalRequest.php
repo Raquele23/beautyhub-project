@@ -44,4 +44,17 @@ class StoreProfessionalRequest extends FormRequest
             'auto_complete' => 'boolean',
         ];
     }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'house_number.required' => 'O número da casa é obrigatório.',
+            'house_number.max' => 'O número da casa deve ter no máximo 10 caracteres.',
+        ];
+    }
 }

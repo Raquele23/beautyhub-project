@@ -42,4 +42,17 @@ class UpdateProfessionalRequest extends FormRequest
             'delete_profile_photo' => 'nullable|boolean',
         ];
     }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'house_number.required' => 'O número da casa é obrigatório.',
+            'house_number.max' => 'O número da casa deve ter no máximo 10 caracteres.',
+        ];
+    }
 }

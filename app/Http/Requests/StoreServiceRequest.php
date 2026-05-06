@@ -43,6 +43,9 @@ class StoreServiceRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'duration.required' => 'A duração do serviço é obrigatória.',
+            'duration.integer' => 'A duração do serviço deve ser um número inteiro.',
+            'duration.min' => 'A duração mínima do serviço é de 5 minutos.',
             'duration.max' => 'A duração máxima do serviço é de 12 horas.',
         ];
     }
