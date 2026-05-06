@@ -2,20 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ExploreRequest;
 use App\Models\Professional;
 use App\Models\Service;
-use Illuminate\Http\Request;
 
 class ExploreController extends Controller
 {
-    public function index(Request $request)
+    public function index(ExploreRequest $request)
     {
         $validCategories = array_keys(Service::categoryOptions());
 
-        $validated = $request->validate([
-            'lat' => ['nullable', 'numeric', 'between:-90,90'],
-            'lon' => ['nullable', 'numeric', 'between:-180,180'],
-        ]);
+        $validated = $request->validated();
 
         $userLat = isset($validated['lat']) ? (float) $validated['lat'] : null;
         $userLon = isset($validated['lon']) ? (float) $validated['lon'] : null;

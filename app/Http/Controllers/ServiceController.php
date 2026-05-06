@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
 use App\Models\Service;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Validation\Rules\File;
 
 class ServiceController extends Controller
 {
@@ -57,33 +57,12 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreServiceRequest $request)
     {
         $user = Auth::user();
-
-        // Apenas profissionais podem acessar
-        if (!$user->isProfessional()) {
-            abort(403, 'Apenas profissionais têm acesso a esta área.');
-        }
-
         $professional = $user->professional;
 
-        if (!$professional) {
-            return redirect()->route('professional.create');
-        }
-
-        $validated = $request->validate([
-            'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'duration' => 'required|integer|min:5|max:720',
-            'price' => 'required|numeric|min:0.01',
-            'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_image' => ['nullable', 'string'],
-            'original_image_base64' => ['nullable', 'string'],
-        ], [
-            'duration.max' => 'A duração máxima do serviço é de 12 horas.',
-        ]);
+        $validated = $request->validated();
 
         // Processar imagem do serviço
         if ($request->filled('cropped_image')) {
@@ -113,26 +92,9 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, Service $service)
+    public function update(UpdateServiceRequest $request, Service $service)
     {
-        $user = Auth::user();
-
-        if ($service->professional->user_id !== $user->id) {
-            abort(403);
-        }
-
-        $validated = $request->validate([
-            'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'duration' => 'required|integer|min:5|max:720',
-            'price' => 'required|numeric|min:0.01',
-            'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_image' => ['nullable', 'string'],
-            'original_image_base64' => ['nullable', 'string'],
-        ], [
-            'duration.max' => 'A duração máxima do serviço é de 12 horas.',
-        ]);
+        $validated = $request->validated();
 
         // Processar nova imagem
         if ($request->filled('cropped_image') || $request->hasFile('image')) {

@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AddPortfolioPhotoRequest;
+use App\Http\Requests\StoreProfessionalRequest;
+use App\Http\Requests\UpdatePortfolioPhotoRequest;
+use App\Http\Requests\UpdateProfessionalRequest;
+use App\Http\Requests\UpdateProfessionalSettingsRequest;
 use App\Jobs\AutoCompleteAppointments;
 use App\Models\Availability;
 use App\Models\Professional;
@@ -12,7 +17,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Validation\Rules\File;
 
 class ProfessionalController extends Controller
 {
@@ -109,34 +113,14 @@ class ProfessionalController extends Controller
         return view('professional.show', ['professional' => $professional]);
     }
 
-    public function store(Request $request)
+    public function store(StoreProfessionalRequest $request)
     {
         $user = Auth::user();
         if ($user->professional) {
             return redirect()->route('professional.show');
         }
 
-        $validated = $request->validate([
-            'name'               => 'required|string|max:255',
-            'establishment_name' => 'nullable|string|max:255',
-            'description'        => 'required|string',
-            'phone'              => 'required|string|max:20',
-            'state'              => 'required|string|max:2',
-            'city'               => 'required|string|max:255',
-            'street'             => 'required|string|max:255',
-            'house_number'       => 'required|string|max:10',
-            'zip_code'           => 'nullable|string|regex:/^\d{5}-?\d{3}$/',
-            'instagram'          => 'nullable|string|max:255',
-            'profile_photo'      => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
-            'cropped_profile_photo' => ['nullable', 'string'],
-            'banner_style'       => 'nullable|in:color,photo',
-            'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'banner_photo'       => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
-            'banner_photo_base64' => ['nullable', 'string'],
-            'portfolio_photos'   => 'nullable|array|max:10',
-            'portfolio_photos.*' => [File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'auto_complete'      => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         // Atualiza o nome do usuário
         $user->update(['name' => $validated['name']]);
@@ -187,7 +171,7 @@ class ProfessionalController extends Controller
         return view('professional.edit', ['professional' => $professional]);
     }
 
-    public function update(Request $request)
+    public function update(UpdateProfessionalRequest $request)
     {
         $user = Auth::user();
         $professional = $user->professional;
@@ -195,25 +179,7 @@ class ProfessionalController extends Controller
             return redirect()->route('professional.create');
         }
 
-        $validated = $request->validate([
-            'name'               => 'required|string|max:255',
-            'establishment_name' => 'nullable|string|max:255',
-            'description'        => 'required|string',
-            'phone'              => 'required|string|max:20',
-            'state'              => 'required|string|max:2',
-            'city'               => 'required|string|max:255',
-            'street'             => 'required|string|max:255',
-            'house_number'       => 'required|string|max:10',
-            'zip_code'           => 'nullable|string|regex:/^\d{5}-?\d{3}$/',
-            'instagram'          => 'nullable|string|max:255',
-            'profile_photo'      => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
-            'cropped_profile_photo' => ['nullable', 'string'],
-            'banner_style'       => 'nullable|in:color,photo',
-            'banner_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'banner_photo'       => ['nullable', File::image()->max(8 * 1024)],
-            'banner_photo_base64' => ['nullable', 'string'],
-            'delete_profile_photo' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Atualiza o nome do usuário
         $user->update(['name' => $validated['name']]);
@@ -279,7 +245,7 @@ class ProfessionalController extends Controller
         return view('professional.portfolio.manage', ['professional' => $professional]);
     }
 
-    public function addPortfolioPhoto(Request $request)
+    public function addPortfolioPhoto(AddPortfolioPhotoRequest $request)
     {
         $user = Auth::user();
         $professional = $user->professional;
@@ -287,13 +253,7 @@ class ProfessionalController extends Controller
             return redirect()->route('professional.create');
         }
 
-        $validated = $request->validate([
-            'photo' => ['nullable', 'required_without:cropped_photo', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_photo' => ['nullable', 'required_without:photo', 'string'],
-            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
-            'original_photo_base64' => ['nullable', 'string'],
-            'description' => 'nullable|string|max:30',
-        ]);
+        $validated = $request->validated();
 
         if ($professional->portfolioPhotos()->count() >= 10) {
             return back()->with('error', 'Limite de 10 fotos no portfólio atingido!');
@@ -335,19 +295,13 @@ class ProfessionalController extends Controller
         return back()->with('status', 'Foto removida do portfólio!');
     }
 
-    public function updatePortfolioPhoto(Request $request, PortfolioPhoto $photo)
+    public function updatePortfolioPhoto(UpdatePortfolioPhotoRequest $request, PortfolioPhoto $photo)
     {
         if ($photo->professional->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
-            'cropped_photo' => ['nullable', 'string'],
-            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
-            'original_photo_base64' => ['nullable', 'string'],
-            'description' => 'nullable|string|max:30',
-        ]);
+        $validated = $request->validated();
 
         // Se uma nova foto foi enviada/recortada, atualizar
         if ($request->filled('cropped_photo') || $request->hasFile('photo')) {
@@ -570,16 +524,14 @@ class ProfessionalController extends Controller
         ]);
     }
 
-    public function updateSettings(Request $request): RedirectResponse
+    public function updateSettings(UpdateProfessionalSettingsRequest $request): RedirectResponse
     {
         $professional = Auth::user()->professional;
         if (!$professional) {
             return redirect()->route('professional.create');
         }
 
-        $validated = $request->validate([
-            'auto_complete' => ['required', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $professional->update($validated);
 

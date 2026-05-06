@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreReviewRequest;
+use App\Http\Requests\ReplyReviewRequest;
 use App\Models\Appointment;
 use App\Models\Notification;
 use App\Models\Review;
@@ -100,17 +102,14 @@ class ReviewController extends Controller
         return view('reviews.create', compact('appointment'));
     }
 
-    public function store(Request $request, Appointment $appointment): RedirectResponse
+    public function store(StoreReviewRequest $request, Appointment $appointment): RedirectResponse
     {
         Gate::authorize('review', $appointment);
 
         abort_if($appointment->status !== 'completed', 403);
         abort_if($appointment->review()->exists(), 409);
 
-        $validated = $request->validate([
-            'rating'  => ['required', 'integer', 'min:1', 'max:5'],
-            'comment' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $review = $appointment->review()->create([
             ...$validated,
@@ -133,13 +132,11 @@ class ReviewController extends Controller
             ->with('success', 'Avaliação enviada com sucesso!');
     }
 
-    public function reply(Request $request, Review $review): RedirectResponse
+    public function reply(ReplyReviewRequest $request, Review $review): RedirectResponse
     {
         Gate::authorize('reply', $review);
 
-        $validated = $request->validate([
-            'professional_reply' => ['required', 'string', 'max:500'],
-        ]);
+        $validated = $request->validated();
 
         $review->update([
             ...$validated,

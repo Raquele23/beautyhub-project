@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SlotsAppointmentRequest;
+use App\Http\Requests\StoreAppointmentRequest;
+use App\Http\Requests\StoreAppointmentByProfessionalRequest;
 use App\Models\Appointment;
 use App\Models\Notification;
 use App\Models\Professional;
@@ -28,12 +31,8 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function slots(Professional $professional, Request $request)
+    public function slots(Professional $professional, SlotsAppointmentRequest $request)
     {
-        $request->validate([
-            'date' => ['required', 'date', 'after_or_equal:today'],
-            'service_id' => ['required', 'integer', 'exists:services,id'],
-        ]);
 
         $service = $professional->services()
             ->whereKey((int) $request->input('service_id'))
@@ -48,17 +47,11 @@ class AppointmentController extends Controller
         return response()->json($slots);
     }
 
-    public function store(Request $request, Professional $professional, Service $service)
+    public function store(StoreAppointmentRequest $request, Professional $professional, Service $service)
     {
         if ($service->professional_id !== $professional->id) {
             abort(404);
         }
-
-        $request->validate([
-            'date'  => ['required', 'date', 'after_or_equal:today'],
-            'time'  => ['required', 'date_format:H:i'],
-            'notes' => ['nullable', 'string', 'max:500'],
-        ]);
 
         if (!$professional->isSlotAvailableForService($request->date, $request->time, (int) $service->duration)) {
             return back()->withErrors(['time' => 'Horário indisponível para este serviço. Escolha outro.']);
@@ -134,21 +127,11 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function storeByProfessional(Request $request)
+    public function storeByProfessional(StoreAppointmentByProfessionalRequest $request)
     {
         $professional = Auth::user()->professional;
 
-        $validated = $request->validate([
-            'service_id'         => ['required', 'integer', 'exists:services,id'],
-            'date'               => ['required', 'date', 'after_or_equal:today'],
-            'time'               => ['required', 'date_format:H:i'],
-            'notes'              => ['nullable', 'string', 'max:500'],
-            'client_mode'        => ['required', 'in:known,external'],
-            'known_client_id'    => ['exclude_unless:client_mode,known', 'required_if:client_mode,known', 'integer', 'exists:users,id'],
-            'external_name'      => ['exclude_unless:client_mode,external', 'required_if:client_mode,external', 'string', 'max:255'],
-            'external_email'     => ['exclude_unless:client_mode,external', 'nullable', 'email', 'max:255'],
-            'external_phone'     => ['exclude_unless:client_mode,external', 'required_if:client_mode,external', 'string', 'max:20'],
-        ]);
+        $validated = $request->validated();
 
         $service = $professional->services()
             ->whereKey($validated['service_id'])
