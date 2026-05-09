@@ -55,4 +55,21 @@ class NotificationController extends Controller
 
         return back();
     }
+
+    /**
+     * Endpoint de polling — retorna contagem de não lidas e ID da mais recente.
+     * Chamado pelo frontend a cada 60 segundos via fetch().
+     */
+    public function poll()
+    {
+        $user = Auth::user();
+
+        $unread = $user->notifications()->unread()->count();
+        $latestNotification = $user->notifications()->first();
+
+        return response()->json([
+            'unread_count' => $unread,
+            'latest_id'    => $latestNotification?->id,
+        ]);
+    }
 }
