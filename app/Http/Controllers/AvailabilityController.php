@@ -56,7 +56,7 @@ class AvailabilityController extends Controller
                     ]
                 );
 
-                $parsed = $this->parseBreakLines((string) $request->input("breaks.$weekday", ''));
+                $parsed = $request->parseBreakLines((string) $request->input("breaks.$weekday", ''));
                 $parsedBreaks = $parsed['breaks'];
 
                 $availability->breaks()->delete();
