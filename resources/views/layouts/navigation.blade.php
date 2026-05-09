@@ -118,7 +118,7 @@
                                 @endif
                             </div>
 
-                            <div class="max-h-80 overflow-y-auto divide-y divide-purple-50">
+                            <div class="max-h-80 overflow-y-auto divide-y divide-purple-50" data-notif-content>
                                 @forelse(auth()->user()->notifications()->take(10)->get() as $notification)
                                     <a href="{{ route('notifications.open', $notification->id) }}"
                                        @click.stop
@@ -242,7 +242,7 @@
                                 @endif
                             </div>
 
-                            <div class="max-h-80 overflow-y-auto divide-y divide-purple-50">
+                            <div class="max-h-80 overflow-y-auto divide-y divide-purple-50" data-notif-content>
                                 @forelse(auth()->user()->notifications()->take(10)->get() as $notification)
                                     <a href="{{ route('notifications.open', $notification->id) }}"
                                        @click.stop
@@ -418,17 +418,18 @@
 @auth
 <script>
 (function () {
-    const POLL_INTERVAL = 15000; // 15 segundos em ms
+    const POLL_INTERVAL = 15000;
     const POLL_URL      = '{{ route('notifications.poll') }}';
+    const LIST_URL      = '{{ route('notifications.list') }}';
 
-    // ID da notificação mais recente no momento do carregamento.
-    // Começa como -1 para que qualquer notificação existente não dispare som,
-    // mas será atualizado no primeiro poll sem tocar.
     let lastKnownId  = null;
-    let initialized  = false; // controla se já fez o primeiro poll
+    let initialized  = false;
     let audioCtx     = null;
+    let audioReady   = false;
+    let pendingSound = false;
 
-    // ── Dois bips mais altos ────────────────────────────────────────────────
+    const SHOULD_RELOAD = {{ request()->routeIs('professional.appointments', 'client.appointments') ? 'true' : 'false' }};
+
     async function playNotificationSound() {
         try {
             if (!audioCtx) {
@@ -438,6 +439,9 @@
             if (audioCtx.state === 'suspended') {
                 await audioCtx.resume();
             }
+
+            audioReady = true;
+            pendingSound = false;
 
             [0, 0.18].forEach(function (delay) {
                 const osc  = audioCtx.createOscillator();
@@ -457,12 +461,27 @@
                 osc.start(t);
                 osc.stop(t + 0.25);
             });
-        } catch (e) {
-            // Browser ainda não liberou AudioContext ou áudio não foi autorizado.
-        }
+        } catch (e) {}
     }
 
-    // ── Atualiza o número nos dois sinos (desktop + mobile) ─────────────
+    async function ensureAudioReady() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+
+            audioReady = audioCtx.state === 'running';
+
+            if (audioReady && pendingSound) {
+                await playNotificationSound();
+            }
+        } catch (e) {}
+    }
+
     function updateBadges(count) {
         document.querySelectorAll('[data-notif-badge]').forEach(function (el) {
             if (count > 0) {
@@ -474,11 +493,88 @@
         });
     }
 
-    // ── Requisição ao servidor ───────────────────────────────────────────
+    function getIconHtml(iconType) {
+        let bgClass, textClass, svgContent;
+
+        switch (iconType) {
+            case 'confirmed':
+                bgClass = 'bg-green-100';
+                textClass = 'text-green-600';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+                break;
+            case 'cancelled':
+                bgClass = 'bg-red-100';
+                textClass = 'text-red-500';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+                break;
+            case 'completed':
+                bgClass = 'bg-blue-100';
+                textClass = 'text-blue-600';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+                break;
+            case 'review':
+                bgClass = 'bg-purple-100';
+                textClass = 'text-purple-600';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.95-.69l1.519-4.674z"/></svg>';
+                break;
+            default:
+                bgClass = 'bg-purple-100';
+                textClass = 'text-purple-600';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>';
+        }
+
+        return '<span class="flex h-7 w-7 items-center justify-center rounded-full ' + bgClass + ' ' + textClass + '">' + svgContent + '</span>';
+    }
+
+    function renderNotificationItem(notification) {
+        const bgClass = notification.is_unread ? 'bg-purple-50' : '';
+        const dotHtml = notification.is_unread ? '<span class="mt-1.5 flex-shrink-0 h-2 w-2 rounded-full bg-purple-500"></span>' : '';
+
+        return `
+            <a href="${notification.url}" onclick="event.preventDefault(); window.location.href='${notification.url}'" 
+               class="flex items-start gap-3 px-4 py-3 ${bgClass} hover:bg-purple-50 transition">
+                <div class="mt-0.5 flex-shrink-0">
+                    ${getIconHtml(notification.icon_type)}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-700 leading-snug">${notification.message}</p>
+                    <p class="text-[11px] text-purple-300 mt-1">${notification.created_at}</p>
+                </div>
+                ${dotHtml}
+            </a>
+        `;
+    }
+
+    async function updateNotificationDropdown() {
+        try {
+            const res = await fetch(LIST_URL, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            updateBadges(data.unread_count);
+
+            const contentDivs = document.querySelectorAll('[data-notif-content]');
+            contentDivs.forEach(function (div) {
+                if (data.notifications.length === 0) {
+                    div.innerHTML = '<div class="px-4 py-8 text-center text-sm text-purple-300">Nenhuma notificação.</div>';
+                } else {
+                    div.innerHTML = data.notifications.map(renderNotificationItem).join('');
+                }
+            });
+
+        } catch (e) {}
+    }
+
     async function poll() {
         try {
             const res = await fetch(POLL_URL, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
             });
 
             if (!res.ok) return;
@@ -486,39 +582,36 @@
             const data = await res.json();
 
             if (!initialized) {
-                // Primeiro poll: só registra o ID atual, não toca som.
-                // Isso evita tocar ao carregar a página.
                 lastKnownId = data.latest_id;
                 initialized = true;
             } else {
-                // Polls seguintes: toca se veio ID diferente (notificação nova)
                 if (data.latest_id && data.latest_id !== lastKnownId) {
-                    playNotificationSound();
+                    if (audioReady) {
+                        playNotificationSound();
+                    } else {
+                        pendingSound = true;
+                        ensureAudioReady();
+                    }
                     lastKnownId = data.latest_id;
+
+                    updateNotificationDropdown();
+
+                    if (SHOULD_RELOAD) {
+                        setTimeout(function () { location.reload(); }, 300);
+                        return;
+                    }
                 }
             }
 
             updateBadges(data.unread_count);
 
-        } catch (e) {
-            // Falha de rede — ignora e tenta no próximo ciclo.
-        }
+        } catch (e) {}
     }
 
-    // ── Desbloqueio do AudioContext na primeira interação do usuário ─────
-    // Browsers modernos exigem um gesto do usuário antes de permitir áudio.
-    document.addEventListener('click', async function initAudio() {
-        try {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
-        } catch (e) {}
-        document.removeEventListener('click', initAudio);
-    }, { once: true });
+    ['pointerdown', 'touchstart', 'keydown', 'click'].forEach(function (eventName) {
+        document.addEventListener(eventName, ensureAudioReady, { once: true, passive: true });
+    });
 
-    // ── Inicia o polling ─────────────────────────────────────────────────
-    // Chama imediatamente para registrar o ID atual, depois a cada 60s.
     poll();
     setInterval(poll, POLL_INTERVAL);
 })();

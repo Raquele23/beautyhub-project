@@ -72,4 +72,44 @@ class NotificationController extends Controller
             'latest_id'    => $latestNotification?->id,
         ]);
     }
+
+    /**
+     * Lista notificações do usuário em JSON (para atualização dinâmica).
+     */
+    public function list()
+    {
+        $user = Auth::user();
+        $unread = $user->notifications()->unread()->count();
+        $notifications = $user->notifications()->take(10)->get();
+
+        $data = $notifications->map(function ($notification) {
+            $iconType = $this->getIconType($notification->type);
+
+            return [
+                'id'         => $notification->id,
+                'message'    => $notification->message,
+                'type'       => $notification->type,
+                'icon_type'  => $iconType,
+                'created_at' => $notification->created_at->diffForHumans(),
+                'is_unread'  => $notification->isUnread(),
+                'url'        => route('notifications.open', $notification->id),
+            ];
+        });
+
+        return response()->json([
+            'unread_count'   => $unread,
+            'notifications'  => $data,
+        ]);
+    }
+
+    private function getIconType($type)
+    {
+        return match ($type) {
+            'appointment_confirmed' => 'confirmed',
+            'appointment_cancelled' => 'cancelled',
+            'appointment_completed' => 'completed',
+            'review_received', 'review_reply_received' => 'review',
+            default => 'default',
+        };
+    }
 }

@@ -39,6 +39,8 @@ Route::middleware('auth')->group(function () {
     // Laravel não tentar resolver a string "poll" como um ID de notificação.
     Route::get('/notifications/poll', [NotificationController::class, 'poll'])
         ->name('notifications.poll');
+    Route::get('/notifications/list', [NotificationController::class, 'list'])
+        ->name('notifications.list');
 
     Route::get('/notifications/{notification}/open', [NotificationController::class, 'open'])
         ->name('notifications.open');
