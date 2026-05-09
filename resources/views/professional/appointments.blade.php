@@ -267,7 +267,7 @@
                                 {{ !auth()->user()->professional->auto_complete
                                     ? 'border-purple-500 bg-purple-50'
                                     : 'border-purple-100 hover:border-purple-300' }}">
-                                <input type="radio" name="auto_complete" value="0"
+                                <input type="radio" name="auto_complete" value="0" required
                                     {{ !auth()->user()->professional->auto_complete ? 'checked' : '' }}
                                     class="mt-0.5 text-purple-600 focus:ring-purple-500">
                                 <div>
@@ -280,7 +280,7 @@
                                 {{ auth()->user()->professional->auto_complete
                                     ? 'border-purple-500 bg-purple-50'
                                     : 'border-purple-100 hover:border-purple-300' }}">
-                                <input type="radio" name="auto_complete" value="1"
+                                <input type="radio" name="auto_complete" value="1" required
                                     {{ auth()->user()->professional->auto_complete ? 'checked' : '' }}
                                     class="mt-0.5 text-purple-600 focus:ring-purple-500">
                                 <div>
@@ -572,9 +572,19 @@
                                     <p class="text-xs text-purple-400 mt-0.5">{{ $appointment->display_client_name }} · {{ $appointment->scheduled_at->format('H:i') }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
+                                    @php
+                                        $isAutoCompleted = auth()->user()->professional->auto_complete && $appointment->shouldAutoComplete();
+                                    @endphp
                                     <form method="POST" action="{{ route('appointments.complete', $appointment->id) }}" @click.stop>
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-sm" style="background-color: #6A0DAD;">Concluir</button>
+                                        <button 
+                                            type="submit" 
+                                            @if($isAutoCompleted) disabled @endif
+                                            class="px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 {{ $isAutoCompleted ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5' }} shadow-sm" 
+                                            style="background-color: #6A0DAD;"
+                                            title="{{ $isAutoCompleted ? 'Concluído automaticamente' : 'Marcar como concluído' }}">
+                                            {{ $isAutoCompleted ? '✓ Concluído' : 'Concluir' }}
+                                        </button>
                                     </form>
                                     <svg class="w-4 h-4 text-purple-300 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
