@@ -34,6 +34,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
         ->name('appointments.cancel');
 
+    // ── Notificações ─────────────────────────────────────────────────────
+    // IMPORTANTE: a rota 'poll' deve vir ANTES de '{notification}' para o
+    // Laravel não tentar resolver a string "poll" como um ID de notificação.
+    Route::get('/notifications/poll', [NotificationController::class, 'poll'])
+        ->name('notifications.poll');
+
     Route::get('/notifications/{notification}/open', [NotificationController::class, 'open'])
         ->name('notifications.open');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
