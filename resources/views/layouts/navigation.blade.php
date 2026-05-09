@@ -80,18 +80,19 @@
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-2">
 
                 @auth
-                    {{-- Sino --}}
+                    {{-- Sino desktop --}}
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open"
                                 class="relative p-2 rounded-xl text-purple-600 hover:bg-purple-200 transition-all duration-150">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            @if($unread > 0)
-                                <span class="absolute top-1 right-1 h-4 w-4 bg-purple-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
-                                    {{ $unread > 9 ? '9+' : $unread }}
-                                </span>
-                            @endif
+                            {{-- Badge: data-notif-badge permite atualização via JS --}}
+                            <span data-notif-badge
+                                  class="absolute top-1 right-1 h-4 w-4 bg-purple-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none"
+                                  {{ $unread === 0 ? 'style=display:none' : '' }}>
+                                {{ $unread > 9 ? '9+' : $unread }}
+                            </span>
                         </button>
 
                         <div x-show="open"
@@ -204,17 +205,19 @@
             {{-- ── Hamburger ── --}}
             <div class="-me-1 flex items-center gap-1 sm:hidden">
                 @auth
+                    {{-- Sino mobile --}}
                     <div x-data="{ open: false }" class="relative">
                         <button @click="open = !open"
                                 class="relative inline-flex items-center justify-center p-2 rounded-xl text-purple-600 hover:bg-purple-200 transition duration-150">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
-                            @if($unread > 0)
-                                <span class="absolute top-1 right-1 h-4 w-4 bg-purple-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none">
-                                    {{ $unread > 9 ? '9+' : $unread }}
-                                </span>
-                            @endif
+                            {{-- Badge: data-notif-badge permite atualização via JS --}}
+                            <span data-notif-badge
+                                  class="absolute top-1 right-1 h-4 w-4 bg-purple-700 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none"
+                                  {{ $unread === 0 ? 'style=display:none' : '' }}>
+                                {{ $unread > 9 ? '9+' : $unread }}
+                            </span>
                         </button>
 
                         <div x-show="open"
@@ -410,3 +413,114 @@
         </div>
     </div>
 </nav>
+
+{{-- ── Polling de notificações + som ─────────────────────────────────────── --}}
+@auth
+<script>
+(function () {
+    const POLL_INTERVAL = 15000; // 15 segundos em ms
+    const POLL_URL      = '{{ route('notifications.poll') }}';
+
+    // ID da notificação mais recente no momento do carregamento.
+    // Começa como -1 para que qualquer notificação existente não dispare som,
+    // mas será atualizado no primeiro poll sem tocar.
+    let lastKnownId  = null;
+    let initialized  = false; // controla se já fez o primeiro poll
+    let audioCtx     = null;
+
+    // ── Dois bips mais altos ────────────────────────────────────────────────
+    async function playNotificationSound() {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+
+            [0, 0.18].forEach(function (delay) {
+                const osc  = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.type            = 'sine';
+                osc.frequency.value = 880;
+
+                const t = audioCtx.currentTime + delay;
+                gain.gain.setValueAtTime(0, t);
+                gain.gain.linearRampToValueAtTime(0.55, t + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+
+                osc.start(t);
+                osc.stop(t + 0.25);
+            });
+        } catch (e) {
+            // Browser ainda não liberou AudioContext ou áudio não foi autorizado.
+        }
+    }
+
+    // ── Atualiza o número nos dois sinos (desktop + mobile) ─────────────
+    function updateBadges(count) {
+        document.querySelectorAll('[data-notif-badge]').forEach(function (el) {
+            if (count > 0) {
+                el.textContent  = count > 9 ? '9+' : count;
+                el.style.display = '';
+            } else {
+                el.style.display = 'none';
+            }
+        });
+    }
+
+    // ── Requisição ao servidor ───────────────────────────────────────────
+    async function poll() {
+        try {
+            const res = await fetch(POLL_URL, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+
+            if (!initialized) {
+                // Primeiro poll: só registra o ID atual, não toca som.
+                // Isso evita tocar ao carregar a página.
+                lastKnownId = data.latest_id;
+                initialized = true;
+            } else {
+                // Polls seguintes: toca se veio ID diferente (notificação nova)
+                if (data.latest_id && data.latest_id !== lastKnownId) {
+                    playNotificationSound();
+                    lastKnownId = data.latest_id;
+                }
+            }
+
+            updateBadges(data.unread_count);
+
+        } catch (e) {
+            // Falha de rede — ignora e tenta no próximo ciclo.
+        }
+    }
+
+    // ── Desbloqueio do AudioContext na primeira interação do usuário ─────
+    // Browsers modernos exigem um gesto do usuário antes de permitir áudio.
+    document.addEventListener('click', async function initAudio() {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+        } catch (e) {}
+        document.removeEventListener('click', initAudio);
+    }, { once: true });
+
+    // ── Inicia o polling ─────────────────────────────────────────────────
+    // Chama imediatamente para registrar o ID atual, depois a cada 60s.
+    poll();
+    setInterval(poll, POLL_INTERVAL);
+})();
+</script>
+@endauth
