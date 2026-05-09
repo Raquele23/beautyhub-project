@@ -284,6 +284,7 @@
         <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-purple-50">
                 <p class="text-sm font-bold text-purple-400 uppercase tracking-wide">Serviços</p>
+                <p class="sm:hidden text-xs text-purple-300 mt-1">Clique em um serviço para agendar</p>
             </div>
 
             @forelse($professional->services as $service)
