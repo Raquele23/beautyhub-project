@@ -57,22 +57,34 @@
             </div>
         @endif
 
-        {{-- ── Próximo agendamento destaque ── --}}
-        @if($nextAppointment)
-            <div class="rounded-2xl p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style="background-color: #6A0DAD;">
+        {{-- ── Destaque único: mostra em andamento ou próximo automaticamente ── --}}
+        @php
+            $highlight = null;
+            if(isset($ongoingAppointment) && $ongoingAppointment && $ongoingAppointment->isCurrentlyOngoing()) {
+                $highlight = $ongoingAppointment;
+            } elseif(isset($nextAppointment) && $nextAppointment) {
+                $highlight = $nextAppointment;
+            }
+            $highlightBg = '#6A0DAD';
+            $highlightText = '#D4AEFF';
+        @endphp
+
+        @if($highlight)
+            @php $highlightLabel = $highlight->isCurrentlyOngoing() ? 'Em andamento' : 'Próximo agendamento'; @endphp
+            <div class="rounded-2xl p-6 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style="background-color: {{ $highlightBg }};">
                 <div>
-                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: #D4AEFF;">Próximo agendamento</p>
-                    <p class="text-xl font-bold">{{ $nextAppointment->service->name }}</p>
-                    <p class="text-sm mt-0.5" style="color: #D4AEFF;">
-                        com {{ $nextAppointment->professional->establishment_name ?? $nextAppointment->professional->user->name }}
+                    <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: {{ $highlightText }};">{{ $highlightLabel }}</p>
+                    <p class="text-xl font-bold">{{ $highlight->service->name }}</p>
+                    <p class="text-sm mt-0.5" style="color: {{ $highlightText }};">
+                        com {{ $highlight->professional->establishment_name ?? $highlight->professional->user->name }}
                     </p>
                 </div>
-                <div class="sm:text-right flex-shrink-0 flex sm:flex-col items-center sm:items-end gap-3 sm:gap-0">
+                <div class="flex-shrink-0 flex flex-col items-center justify-center gap-2 min-w-[90px]">
                     <div class="w-16 h-16 rounded-2xl flex flex-col items-center justify-center flex-shrink-0" style="background-color: rgba(255,255,255,0.15);">
-                        <p class="text-2xl font-bold leading-none">{{ $nextAppointment->scheduled_at->format('d') }}</p>
-                        <p class="text-xs uppercase tracking-wide mt-0.5" style="color: #D4AEFF;">{{ $nextAppointment->scheduled_at->isoFormat('MMM') }}</p>
+                        <p class="text-2xl font-bold leading-none">{{ $highlight->scheduled_at->format('d') }}</p>
+                        <p class="text-xs uppercase tracking-wide mt-0.5" style="color: {{ $highlightText }};">{{ $highlight->scheduled_at->isoFormat('MMM') }}</p>
                     </div>
-                    <p class="text-sm font-semibold sm:mt-2" style="color: #D4AEFF;">{{ $nextAppointment->scheduled_at->format('H:i') }}</p>
+                    <p class="text-sm font-semibold text-center" style="color: {{ $highlightText }};">{{ $highlight->scheduled_at->format('H:i') }}</p>
                 </div>
             </div>
         @endif
@@ -126,9 +138,9 @@
 
             {{-- ── ABA: PENDENTES ── --}}
             <div x-show="tab === 'pendentes'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
-                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
+                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-visible">
                     @forelse($pendingAppointments as $appt)
-                        <div x-data="{ open: false }" class="border-b border-purple-50 last:border-0">
+                        <div x-data="{ open: false, infoOpen: false }" class="border-b border-purple-50 last:border-0">
                             <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
                                 <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
                                     <p class="text-lg font-semibold text-gray-900 leading-none">{{ $appt->scheduled_at->format('d') }}</p>
@@ -141,9 +153,35 @@
                                     </p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">
-                                        {{ $appt->status_label }}
-                                    </span>
+                                    @if($appt->hasPassedWithoutConfirmation())
+                                        <div class="relative inline-flex items-center">
+                                            <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-red-50 text-red-700 border-red-200">Não confirmado</span>
+                                            <button type="button" @click.stop="infoOpen = !infoOpen" aria-label="Mais informações" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition ml-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="infoOpen" x-cloak @click.outside="infoOpen = false" class="absolute right-0 mt-2 w-72 p-3 rounded-xl border border-red-100 bg-white shadow-xl z-50" style="display: none;">
+                                                <p class="text-xs font-semibold text-red-700">Esse horário passou sem confirmação do profissional.</p>
+                                                <p class="text-xs text-red-500 mt-1">Você pode excluir este agendamento ou remarcar agora.</p>
+                                            </div>
+                                        </div>
+                                    @elseif($appt->isUpcomingAndUnconfirmed())
+                                        <div class="relative inline-flex items-center">
+                                            <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-orange-50 text-orange-700 border-orange-200">{{ $appt->status_label }}</span>
+                                            <button type="button" @click.stop="infoOpen = !infoOpen" aria-label="Mais informações" class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 transition ml-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="infoOpen" x-cloak @click.outside="infoOpen = false" class="absolute right-0 mt-2 w-72 p-3 rounded-xl border border-orange-100 bg-white shadow-xl z-50" style="display: none;">
+                                                <p class="text-xs font-semibold text-orange-700">Ainda não confirmado pelo profissional.</p>
+                                                <p class="text-xs text-orange-600 mt-1">Faltam {{ $appt->timeUntilScheduledFormatted() }} para o horário. Você pode remarcar ou cancelar.</p>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">{{ $appt->status_label }}</span>
+                                    @endif
                                     <svg class="w-4 h-4 text-purple-300 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                     </svg>
@@ -152,42 +190,57 @@
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
                                 <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                         <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
                                         <a href="{{ route('professional.public', $appt->professional) }}"
                                            class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">
                                             {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                                         </a>
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                     </div>
                                     @if($appt->professional->full_address)
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appt->professional->full_address }}</p>
+                                        <p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p>
                                     </div>
                                     @endif
                                     @if($appt->notes)
-                                    <div>
+                                    <div class="w-full">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p>
                                         <p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p>
                                     </div>
                                     @endif
                                 </div>
-                                <div class="pt-2 border-t border-purple-50">
-                                    <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">
-                                            Cancelar agendamento
-                                        </button>
-                                    </form>
+
+                                <div class="pt-2 border-t border-purple-50 flex items-center gap-3">
+                                    <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}"
+                                       class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
+                                        Remarcar agendamento
+                                    </a>
+
+                                    @if($appt->hasPassedWithoutConfirmation())
+                                        <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}" class="flex-1">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="flex items-center gap-2 text-xs font-semibold text-red-400 hover:text-red-700 transition-colors">
+                                                Excluir agendamento
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">
+                                                Cancelar agendamento
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -199,80 +252,122 @@
 
             {{-- ── ABA: PRÓXIMOS ── --}}
             <div x-show="tab === 'proximos'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
-                <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-                    @forelse($upcomingAppointments as $appt)
-                        <div x-data="{ open: false }" class="border-b border-purple-50 last:border-0">
-                            <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
-                                <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
-                                    <p class="text-lg font-semibold text-gray-900 leading-none">{{ $appt->scheduled_at->format('d') }}</p>
-                                    <p class="text-xs text-purple-400 uppercase font-medium mt-0.5">{{ $appt->scheduled_at->isoFormat('MMM') }}</p>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-2">Em andamento</p>
+                        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-visible">
+                        @forelse($ongoingAppointments as $appt)
+                            <div x-data="{ open: false }" class="border-t border-purple-50 last:border-0">
+                                <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
+                                    <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
+                                        <p class="text-lg font-semibold text-gray-900 leading-none">{{ $appt->scheduled_at->format('d') }}</p>
+                                        <p class="text-xs text-purple-400 uppercase font-medium mt-0.5">{{ $appt->scheduled_at->isoFormat('MMM') }}</p>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
+                                        <p class="text-xs text-purple-400 mt-0.5 truncate">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-blue-50 text-blue-700 border-blue-200">Em andamento</span>
+                                        <svg class="w-4 h-4 text-purple-300 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5 truncate">
-                                        {{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-2 flex-shrink-0">
-                                    @if($appt->status === 'confirmed')
-                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-green-50 text-green-700 border-green-200">
-                                            {{ $appt->status_label }}
-                                        </span>
-                                    @else
-                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">
-                                            {{ $appt->status_label }}
-                                        </span>
-                                    @endif
-                                    <svg class="w-4 h-4 text-purple-300 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
-                                </div>
-                            </div>
 
-                            <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                    <div>
-                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
-                                        <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
+                                <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
+                                    <div class="flex flex-wrap gap-x-10 gap-y-3">
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
+                                            <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
+                                            <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
+                                        </div>
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
+                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
+                                        </div>
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
+                                            <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
+                                        </div>
+                                        @if($appt->professional->full_address)
+                                        <div class="flex-1 min-w-max"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
+                                        @endif
+                                        @if($appt->notes)
+                                        <div class="w-full"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
+                                        @endif
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
-                                        <a href="{{ route('professional.public', $appt->professional) }}"
-                                           class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">
-                                            {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
-                                        </a>
+                                    <div class="pt-2 border-t border-purple-50">
+                                        <div class="flex items-center gap-4">
+                                            <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">Remarcar para outro horário</a>
+                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">@csrf @method('PATCH')<button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Cancelar agendamento</button></form>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
-                                    </div>
-                                    @if($appt->professional->full_address)
-                                    <div>
-                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appt->professional->full_address }}</p>
-                                    </div>
-                                    @endif
-                                    @if($appt->notes)
-                                    <div>
-                                        <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p>
-                                        <p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p>
-                                    </div>
-                                    @endif
-                                </div>
-                                <div class="pt-2 border-t border-purple-50">
-                                    <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">
-                                            Cancelar agendamento
-                                        </button>
-                                    </form>
                                 </div>
                             </div>
+                        @empty
+                            <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum atendimento em andamento agora.</div>
+                        @endforelse
                         </div>
-                    @empty
-                        <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento futuro por aqui.</div>
-                    @endforelse
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-2">Agendados</p>
+                        <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-visible">
+                        @forelse($upcomingAppointments as $appt)
+                            <div x-data="{ open: false }" class="border-t border-purple-50 last:border-0">
+                                <div class="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-purple-50/50 transition-colors duration-150" @click="open = !open">
+                                    <div class="w-12 flex-shrink-0 rounded-xl py-2 text-center" style="background-color: #EDE4F8;">
+                                        <p class="text-lg font-semibold text-gray-900 leading-none">{{ $appt->scheduled_at->format('d') }}</p>
+                                        <p class="text-xs text-purple-400 uppercase font-medium mt-0.5">{{ $appt->scheduled_at->isoFormat('MMM') }}</p>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
+                                        <p class="text-xs text-purple-400 mt-0.5 truncate">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 flex-shrink-0">
+                                        @if($appt->status === 'confirmed')
+                                            <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-green-50 text-green-700 border-green-200">{{ $appt->status_label }}</span>
+                                        @else
+                                            <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-yellow-50 text-yellow-700 border-yellow-200">{{ $appt->status_label }}</span>
+                                        @endif
+                                        <svg class="w-4 h-4 text-purple-300 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
+                                </div>
+
+                                <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
+                                    <div class="flex flex-wrap gap-x-10 gap-y-3">
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
+                                            <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
+                                            <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
+                                        </div>
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
+                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
+                                        </div>
+                                        <div class="flex-1 min-w-max">
+                                            <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
+                                            <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
+                                        </div>
+                                        @if($appt->professional->full_address)
+                                        <div class="flex-1 min-w-max"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
+                                        @endif
+                                        @if($appt->notes)
+                                        <div class="w-full"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
+                                        @endif
+                                    </div>
+                                    <div class="pt-2 border-t border-purple-50">
+                                        <div class="flex items-center gap-4">
+                                            <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">Remarcar agendamento</a>
+                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">@csrf @method('PATCH')<button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Cancelar agendamento</button></form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento futuro por aqui.</div>
+                        @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -328,30 +423,30 @@
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50">
                                 <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                         <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
                                         <a href="{{ route('professional.public', $appt->professional) }}"
                                            class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">
                                             {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                                         </a>
                                     </div>
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                     </div>
                                     @if($appt->professional->full_address)
-                                    <div>
+                                    <div class="flex-1 min-w-max">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p>
-                                        <p class="text-sm font-medium text-gray-800">{{ $appt->professional->full_address }}</p>
+                                        <p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p>
                                     </div>
                                     @endif
                                     @if($appt->notes)
-                                    <div>
+                                    <div class="w-full">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p>
                                         <p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p>
                                     </div>
