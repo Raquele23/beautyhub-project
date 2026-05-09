@@ -98,7 +98,7 @@ class SaveAvailabilityRequest extends FormRequest
      * @param  string  $value
      * @return array
      */
-    private function parseBreakLines(string $value): array
+    public function parseBreakLines(string $value): array
     {
         $value = trim($value);
         if ($value === '') {
