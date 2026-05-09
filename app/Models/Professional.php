@@ -289,6 +289,9 @@ class Professional extends Model
             return [];
         }
 
+        $preparationTimeMinutes = max((int) ($this->preparation_time_minutes ?? 15), 0);
+        $effectiveDurationMinutes = $serviceDurationMinutes + $preparationTimeMinutes;
+
         $availability = $this->getAvailabilityForDate($date);
 
         if (!$availability) {
@@ -296,7 +299,8 @@ class Professional extends Model
         }
 
         $blockedRanges = $this->getBlockedRangesForDate($date);
-        $allSlots = $availability->generateSlots($date, $serviceDurationMinutes, $blockedRanges);
+        // O slot precisa respeitar duracao do servico + tempo de preparo.
+        $allSlots = $availability->generateSlots($date, $effectiveDurationMinutes, $blockedRanges);
 
         // Não retorna horários no passado quando a data é hoje.
         $selectedDate = Carbon::parse($date)->toDateString();
@@ -315,6 +319,9 @@ class Professional extends Model
         if ($serviceDurationMinutes <= 0) {
             return false;
         }
+
+        $preparationTimeMinutes = max((int) ($this->preparation_time_minutes ?? 15), 0);
+        $effectiveDurationMinutes = $serviceDurationMinutes + $preparationTimeMinutes;
 
         $availability = $this->getAvailabilityForDate($date);
 
@@ -342,7 +349,8 @@ class Professional extends Model
             return false;
         }
 
-        $slotEnd = $slotStart->copy()->addMinutes($serviceDurationMinutes);
+        // A validacao considera o horario ocupado ate o fim do preparo.
+        $slotEnd = $slotStart->copy()->addMinutes($effectiveDurationMinutes);
         if ($slotEnd->greaterThan($close)) {
             return false;
         }
