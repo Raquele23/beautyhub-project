@@ -18,15 +18,16 @@ class AutoCompleteAppointments implements ShouldQueue
     {
         Appointment::query()
             ->where('status', 'confirmed')
-            ->whereHas('professional', fn($q) => $q->where('auto_complete', true))
-            ->with('service')
+            ->with('service', 'professional')
             ->get()
             ->each(function (Appointment $appointment) {
-                $endsAt = $appointment->scheduled_at
-                    ->copy()
-                    ->addMinutes($appointment->service->duration ?? 60);
+                // Valida se o profissional tem auto_complete ativado
+                if (!$appointment->professional->auto_complete) {
+                    return;
+                }
 
-                if ($endsAt->isPast()) {
+                // Usa o método do modelo para verificar se deve auto-completar
+                if ($appointment->shouldAutoComplete()) {
                     $appointment->update(['status' => 'completed']);
 
                     if (!empty($appointment->client_id)) {

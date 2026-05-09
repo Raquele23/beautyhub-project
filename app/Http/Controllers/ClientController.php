@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\AutoCompleteAppointments;
 use Illuminate\Support\Facades\Auth;
 
 class ClientController extends Controller
@@ -31,13 +30,24 @@ class ClientController extends Controller
     {
         $user = Auth::user();
 
-        AutoCompleteAppointments::dispatchSync();
+        $appointments = $user->appointments()
+            ->with(['service', 'professional.user', 'review'])
+            ->orderBy('scheduled_at')
+            ->get();
 
-        $nextAppointment = $user->appointments()
-            ->with(['service', 'professional.user'])
-            ->upcoming()
-            ->where('status', 'confirmed')
-            ->first();
+        $confirmedAppointments = $appointments->filter(function ($appointment) {
+            return $appointment->status === 'confirmed';
+        });
+
+        $nextAppointment = $confirmedAppointments
+            ->first(function ($appointment) {
+                return $appointment->scheduled_at->greaterThanOrEqualTo(now());
+            });
+
+        $ongoingAppointment = $confirmedAppointments
+            ->first(function ($appointment) {
+                return $appointment->isCurrentlyOngoing();
+            });
 
         $pendingAppointments = $user->appointments()
             ->with(['service', 'professional.user'])
@@ -45,21 +55,32 @@ class ClientController extends Controller
             ->orderBy('scheduled_at')
             ->get();
 
-        $upcomingAppointments = $user->appointments()
-            ->with(['service', 'professional.user'])
-            ->confirmed()
-            ->upcoming()
-            ->get();
+        $upcomingAppointments = $confirmedAppointments
+            ->filter(function ($appointment) {
+                return $appointment->scheduled_at->greaterThanOrEqualTo(now());
+            })
+            ->values();
 
-        $pastAppointments = $user->appointments()
-            ->with(['service', 'professional.user', 'review'])
-            ->past()
-            ->get();
+        $ongoingAppointments = $confirmedAppointments
+            ->filter(function ($appointment) {
+                return $appointment->isCurrentlyOngoing();
+            })
+            ->sortByDesc('scheduled_at')
+            ->values();
+
+        $pastAppointments = $appointments
+            ->filter(function ($appointment) {
+                return $appointment->hasEndedForClient();
+            })
+            ->sortByDesc('scheduled_at')
+            ->values();
 
         return view('client.appointments', compact(
             'nextAppointment',
+            'ongoingAppointment',
             'pendingAppointments',
             'upcomingAppointments',
+            'ongoingAppointments',
             'pastAppointments'
         ));
     }
@@ -67,8 +88,6 @@ class ClientController extends Controller
     public function calendar()
     {
         $user = Auth::user();
-
-        AutoCompleteAppointments::dispatchSync();
 
         $appointmentsJson = $user->appointments()
             ->with(['service', 'professional.user'])

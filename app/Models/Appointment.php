@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 class Appointment extends Model
 {
@@ -117,6 +118,24 @@ class Appointment extends Model
             && ! $this->review()->exists();
     }
 
+    public function serviceEndTime(): Carbon
+    {
+        return $this->scheduled_at->copy()->addMinutes($this->service->duration ?? 0);
+    }
+
+    public function hasEndedForClient(): bool
+    {
+        if (in_array($this->status, ['completed', 'cancelled'], true)) {
+            return true;
+        }
+
+        if ($this->status !== 'confirmed') {
+            return false;
+        }
+
+        return now()->greaterThanOrEqualTo($this->serviceEndTime());
+    }
+
     public function getDisplayClientNameAttribute(): string
     {
         return $this->client?->name
@@ -173,6 +192,103 @@ class Appointment extends Model
     public function getIsExternalClientAttribute(): bool
     {
         return $this->client_id === null;
+    }
+
+    // ─── Status Verification ────────────────────────────────────────────────────
+
+    /**
+     * Verifica se passou do horário do agendamento sem confirmação
+     */
+    public function hasPassedWithoutConfirmation(): bool
+    {
+        return $this->status === 'pending' && now()->isAfter($this->scheduled_at);
+    }
+
+    /**
+     * Verifica se o horário está próximo (falta menos de 24h e não foi confirmado)
+     */
+    public function isUpcomingAndUnconfirmed(): bool
+    {
+        if ($this->status !== 'pending') {
+            return false;
+        }
+
+        $minutesRemaining = now()->diffInMinutes($this->scheduled_at, false);
+
+        return $minutesRemaining >= 0 && $minutesRemaining <= (24 * 60);
+    }
+
+    /**
+     * Retorna horas restantes até o agendamento
+     */
+    public function hoursUntilScheduled(): int
+    {
+        return (int) now()->diffInHours($this->scheduled_at, false);
+    }
+
+    /**
+     * Retorna o texto de tempo restante formatado
+     */
+    public function timeUntilScheduledFormatted(): string
+    {
+        $minutes = now()->diffInMinutes($this->scheduled_at, false);
+
+        if ($minutes <= 0) {
+            return 'menos de 1 minuto';
+        }
+
+        $days = intdiv($minutes, 1440);
+        $remainingAfterDays = $minutes % 1440;
+        $hours = intdiv($remainingAfterDays, 60);
+        $remainingMinutes = $remainingAfterDays % 60;
+
+        $parts = [];
+
+        if ($days > 0) {
+            $parts[] = $days . ' dia' . ($days > 1 ? 's' : '');
+        }
+
+        if ($hours > 0) {
+            $parts[] = $hours . ' hora' . ($hours > 1 ? 's' : '');
+        }
+
+        if ($remainingMinutes > 0) {
+            $parts[] = $remainingMinutes . ' minuto' . ($remainingMinutes > 1 ? 's' : '');
+        }
+
+        return implode(' e ', $parts);
+    }
+
+    /**
+     * Verifica se deve auto-completar (passou do horário + tempo de duração).
+     * Nao considera buffer adicional para a virada de status.
+     */
+    public function shouldAutoComplete(): bool
+    {
+        if ($this->status !== 'confirmed') {
+            return false;
+        }
+
+        // Calcula o tempo de conclusao esperado: scheduled_at + duracao do servico
+        $serviceEndTime = $this->scheduled_at->copy()
+            ->addMinutes($this->service->duration ?? 0);
+
+        return now()->isAfter($serviceEndTime);
+    }
+
+    /**
+     * Verifica se o atendimento está em andamento (entre início e término previsto)
+     */
+    public function isCurrentlyOngoing(): bool
+    {
+        if ($this->status !== 'confirmed') {
+            return false;
+        }
+
+        $start = $this->scheduled_at;
+        $end = $this->serviceEndTime();
+
+        return now()->greaterThanOrEqualTo($start) && now()->lessThan($end);
     }
 
 }

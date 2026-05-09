@@ -7,7 +7,6 @@ use App\Http\Requests\StoreProfessionalRequest;
 use App\Http\Requests\UpdatePortfolioPhotoRequest;
 use App\Http\Requests\UpdateProfessionalRequest;
 use App\Http\Requests\UpdateProfessionalSettingsRequest;
-use App\Jobs\AutoCompleteAppointments;
 use App\Models\Availability;
 use App\Models\Professional;
 use App\Models\PortfolioPhoto;
@@ -445,10 +444,6 @@ class ProfessionalController extends Controller
         }
 
         $openCreateModal = $request->boolean('open_create', false);
-
-        if ($professional->auto_complete) {
-            AutoCompleteAppointments::dispatchSync();
-        }
 
         $pending = $professional->appointments()
             ->with(['client', 'service'])
