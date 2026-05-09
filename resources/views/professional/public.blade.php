@@ -287,7 +287,7 @@
             </div>
 
             @forelse($professional->services as $service)
-            <div class="relative flex items-center gap-4 px-6 py-4 border-b border-purple-50 last:border-0 group">
+            <div class="relative flex items-center gap-4 px-6 py-4 border-b border-purple-100 last:border-0 group">
 
                 {{-- Imagem do serviço --}}
                 <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
