@@ -287,7 +287,7 @@
             </div>
 
             @forelse($professional->services as $service)
-            <div class="flex items-center gap-4 px-6 py-4 border-b border-purple-50 last:border-0">
+            <div class="relative flex items-center gap-4 px-6 py-4 border-b border-purple-50 last:border-0 group">
 
                 {{-- Imagem do serviço --}}
                 <div class="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style="background-color: #EDE4F8;">
@@ -315,24 +315,22 @@
                         <span class="text-xs text-purple-300">⏱ {{ $service->duration_formatted }}</span>
                     </div>
 
-                    {{-- Botão Agendar: visível só no mobile (abaixo das infos) --}}
-                    <div class="mt-3 sm:hidden">
-                        @auth
-                            @if(auth()->user()->isClient())
-                                <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
-                                   class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                   style="background-color: #6A0DAD;">
-                                    Agendar
-                                </a>
-                            @endif
-                        @else
-                            <button onclick="document.getElementById('loginModal').classList.remove('hidden')"
-                                    class="inline-flex w-full items-center justify-center gap-1.5 px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
-                                    style="background-color: #6A0DAD;">
-                                Agendar
-                            </button>
-                        @endauth
-                    </div>
+                </div>
+
+                {{-- Área clicável no mobile --}}
+                <div class="absolute inset-0 sm:hidden">
+                    @auth
+                        @if(auth()->user()->isClient())
+                            <a href="{{ route('appointments.create', [$professional->id, $service->id]) }}"
+                               class="absolute inset-0 rounded-none"
+                               aria-label="Agendar {{ $service->name }}"></a>
+                        @endif
+                    @else
+                        <button type="button"
+                                onclick="document.getElementById('loginModal').classList.remove('hidden')"
+                                class="absolute inset-0 rounded-none"
+                                aria-label="Agendar {{ $service->name }}"></button>
+                    @endauth
                 </div>
 
                 {{-- Botão Agendar: visível só no desktop (à direita) --}}
