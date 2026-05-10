@@ -389,25 +389,25 @@
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     @if($appt->status === 'completed')
-                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border" style="background-color: #E0F7F4; color: #0D9488; border-color: #99E6DE;">
+                                        <span class="inline-flex w-28 items-center justify-center px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap text-center" style="background-color: #E0F7F4; color: #0D9488; border-color: #99E6DE;">
                                             {{ $appt->status_label }}
                                         </span>
                                     @elseif($appt->status === 'cancelled')
-                                        <span class="text-xs font-semibold px-3 py-1 bg-red-50 text-red-500 rounded-full border border-red-100">
+                                        <span class="inline-flex w-28 items-center justify-center px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap text-center bg-red-50 text-red-500 border-red-100">
                                             {{ $appt->status_label }}
                                         </span>
                                     @else
-                                        <span class="text-xs font-semibold px-3 py-1 rounded-full border" style="background-color: #EDE4F8; color: #6A0DAD; border-color: #C4A8E8;">
+                                        <span class="inline-flex w-28 items-center justify-center px-3 py-1 rounded-full border text-xs font-semibold whitespace-nowrap text-center" style="background-color: #EDE4F8; color: #6A0DAD; border-color: #C4A8E8;">
                                             {{ $appt->status_label }}
                                         </span>
                                     @endif
 
                                     @if($appt->status === 'completed')
                                         @if($appt->review)
-                                            <span class="text-xs text-purple-300">Avaliado</span>
+                                            <span class="inline-flex w-28 items-center justify-center px-3 py-1 whitespace-nowrap text-xs text-purple-300 text-center">Avaliado</span>
                                         @else
                                             <a href="{{ route('reviews.create', $appt->id) }}"
-                                               class="text-xs font-semibold px-3 py-1 rounded-xl transition-all duration-200 hover:-translate-y-0.5"
+                                               class="inline-flex w-28 items-center justify-center px-3 py-1 rounded-xl text-xs font-semibold transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap text-center"
                                                style="background-color: #EDE4F8; color: #6A0DAD;"
                                                @click.stop>
                                                 Avaliar
