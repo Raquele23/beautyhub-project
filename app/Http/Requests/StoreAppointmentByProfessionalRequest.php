@@ -33,4 +33,38 @@ class StoreAppointmentByProfessionalRequest extends FormRequest
             'external_phone'     => ['exclude_unless:client_mode,external', 'required_if:client_mode,external', 'string', 'max:20'],
         ];
     }
+
+    /**
+     * Custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'service_id.required' => 'Selecione um serviço.',
+            'service_id.exists' => 'Serviço inválido.',
+
+            'date.required' => 'Selecione a data.',
+            'date.date' => 'Data inválida.',
+            'date.after_or_equal' => 'A data deve ser hoje ou posterior.',
+
+            'time.required' => 'Selecione o horário.',
+            'time.date_format' => 'Horário inválido.',
+
+            'client_mode.required' => 'Escolha tipo de cliente.',
+
+            'known_client_id.required_if' => 'Selecione um cliente da plataforma.',
+            'known_client_id.exists' => 'Cliente não encontrado.',
+
+            'external_name.required_if' => 'Informe o nome do cliente.',
+            'external_name.max' => 'Nome muito longo.',
+
+            'external_email.email' => 'Email inválido.',
+            'external_email.max' => 'Email muito longo.',
+
+            'external_phone.required_if' => 'Informe o telefone do cliente.',
+            'external_phone.max' => 'Telefone inválido.',
+
+            'notes.max' => 'Observações muito longas.',
+        ];
+    }
 }
