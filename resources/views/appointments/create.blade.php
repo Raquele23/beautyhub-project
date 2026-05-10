@@ -34,7 +34,7 @@
               action="{{ route('appointments.store', [$professional->id, $service->id]) }}"
               x-data="appointmentForm()" 
               x-init="init()" 
-              @submit.prevent="handleSubmit($event)"
+              @submit="handleSubmit($event)"
               class="space-y-5">
             @csrf
                         <input type="hidden" name="force_conflict" x-ref="forceConflict" value="0">
