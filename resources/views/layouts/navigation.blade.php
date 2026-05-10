@@ -136,6 +136,10 @@
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                 </span>
+                                            @elseif($notification->type === 'appointment_reminder')
+                                                <span class="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 9v.01M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>
+                                                </span>
                                             @elseif(in_array($notification->type, ['review_received', 'review_reply_received']))
                                                 <span class="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -511,6 +515,11 @@
                 bgClass = 'bg-blue-100';
                 textClass = 'text-blue-600';
                 svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+                break;
+            case 'reminder':
+                bgClass = 'bg-amber-100';
+                textClass = 'text-amber-600';
+                svgContent = '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 9v.01M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg>';
                 break;
             case 'review':
                 bgClass = 'bg-purple-100';

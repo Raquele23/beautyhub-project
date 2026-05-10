@@ -204,10 +204,12 @@ class Appointment extends Model
         return $this->status === 'pending' && now()->isAfter($this->scheduled_at);
     }
 
-    /**
-     * Verifica se o horário está próximo (falta menos de 24h e não foi confirmado)
-     */
-    public function isUpcomingAndUnconfirmed(): bool
+    public function isPendingOverdue(): bool
+    {
+        return $this->status === 'pending' && now()->isAfter($this->scheduled_at);
+    }
+
+    public function isPendingDueSoon(): bool
     {
         if ($this->status !== 'pending') {
             return false;
@@ -216,6 +218,19 @@ class Appointment extends Model
         $minutesRemaining = now()->diffInMinutes($this->scheduled_at, false);
 
         return $minutesRemaining >= 0 && $minutesRemaining <= (24 * 60);
+    }
+
+    public function needsProfessionalAttention(): bool
+    {
+        return $this->isPendingOverdue() || $this->isPendingDueSoon();
+    }
+
+    /**
+     * Verifica se o horário está próximo (falta menos de 24h e não foi confirmado)
+     */
+    public function isUpcomingAndUnconfirmed(): bool
+    {
+        return $this->isPendingDueSoon();
     }
 
     /**
