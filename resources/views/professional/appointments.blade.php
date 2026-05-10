@@ -428,7 +428,12 @@
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
                                     @php
-                                        $isAutoCompleted = auth()->user()->professional->auto_complete && $appointment->shouldAutoComplete();
+                                        // Desabilita o botão apenas quando o agendamento já estiver concluído.
+                                        // Antes: o botão ficava desabilitado se o profissional tinha auto_complete
+                                        // ativado e o sistema determinava que deveria auto-completar.
+                                        // Agora: considerar apenas quando o status já for 'completed',
+                                        // permitindo que o profissional conclua manualmente antes da job rodar.
+                                        $isAutoCompleted = $appointment->status === 'completed';
                                     @endphp
                                     <form method="POST" action="{{ route('appointments.complete', $appointment->id) }}" @click.stop>
                                         @csrf @method('PATCH')
