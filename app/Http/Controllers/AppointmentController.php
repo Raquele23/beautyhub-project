@@ -24,10 +24,29 @@ class AppointmentController extends Controller
             abort(404);
         }
 
+        $clientConflictAppointments = Auth::user()->appointments()
+            ->with(['service', 'professional.user'])
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('scheduled_at', '>=', now())
+            ->orderBy('scheduled_at')
+            ->get()
+            ->map(function (Appointment $appointment) {
+                $appointmentEnd = $appointment->scheduled_at->copy()->addMinutes((int) ($appointment->service->duration ?? 0));
+
+                return [
+                    'start'         => $appointment->scheduled_at->format('Y-m-d H:i'),
+                    'end'           => $appointmentEnd->format('Y-m-d H:i'),
+                    'establishment'  => $appointment->professional->establishment_name ?? $appointment->professional->user->name,
+                    'service'        => $appointment->service->name,
+                ];
+            })
+            ->values();
+
         return view('appointments.create', [
-            'professional' => $professional,
-            'service'      => $service,
-            'weekdays'     => \App\Models\Availability::WEEKDAYS,
+            'professional'              => $professional,
+            'service'                   => $service,
+            'weekdays'                  => \App\Models\Availability::WEEKDAYS,
+            'clientConflictAppointments' => $clientConflictAppointments,
         ]);
     }
 
@@ -53,26 +72,44 @@ class AppointmentController extends Controller
             abort(404);
         }
 
+        $scheduledAt = $request->date . ' ' . $request->time . ':00';
+
+        if ($this->clientHasConflict(Auth::user(), $scheduledAt, (int) $service->duration, $professional->id) && !$request->boolean('force_conflict')) {
+            return back()
+            ->withErrors(['time' => 'Você já tem um agendamento ativo que conflita com esse horário em outro estabelecimento. Confirme se deseja continuar ou escolha outro horário.'])
+                ->withInput();
+        }
+
         if (!$professional->isSlotAvailableForService($request->date, $request->time, (int) $service->duration)) {
             return back()->withErrors(['time' => 'Horário indisponível para este serviço. Escolha outro.']);
         }
 
-        $scheduledAt = null;
         $appointment = null;
 
         DB::transaction(function () use ($request, $professional, $service, &$scheduledAt, &$appointment) {
+            User::query()
+                ->whereKey(Auth::id())
+                ->lockForUpdate()
+                ->first();
+
             Professional::query()
                 ->whereKey($professional->id)
                 ->lockForUpdate()
                 ->first();
+
+            $scheduledAt = $request->date . ' ' . $request->time . ':00';
+
+            if ($this->clientHasConflict(Auth::user(), $scheduledAt, (int) $service->duration, $professional->id) && !$request->boolean('force_conflict')) {
+                throw ValidationException::withMessages([
+                    'time' => 'Você já tem um agendamento ativo que conflita com esse horário em outro estabelecimento. Confirme se deseja continuar ou escolha outro horário.',
+                ]);
+            }
 
             if (!$professional->fresh()->isSlotAvailableForService($request->date, $request->time, (int) $service->duration)) {
                 throw ValidationException::withMessages([
                     'time' => 'Este horário acabou de ser ocupado. Escolha outro.',
                 ]);
             }
-
-            $scheduledAt = $request->date . ' ' . $request->time . ':00';
 
             $appointment = Appointment::create([
                 'client_id'       => Auth::id(),
@@ -96,6 +133,25 @@ class AppointmentController extends Controller
 
         return redirect()->route('client.appointments')
             ->with('status', 'Agendamento realizado! Aguarde a confirmação do profissional.');
+    }
+
+    private function clientHasConflict(User $client, string $scheduledAt, int $serviceDurationMinutes, int $professionalId): bool
+    {
+        $newStart = Carbon::parse($scheduledAt);
+        $newEnd = $newStart->copy()->addMinutes(max($serviceDurationMinutes, 0));
+
+        return $client->appointments()
+            ->with('service')
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('professional_id', '!=', $professionalId)
+            ->where('scheduled_at', '<', $newEnd->toDateTimeString())
+            ->get()
+            ->contains(function (Appointment $appointment) use ($newStart, $newEnd) {
+                $existingStart = $appointment->scheduled_at->copy();
+                $existingEnd = $existingStart->copy()->addMinutes((int) ($appointment->service->duration ?? 0));
+
+                return $newStart->lt($existingEnd) && $newEnd->gt($existingStart);
+            });
     }
 
     public function createByProfessional(Request $request)

@@ -32,9 +32,12 @@
 
         <form method="POST"
               action="{{ route('appointments.store', [$professional->id, $service->id]) }}"
-              x-data="appointmentForm()" x-init="init()"
+              x-data="appointmentForm()" 
+              x-init="init()" 
+              @submit.prevent="handleSubmit($event)"
               class="space-y-5">
             @csrf
+                        <input type="hidden" name="force_conflict" x-ref="forceConflict" value="0">
 
             {{-- ── Card: Serviço ── --}}
             <div class="bg-white rounded-2xl border border-purple-100 shadow-sm p-6">
@@ -134,7 +137,7 @@
                                                name="time"
                                                :value="slot"
                                                x-model="selectedTime"
-                                               @change="open = false"
+                                               @change="open = false; updateConflictWarning()"
                                                class="peer sr-only">
                                         <span class="slot-pill inline-flex items-center px-4 py-2 rounded-xl border border-purple-100 text-xs font-semibold text-purple-500 bg-white transition-all duration-150 cursor-pointer hover:border-purple-300 whitespace-nowrap"
                                               x-text="slot">
@@ -147,6 +150,11 @@
                     </div>
                     <x-input-error :messages="$errors->get('time')" class="mt-2 text-xs text-red-400" />
                 </div>
+            </div>
+
+            <div x-show="conflictWarning" x-cloak class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm">
+                <p class="text-sm font-semibold text-amber-800">Atenção: já existe outro agendamento seu nesse mesmo horário.</p>
+                <p class="text-xs text-amber-700 mt-1" x-text="conflictWarning"></p>
             </div>
 
             {{-- ── Card: Observações ── --}}
@@ -194,6 +202,9 @@
                 slots: [],
                 loading: false,
                 oldTime: '{{ old('time') }}',
+                conflictAppointments: @js($clientConflictAppointments),
+                conflictWarning: '',
+                serviceDurationMinutes: {{ (int) $service->duration }},
 
                 init() {
                     const oldDate = '{{ old('date') }}';
@@ -201,6 +212,8 @@
                         this.selectedDate = oldDate;
                         this.fetchSlots();
                     }
+
+                    this.updateConflictWarning();
                 },
 
                 async fetchSlots() {
@@ -220,10 +233,56 @@
                             this.selectedTime = this.oldTime;
                         }
                         this.oldTime = '';
+                        this.updateConflictWarning();
                     } catch (e) {
                         this.slots = [];
                     } finally {
                         this.loading = false;
+                    }
+                },
+
+                updateConflictWarning() {
+                    this.conflictWarning = '';
+
+                    if (!this.selectedDate || !this.selectedTime) {
+                        return;
+                    }
+
+                    const selectedStart = `${this.selectedDate} ${this.selectedTime}`;
+                    const selectedEnd = this.addMinutesToDateTime(selectedStart, this.serviceDurationMinutes);
+                    const conflict = this.conflictAppointments.find((appointment) => selectedStart < appointment.end && selectedEnd > appointment.start);
+
+                    if (conflict) {
+                        this.conflictWarning = `Você já tem um agendamento em ${conflict.establishment} para ${conflict.service} que conflita com esse horário.`;
+                    }
+                },
+
+                addMinutesToDateTime(dateTime, minutes) {
+                    const [datePart, timePart] = dateTime.split(' ');
+                    const [year, month, day] = datePart.split('-').map(Number);
+                    const [hour, minute] = timePart.split(':').map(Number);
+
+                    const date = new window.Date(year, month - 1, day, hour, minute, 0, 0);
+                    date.setMinutes(date.getMinutes() + minutes);
+
+                    const pad = (value) => String(value).padStart(2, '0');
+                    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                },
+
+                handleSubmit(event) {
+                    this.updateConflictWarning();
+
+                    if (!this.conflictWarning || this.$refs.forceConflict.value === '1') {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const confirmed = window.confirm(`${this.conflictWarning}\n\nTem certeza que deseja continuar?`);
+
+                    if (confirmed) {
+                        this.$refs.forceConflict.value = '1';
+                        event.target.submit();
                     }
                 },
 
