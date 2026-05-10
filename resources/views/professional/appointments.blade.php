@@ -399,9 +399,14 @@
                                     </div>
                                     @endif
                                 </div>
-                                <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}">
+                                <form method="POST" action="{{ route('appointments.cancel', $appointment->id) }}" class="flex items-center">
                                     @csrf @method('PATCH')
-                                    <button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Cancelar agendamento</button>
+                                    <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-red-400 hover:text-red-600 transition-colors">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Cancelar agendamento
+                                    </button>
                                 </form>
                             </div>
                         </div>

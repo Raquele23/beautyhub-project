@@ -222,22 +222,31 @@
 
                                 <div class="pt-2 border-t border-purple-50 flex items-center gap-3">
                                     <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}"
-                                       class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">
-                                        Remarcar agendamento
+                                       class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-purple-600 hover:text-purple-800 transition-colors">
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m5-3a8 8 0 11-16 0 8 8 0 0116 0z" />
+                                        </svg>
+                                        Remarcar
                                     </a>
 
                                     @if($appt->hasPassedWithoutConfirmation())
-                                        <form method="POST" action="{{ route('appointments.destroy', $appt->id) }}" class="flex-1">
+                                        <form method="POST" action="{{ route('appointments.destroy', $appt->id) }}" class="flex-1 flex items-center">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="flex items-center gap-2 text-xs font-semibold text-red-400 hover:text-red-700 transition-colors">
-                                                Excluir agendamento
+                                            <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-red-400 hover:text-red-700 transition-colors">
+                                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12m-10 0V5a1 1 0 011-1h4a1 1 0 011 1v2m-6 0h6m-7 0h8l-1 11a1 1 0 01-1 1H8a1 1 0 01-1-1L6 7zm3 4v4m4-4v4" />
+                                                </svg>
+                                                Excluir
                                             </button>
                                         </form>
                                     @else
-                                        <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">
+                                        <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}" class="flex items-center">
                                             @csrf @method('PATCH')
-                                            <button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">
-                                                Cancelar agendamento
+                                            <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-red-400 hover:text-red-600 transition-colors">
+                                                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                                Cancelar
                                             </button>
                                         </form>
                                     @endif
@@ -298,7 +307,7 @@
                                     <div class="pt-2 border-t border-purple-50">
                                         <div class="flex items-center gap-4">
                                             <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">Remarcar para outro horário</a>
-                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">@csrf @method('PATCH')<button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Cancelar agendamento</button></form>
+                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">@csrf @method('PATCH')<button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold text-red-400 hover:text-red-600 transition-colors"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>Cancelar</button></form>
                                         </div>
                                     </div>
                                 </div>
@@ -357,8 +366,8 @@
                                     </div>
                                     <div class="pt-2 border-t border-purple-50">
                                         <div class="flex items-center gap-4">
-                                            <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}" class="inline-flex items-center gap-2 text-xs font-semibold text-purple-600 hover:text-purple-800 transition-colors">Remarcar agendamento</a>
-                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}">@csrf @method('PATCH')<button type="submit" class="text-xs font-semibold text-red-400 hover:text-red-600 transition-colors">Cancelar agendamento</button></form>
+                                            <a href="{{ route('appointments.create', [$appt->professional, $appt->service]) }}" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-purple-600 hover:text-purple-800 transition-colors"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m5-3a8 8 0 11-16 0 8 8 0 0116 0z" /></svg>Remarcar</a>
+                                            <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}" class="flex items-center">@csrf @method('PATCH')<button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-red-400 hover:text-red-600 transition-colors"><svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>Cancelar</button></form>
                                         </div>
                                     </div>
                                 </div>
