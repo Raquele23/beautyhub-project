@@ -33,6 +33,8 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
         ->name('appointments.cancel');
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
+        ->name('appointments.destroy');
 
     // ── Notificações ─────────────────────────────────────────────────────
     // IMPORTANTE: a rota 'poll' deve vir ANTES de '{notification}' para o

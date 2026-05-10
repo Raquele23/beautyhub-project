@@ -338,6 +338,25 @@ class AppointmentController extends Controller
         return back()->with('status', 'Agendamento cancelado.');
     }
 
+    public function destroy(Appointment $appointment)
+    {
+        $user = Auth::user();
+
+        if ($appointment->client_id !== $user->id) {
+            abort(403);
+        }
+
+        abort_if(
+            ! $appointment->hasPassedWithoutConfirmation(),
+            403,
+            'Apenas agendamentos pendentes e já vencidos podem ser excluídos.'
+        );
+
+        $appointment->delete();
+
+        return back()->with('status', 'Agendamento excluído com sucesso.');
+    }
+
     private function authorizeProfessional(Appointment $appointment): void
     {
         if ($appointment->professional->user_id !== Auth::id()) {

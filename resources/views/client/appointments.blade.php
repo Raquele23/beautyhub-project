@@ -227,8 +227,8 @@
                                     </a>
 
                                     @if($appt->hasPassedWithoutConfirmation())
-                                        <form method="POST" action="{{ route('appointments.cancel', $appt->id) }}" class="flex-1">
-                                            @csrf @method('PATCH')
+                                        <form method="POST" action="{{ route('appointments.destroy', $appt->id) }}" class="flex-1">
+                                            @csrf @method('DELETE')
                                             <button type="submit" class="flex items-center gap-2 text-xs font-semibold text-red-400 hover:text-red-700 transition-colors">
                                                 Excluir agendamento
                                             </button>
