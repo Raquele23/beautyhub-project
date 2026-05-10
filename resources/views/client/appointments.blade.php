@@ -189,31 +189,31 @@
                             </div>
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                    <div class="flex-1 min-w-max">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                         <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                     </div>
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
                                         <a href="{{ route('professional.public', $appt->professional) }}"
-                                           class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">
+                                           class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors break-words">
                                             {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                                         </a>
                                     </div>
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                     </div>
                                     @if($appt->professional->full_address)
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p>
                                         <p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p>
                                     </div>
                                     @endif
                                     @if($appt->notes)
-                                    <div class="w-full">
+                                    <div class="lg:col-span-4">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p>
                                         <p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p>
                                     </div>
@@ -274,25 +274,25 @@
                                 </div>
 
                                 <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                    <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                        <div class="flex-1 min-w-max">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                             <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                         </div>
-                                        <div class="flex-1 min-w-max">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
-                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
+                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors break-words">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
                                         </div>
-                                        <div class="flex-1 min-w-max">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                         </div>
                                         @if($appt->professional->full_address)
-                                        <div class="flex-1 min-w-max"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
+                                        <div class="min-w-0"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
                                         @endif
                                         @if($appt->notes)
-                                        <div class="w-full"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
+                                        <div class="lg:col-span-4"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
                                         @endif
                                     </div>
                                     <div class="pt-2 border-t border-purple-50">
@@ -334,25 +334,25 @@
                                 </div>
 
                                 <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                    <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                        <div class="flex-1 min-w-max">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                             <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                         </div>
-                                        <div class="flex-1 min-w-max">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
-                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
+                                            <a href="{{ route('professional.public', $appt->professional) }}" class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors break-words">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }}</a>
                                         </div>
-                                        <div class="flex-1 min-w-max">
+                                        <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                         </div>
                                         @if($appt->professional->full_address)
-                                        <div class="flex-1 min-w-max"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
+                                        <div class="min-w-0"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p><p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p></div>
                                         @endif
                                         @if($appt->notes)
-                                        <div class="w-full"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
+                                        <div class="lg:col-span-4"><p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p><p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p></div>
                                         @endif
                                     </div>
                                     <div class="pt-2 border-t border-purple-50">
@@ -422,31 +422,31 @@
                             </div>
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50">
-                                <div class="flex flex-wrap gap-x-10 gap-y-3">
-                                    <div class="flex-1 min-w-max">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
                                         <p class="text-xs text-purple-300 mt-0.5">{{ $appt->service->duration_formatted }} · R$ {{ number_format($appt->service->price, 2, ',', '.') }}</p>
                                     </div>
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Profissional</p>
                                         <a href="{{ route('professional.public', $appt->professional) }}"
-                                           class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors">
+                                           class="text-sm font-medium text-gray-800 hover:text-purple-600 transition-colors break-words">
                                             {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                                         </a>
                                     </div>
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Data e hora</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->scheduled_at->format('d/m/Y \à\s H:i') }}</p>
                                     </div>
                                     @if($appt->professional->full_address)
-                                    <div class="flex-1 min-w-max">
+                                    <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Localização</p>
                                         <p class="text-sm font-medium text-gray-800 break-words">{{ $appt->professional->full_address }}</p>
                                     </div>
                                     @endif
                                     @if($appt->notes)
-                                    <div class="w-full">
+                                    <div class="lg:col-span-4">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Observações</p>
                                         <p class="text-xs text-purple-300 italic mt-0.5">{{ $appt->notes }}</p>
                                     </div>
