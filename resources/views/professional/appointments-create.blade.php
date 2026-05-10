@@ -7,11 +7,12 @@
             <div>
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Novo agendamento</h1>
-                <p class="text-xs text-purple-400 mt-1">Agende cliente da plataforma (já atendido) ou cliente externo.</p>
+                <p class="text-xs text-purple-400 mt-1">Agende um cliente que já está cadastrado na plataforma ou um cliente externo.</p>
             </div>
-            <a href="{{ route('professional.appointments') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-               style="background-color: #E3D0F9;">
+                <a href="{{ url()->previous() }}"
+                    onclick="event.preventDefault(); if (document.referrer) { history.back(); } else { window.location.href='{{ route('professional.appointments') }}'; }"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    style="background-color: #E3D0F9;">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
                 </svg>
@@ -40,7 +41,7 @@
                     <label class="border rounded-xl p-4 cursor-pointer transition-all"
                            :class="clientMode === 'known' ? 'border-purple-500 bg-purple-50' : 'border-purple-100 hover:border-purple-300'">
                         <input type="radio" name="client_mode" value="known" x-model="clientMode" class="sr-only">
-                        <p class="text-sm font-semibold text-gray-800">Cliente da plataforma</p>
+                        <p class="text-sm font-semibold text-gray-800">Cliente da plataforma (usuário cadastrado)</p>
                         <p class="text-xs text-purple-400 mt-1">Busca por nome ou email.</p>
                     </label>
                     <label class="border rounded-xl p-4 cursor-pointer transition-all"
@@ -199,7 +200,7 @@
                     if (prefillClientId) {
                         this.selectedKnownClient = {
                             id: prefillClientId,
-                            name: prefillName || 'Cliente da plataforma',
+                            name: prefillName || 'Cliente da plataforma (usuário cadastrado)',
                             email: prefillEmail || '',
                         };
                     }
