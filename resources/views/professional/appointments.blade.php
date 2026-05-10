@@ -329,7 +329,7 @@
         @endif
        
         {{-- ── ABAS ── --}}
-        <div x-data="{ tab: 'pendentes' }">
+        <div x-data="{ tab: @js(request('tab', 'pendentes')) }">
 
             {{-- Barra de abas --}}
             <div class="flex gap-2 overflow-x-auto pb-3 scrollbar-thin-soft">

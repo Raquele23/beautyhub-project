@@ -165,7 +165,7 @@ class AppointmentController extends Controller
                 'professional_id' => $professional->id,
                 'service_id'      => $service->id,
                 'scheduled_at'    => $scheduledAt,
-                'status'          => 'pending',
+                'status'          => 'confirmed',
                 'notes'           => $validated['notes'] ?? null,
             ]);
         });
@@ -179,12 +179,8 @@ class AppointmentController extends Controller
             ]);
         }
 
-        $redirectRoute = $request->input('source') === 'calendar'
-            ? 'professional.calendar'
-            : 'professional.appointments';
-
-        return redirect()->route($redirectRoute)
-            ->with('status', 'Agendamento criado e pendente de confirmação.');
+        return redirect()->route('professional.appointments', ['tab' => 'em-andamento'])
+            ->with('status', 'Agendamento criado e confirmado.');
     }
 
     public function searchKnownClients(Request $request)
