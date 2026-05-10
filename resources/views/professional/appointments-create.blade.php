@@ -82,7 +82,7 @@
                 </div>
 
                 <template x-if="clientMode === 'external'">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div class="sm:col-span-2">
                             <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Nome do cliente</label>
                             <input type="text" name="external_name" value="{{ old('external_name', $prefillName) }}"
@@ -158,11 +158,11 @@
 
                 <p class="text-xs text-purple-400">Horários ocupados não aparecem para evitar conflito na agenda.</p>
 
-                <div>
-                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Observações (opcional)</label>
-                    <textarea name="notes" rows="3"
-                              class="mt-1 w-full px-4 py-3 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm resize-none">{{ old('notes') }}</textarea>
-                </div>
+                    <div>
+                        <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Observações (opcional)</label>
+                        <textarea name="notes" rows="3"
+                                  class="mt-1 w-full px-4 py-3 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm resize-none">{{ old('notes') }}</textarea>
+                    </div>
             </div>
 
             <button type="submit"
@@ -203,6 +203,42 @@
                             email: prefillEmail || '',
                         };
                     }
+
+                    // Watch clientMode to avoid leaking values between known/external
+                    if (this.$watch) {
+                        this.$watch('clientMode', (value) => {
+                                if (value === 'known') {
+                                this.clearExternalFields();
+                            } else {
+                                this.knownSearch = '';
+                                this.knownResults = [];
+                                this.selectedKnownClientId = '';
+                                this.selectedKnownClient = null;
+                            }
+                        });
+                    }
+
+                    // Clear form when leaving the page
+                    window.addEventListener('beforeunload', () => {
+                        try { document.querySelector('form[action="{{ route('professional.appointments.store') }}"]')?.reset(); } catch(e) {}
+                    });
+                },
+
+                clearExternalFields() {
+                    this.$nextTick?.(() => {
+                        try {
+                            const form = document.querySelector('form[action="{{ route('professional.appointments.store') }}"]');
+                            if (!form) return;
+                            const name = form.querySelector('[name="external_name"]');
+                            const email = form.querySelector('[name="external_email"]');
+                            const phone = form.querySelector('[name="external_phone"]');
+                            if (name) name.value = '';
+                            if (email) email.value = '';
+                            if (phone) phone.value = ''; 
+                        } catch (e) {
+                            // ignore
+                        }
+                    });
                 },
 
                 async fetchSlots() {

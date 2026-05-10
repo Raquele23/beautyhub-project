@@ -71,14 +71,15 @@
                 x-transition:leave="transition ease-in duration-100"
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                @click.self="open = false"
+                @click.self="closeAndReset()"
+                x-ref="createModal"
                 class="fixed inset-0 z-50 flex items-center justify-center p-4"
                 style="display: none; background-color: rgba(146, 64, 204, 0.18);">
 
                 <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-purple-100 max-h-[90vh] overflow-y-auto">
                     <div class="flex items-center justify-between px-6 py-4 border-b border-purple-50 sticky top-0 z-30 bg-white">
                         <h3 class="font-bold text-purple-800">Novo agendamento</h3>
-                        <button @click="open = false" class="text-purple-300 hover:text-purple-600 transition-colors">
+                        <button @click="closeAndReset()" class="text-purple-300 hover:text-purple-600 transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -140,17 +141,17 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div class="sm:col-span-2">
                                         <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Nome do cliente</label>
-                                        <input type="text" name="external_name" value="{{ old('external_name') }}"
+                                        <input type="text" name="external_name"
                                                class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                     </div>
                                     <div>
                                         <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Email (opcional)</label>
-                                        <input type="email" name="external_email" value="{{ old('external_email') }}"
+                                        <input type="email" name="external_email"
                                                class="mt-1 w-full px-4 py-2.5 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm">
                                     </div>
                                     <div>
                                          <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Telefone</label>
-                                             <input type="tel" name="external_phone" value="{{ old('external_phone') }}"
+                                             <input type="tel" name="external_phone"
                                                  required
                                                  maxlength="15"
                                                  placeholder="(11) 99999-9999"
@@ -213,11 +214,11 @@
 
                             <p class="text-xs text-purple-400">Horários ocupados não aparecem para evitar conflito na agenda.</p>
 
-                            <div>
-                                <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Observações (opcional)</label>
-                                <textarea name="notes" rows="3"
-                                          class="mt-1 w-full px-4 py-3 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm resize-none">{{ old('notes') }}</textarea>
-                            </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-purple-400 uppercase tracking-wide">Observações (opcional)</label>
+                                    <textarea name="notes" rows="3" x-model="notes"
+                                              class="mt-1 w-full px-4 py-3 rounded-xl border border-purple-100 bg-white text-sm text-gray-800 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent shadow-sm resize-none">{{ old('notes') }}</textarea>
+                                </div>
                         </div>
 
                         <div class="pt-1">
@@ -787,6 +788,70 @@
                         email: '',
                     };
                 }
+
+                // Watch clientMode to avoid leaking data between known/external
+                if (this.$watch) {
+                    this.$watch('clientMode', (value) => {
+                        if (value === 'known') {
+                            // clear external inputs
+                            this.clearExternalFields();
+                        } else {
+                            // clear known client selection
+                            this.knownSearch = '';
+                            this.knownResults = [];
+                            this.selectedKnownClientId = '';
+                            this.selectedKnownClient = null;
+                        }
+                    });
+                }
+            },
+
+            closeAndReset() {
+                this.open = false;
+                // wait for leave transition
+                setTimeout(() => this.resetForm(), 120);
+            },
+
+            resetForm() {
+                // reset JS state
+                this.clientMode = 'known';
+                this.knownSearch = '';
+                this.knownResults = [];
+                this.selectedKnownClientId = '';
+                this.selectedKnownClient = null;
+                this.serviceId = '';
+                this.selectedDate = '';
+                this.selectedTime = '';
+                this.slots = [];
+                this.loading = false;
+
+                // reset form DOM values inside modal if present
+                try {
+                    const root = this.$refs?.createModal;
+                    if (root) {
+                        const form = root.querySelector('form');
+                        if (form) form.reset();
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            },
+
+            clearExternalFields() {
+                this.$nextTick?.(() => {
+                    try {
+                        const root = this.$refs?.createModal;
+                        if (!root) return;
+                        const name = root.querySelector('[name="external_name"]');
+                        const email = root.querySelector('[name="external_email"]');
+                        const phone = root.querySelector('[name="external_phone"]');
+                        if (name) name.value = '';
+                        if (email) email.value = '';
+                        if (phone) phone.value = '';
+                    } catch (e) {
+                        // ignore
+                    }
+                });
             },
 
             async fetchSlots() {
