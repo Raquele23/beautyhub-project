@@ -64,6 +64,8 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
 
+        $this->ensureAppointmentReminders($user);
+
         $unread = $user->notifications()->unread()->count();
         $latestNotification = $user->notifications()->first();
 
@@ -79,6 +81,9 @@ class NotificationController extends Controller
     public function list()
     {
         $user = Auth::user();
+
+        $this->ensureAppointmentReminders($user);
+
         $unread = $user->notifications()->unread()->count();
         $notifications = $user->notifications()->take(10)->get();
 
@@ -106,10 +111,43 @@ class NotificationController extends Controller
     {
         return match ($type) {
             'appointment_confirmed' => 'confirmed',
+            'appointment_reminder' => 'reminder',
             'appointment_cancelled' => 'cancelled',
             'appointment_completed' => 'completed',
             'review_received', 'review_reply_received' => 'review',
             default => 'default',
         };
+    }
+
+    private function ensureAppointmentReminders($user): void
+    {
+        if (! $user->isProfessional() || ! $user->professional) {
+            return;
+        }
+
+        $appointments = $user->professional->appointments()
+            ->with('service')
+            ->where('status', 'pending')
+            ->whereBetween('scheduled_at', [now(), now()->addDay()])
+            ->orderBy('scheduled_at')
+            ->get();
+
+        foreach ($appointments as $appointment) {
+            $alreadySent = $user->notifications()
+                ->where('type', 'appointment_reminder')
+                ->where('appointment_id', $appointment->id)
+                ->exists();
+
+            if ($alreadySent) {
+                continue;
+            }
+
+            Notification::create([
+                'user_id'        => $user->id,
+                'type'           => 'appointment_reminder',
+                'message'        => 'Seu agendamento de ' . $appointment->service->name . ' para ' . $appointment->scheduled_at->format('d/m/Y \à\s H:i') . ' está a menos de 24 horas e ainda não foi confirmado.',
+                'appointment_id' => $appointment->id,
+            ]);
+        }
     }
 }
