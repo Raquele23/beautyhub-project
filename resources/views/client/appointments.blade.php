@@ -148,7 +148,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5 truncate">
+                                    <p class="text-xs text-purple-400 mt-0.5 break-words">
                                         {{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}
                                     </p>
                                 </div>
@@ -189,7 +189,7 @@
                             </div>
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 lg:gap-x-4 gap-y-4">
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
@@ -265,7 +265,7 @@
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
-                                        <p class="text-xs text-purple-400 mt-0.5 truncate">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
+                                        <p class="text-xs text-purple-400 mt-0.5 break-words">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span class="text-xs font-semibold px-3 py-1 rounded-full border bg-blue-50 text-blue-700 border-blue-200">Em andamento</span>
@@ -274,7 +274,7 @@
                                 </div>
 
                                 <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 lg:gap-x-4 gap-y-4">
                                         <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
@@ -321,7 +321,7 @@
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
-                                        <p class="text-xs text-purple-400 mt-0.5 truncate">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
+                                        <p class="text-xs text-purple-400 mt-0.5 break-words">{{ $appt->professional->establishment_name ?? $appt->professional->user->name }} · {{ $appt->scheduled_at->format('H:i') }}</p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         @if($appt->status === 'confirmed')
@@ -334,7 +334,7 @@
                                 </div>
 
                                 <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50 space-y-4">
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 lg:gap-x-4 gap-y-4">
                                         <div class="min-w-0">
                                             <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                             <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
@@ -383,7 +383,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-semibold text-gray-900 truncate">{{ $appt->service->name }}</p>
-                                    <p class="text-xs text-purple-400 mt-0.5 truncate">
+                                    <p class="text-xs text-purple-400 mt-0.5 break-words">
                                         {{ $appt->professional->establishment_name ?? $appt->professional->user->name }}
                                     </p>
                                 </div>
@@ -422,7 +422,7 @@
                             </div>
 
                             <div x-show="open" x-cloak x-transition class="px-6 pb-5 pt-4 bg-purple-50/40 border-t border-purple-50">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 lg:gap-x-4 gap-y-4">
                                     <div class="min-w-0">
                                         <p class="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-1">Serviço</p>
                                         <p class="text-sm font-medium text-gray-800">{{ $appt->service->name }}</p>
