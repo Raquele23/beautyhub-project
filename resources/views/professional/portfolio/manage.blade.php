@@ -72,7 +72,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         <span class="text-xs text-purple-400 font-medium text-center leading-relaxed block px-2">Clique para selecionar e<br>recortar a foto</span>
-                           <input type="file" name="photo" accept="image/*" class="sr-only"
+                           <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" class="sr-only"
                                id="add_photo_input"
                                data-crop-target="add"
                                data-preview-wrapper="add_preview_container"
@@ -205,7 +205,7 @@
                                             </div>
                                             <input type="file"
                                                    name="photo"
-                                                   accept="image/*"
+                                                   accept="image/jpeg,image/png,image/webp"
                                                    class="sr-only"
                                                    id="edit_photo_input_{{ $photo->id }}"
                                                    data-crop-target="edit-{{ $photo->id }}"
