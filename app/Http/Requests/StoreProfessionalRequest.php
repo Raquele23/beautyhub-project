@@ -33,14 +33,14 @@ class StoreProfessionalRequest extends FormRequest
             'house_number' => 'required|string|max:10',
             'zip_code' => 'nullable|string|regex:/^\d{5}-?\d{3}$/',
             'instagram' => 'nullable|string|max:255',
-            'profile_photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=1/1'],
+            'profile_photo' => ['nullable', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(5 * 1024), 'dimensions:ratio=1/1'],
             'cropped_profile_photo' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'banner_style' => 'nullable|in:color,photo',
             'banner_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'banner_photo' => ['nullable', 'required_if:banner_style,photo', File::image()->max(8 * 1024)],
+            'banner_photo' => ['nullable', 'required_if:banner_style,photo', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(8 * 1024)],
             'banner_photo_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'portfolio_photos' => 'nullable|array|max:10',
-            'portfolio_photos.*' => [File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
+            'portfolio_photos.*' => [File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(5 * 1024), 'dimensions:ratio=4/5'],
             'auto_complete' => 'boolean',
         ];
     }
