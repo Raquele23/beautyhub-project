@@ -264,7 +264,7 @@
                                             </div>
                                             <input type="file"
                                                    name="photo"
-                                                   accept="image/*"
+                                                   accept="image/jpeg,image/png,image/webp"
                                                    class="sr-only"
                                                    id="show_edit_photo_input_{{ $photo->id }}"
                                                    data-crop-target="show-edit-{{ $photo->id }}"
