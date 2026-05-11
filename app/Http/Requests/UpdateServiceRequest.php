@@ -29,7 +29,7 @@ class UpdateServiceRequest extends FormRequest
         return [
             'category' => 'required|in:' . implode(',', array_keys(Service::categoryOptions())),
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:250',
             'duration' => 'required|integer|min:5|max:720',
             'price' => 'required|numeric|min:0.01',
             'image' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
@@ -50,6 +50,7 @@ class UpdateServiceRequest extends FormRequest
             'duration.integer' => 'A duração do serviço deve ser um número inteiro.',
             'duration.min' => 'A duração mínima do serviço é de 5 minutos.',
             'duration.max' => 'A duração máxima do serviço é de 12 horas.',
+            'description.max' => 'A descrição do serviço deve ter no máximo 250 caracteres.',
             'cropped_image.regex' => 'A imagem recortada deve ser PNG, JPG, JPEG ou WEBP.',
             'original_image_base64.regex' => 'A imagem original deve ser PNG, JPG, JPEG ou WEBP.',
         ];
