@@ -119,3 +119,16 @@ Route::get('/professional/{professional}/slots', [AppointmentController::class, 
     ->name('appointments.slots');
 
 require __DIR__.'/auth.php';
+
+// Rota para disparar o scheduler via HTTP (use com token opcional em env `SCHEDULE_RUN_SECRET`)
+Route::get('/scheduler-run', function () {
+    $secret = env('SCHEDULE_RUN_SECRET');
+
+    if ($secret && request()->query('token') !== $secret) {
+        abort(403);
+    }
+
+    Artisan::call('schedule:run');
+
+    return response('Scheduler executed', 200);
+})->middleware('throttle:1,1');
