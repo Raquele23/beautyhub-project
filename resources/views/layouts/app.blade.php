@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        @auth
+            <meta name="user-id" content="{{ Auth::id() }}">
+        @endauth
 
         <title>{{ config('app.name', 'BeautyHub') }}</title>
         <link rel="shortcut icon" href="{{ asset('assets/img/Beauty_HubIcon.png') }}">
@@ -104,8 +107,10 @@
 
             window.BEAUTY_HUB_GEO.enhanceExploreLinks();
 
+            const userId = document.querySelector('meta[name="user-id"]')?.content;
+
             window.BEAUTY_HUB_VISITOR_KEYS = {
-                visited: 'beautyhub:visited-professionals',
+                visited: userId ? `beautyhub:visited-professionals:${userId}` : 'beautyhub:visited-professionals',
             };
 
             window.BEAUTY_HUB_VISITOR = {
