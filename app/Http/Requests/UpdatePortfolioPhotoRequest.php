@@ -23,9 +23,9 @@ class UpdatePortfolioPhotoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => ['nullable', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
+            'photo' => ['nullable', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(5 * 1024), 'dimensions:ratio=4/5'],
             'cropped_photo' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
-            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
+            'original_photo' => ['nullable', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(10 * 1024)],
             'original_photo_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'description' => 'nullable|string|max:30',
         ];
