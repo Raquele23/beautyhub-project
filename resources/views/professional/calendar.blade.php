@@ -432,7 +432,7 @@ init() {
                         return;
                     }
 
-                    const url = '{{ route('professional.appointments.create') }}?next_date=' + this.selectedDay;
+                    const url = '{{ route('professional.appointments.create') }}?next_date=' + this.selectedDay + '&back_url=' + encodeURIComponent(window.location.href);
                     window.location.href = url;
                 },
 

@@ -26,7 +26,7 @@
             <div class="flex items-center gap-2">
                 <!-- Desktop: botão com texto -->
                 <a
-                    href="{{ route('professional.appointments.create') }}"
+                    href="{{ route('professional.appointments.create', ['back_url' => request()->fullUrl()]) }}"
                     class="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white rounded-xl transition-all duration-200 hover:-translate-y-0.5 shadow-lg shadow-purple-200"
                     style="background-color: #6A0DAD;">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
 
                 <!-- Mobile: ícone apenas -->
                 <a
-                    href="{{ route('professional.appointments.create') }}"
+                    href="{{ route('professional.appointments.create', ['back_url' => request()->fullUrl()]) }}"
                     class="inline-flex sm:hidden w-10 h-10 rounded-xl items-center justify-center transition-all duration-200 hover:-translate-y-0.5 shadow-sm"
                     style="background-color: #6A0DAD;"
                     title="Novo agendamento">
