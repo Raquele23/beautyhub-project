@@ -25,7 +25,7 @@ class UpdateProfessionalRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'establishment_name' => 'nullable|string|max:255',
-            'description' => 'required|string',
+            'description' => 'required|string|max:500',
             'phone' => 'required|string|min:10|max:20|regex:/\d/',
             'state' => 'required|string|max:2',
             'city' => 'required|string|max:255',
@@ -55,6 +55,7 @@ class UpdateProfessionalRequest extends FormRequest
             'phone.min' => 'O telefone deve ter no mínimo 10 dígitos.',
             'phone.max' => 'O telefone deve ter no máximo 20 caracteres.',
             'phone.regex' => 'O telefone deve conter números.',
+            'description.max' => 'A descrição deve ter no máximo 500 caracteres.',
             'house_number.required' => 'O número da casa é obrigatório.',
             'house_number.max' => 'O número da casa deve ter no máximo 10 caracteres.',
             'cropped_profile_photo.regex' => 'A foto de perfil recortada deve ser PNG, JPG, JPEG ou WEBP.',
