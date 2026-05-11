@@ -129,8 +129,18 @@
             </div>
         </div>
 
-        {{-- ── Toast ── --}}
-        @if(session('status'))
+        {{-- ── Toast de Ações ── --}}
+        @php
+            $statusMessage = session('status');
+            $shouldShowToast = $statusMessage && (
+                str_contains($statusMessage, 'confirmado') ||
+                str_contains($statusMessage, 'concluído') ||
+                str_contains($statusMessage, 'cancelado') ||
+                str_contains($statusMessage, 'recusado') ||
+                str_contains($statusMessage, 'criado')
+            );
+        @endphp
+        @if($shouldShowToast)
             <div
                 x-data="{ show: true }"
                 x-show="show"
@@ -147,7 +157,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                     </svg>
                 </div>
-                <p class="text-sm font-semibold text-purple-800">{{ session('status') }}</p>
+                <p class="text-sm font-semibold text-purple-800">{{ $statusMessage }}</p>
                 <button @click="show = false" class="ml-2 text-purple-300 hover:text-purple-600 transition-colors flex-shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -213,7 +223,7 @@
             </div>
 
             {{-- ── ABA: PENDENTES ── --}}
-            <div x-show="tab === 'pendentes'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-show="tab === 'pendentes'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-visible">
                     @forelse($pending as $appointment)
                         <div x-data="{ open: false, infoOpen: false }" class="border-b border-purple-50 last:border-0">
@@ -343,7 +353,7 @@
             </div>
 
             {{-- ── ABA: EM ANDAMENTO (CONFIRMADOS) ── --}}
-            <div x-show="tab === 'em-andamento'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-show="tab === 'em-andamento'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 @if($agenda->count() === 0 && $awaitingComplete->count() === 0)
                     <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                         <div class="px-6 py-12 text-center text-sm text-purple-300">Nenhum agendamento em andamento.</div>
@@ -416,7 +426,7 @@
             </div>
 
             {{-- ── ABA: EM ANDAMENTO (A CONCLUIR) ── --}}
-            <div x-show="tab === 'em-andamento'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-show="tab === 'em-andamento'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 @if($awaitingComplete->count())
                     <p class="text-xs font-bold tracking-widest uppercase text-purple-400 mb-3">A concluir</p>
                     <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
@@ -492,7 +502,7 @@
             </div>
 
             {{-- ── ABA: CONCLUÍDOS ── --}}
-            <div x-data="{ shown: 10 }" x-show="tab === 'concluidos'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-data="{ shown: 10 }" x-show="tab === 'concluidos'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                     @forelse($completed as $index => $appointment)
                         <div x-data="{ open: false }" x-show="{{ $index }} < shown" class="border-b border-purple-50 last:border-0">
@@ -556,7 +566,7 @@
             </div>
 
             {{-- ── ABA: CANCELADOS ── --}}
-            <div x-data="{ shown: 10 }" x-show="tab === 'cancelados'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
+            <div x-data="{ shown: 10 }" x-show="tab === 'cancelados'" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="mt-4">
                 <div class="bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
                     @forelse($cancelled as $index => $appointment)
                         <div x-data="{ open: false }" x-show="{{ $index }} < shown" class="border-b border-purple-50 last:border-0">
