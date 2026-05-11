@@ -23,9 +23,9 @@ class AddPortfolioPhotoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'photo' => ['nullable', 'required_without:cropped_photo', File::image()->max(5 * 1024), 'dimensions:ratio=4/5'],
+            'photo' => ['nullable', 'required_without:cropped_photo', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(5 * 1024), 'dimensions:ratio=4/5'],
             'cropped_photo' => ['nullable', 'required_without:photo', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
-            'original_photo' => ['nullable', File::image()->max(10 * 1024)],
+            'original_photo' => ['nullable', File::image()->types(['png', 'jpg', 'jpeg', 'webp'])->max(10 * 1024)],
             'original_photo_base64' => ['nullable', 'string', 'regex:/^data:image\/(png|jpe?g|webp);base64,/'],
             'description' => 'nullable|string|max:30',
         ];
