@@ -202,6 +202,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const recentList = document.getElementById('recent-list');
             const returnToHome = @json(route('client.home') . '#recent-list');
+            const validateUrl = @json(route('visitor.validate'));
 
             if (!recentList || !window.BEAUTY_HUB_VISITOR) {
                 return;
@@ -249,24 +250,76 @@
                 }).join('');
             }
 
-            // Tentar pegar geolocalização
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    const userLat = position.coords.latitude;
-                    const userLon = position.coords.longitude;
-                    renderRecent(visited, userLat, userLon);
-                }, function (error) {
-                    // Se falhar, renderiza sem distância
+            // Validar quais profissionais ainda existem no backend
+            const professionalIds = visited.map(v => v.id);
+
+            fetch(validateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ ids: professionalIds }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                const validIds = data.valid_ids || [];
+                const validVisited = visited.filter(v => validIds.includes(v.id));
+
+                // Se nenhum profissional válido, limpar localStorage
+                if (!validVisited.length && visited.length > 0) {
+                    window.BEAUTY_HUB_VISITOR.clear();
+                    recentList.innerHTML = `
+                        <div class="rounded-xl border border-dashed border-purple-200 px-4 py-6 text-center">
+                            <p class="text-sm font-semibold text-gray-700">Nenhum profissional visitado ainda.</p>
+                            <p class="text-xs text-purple-400 mt-1">Quando você visitar um perfil, ele aparecerá aqui.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Tentar pegar geolocalização
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+                        renderRecent(validVisited, userLat, userLon);
+                    }, function (error) {
+                        // Se falhar, renderiza sem distância
+                        renderRecent(validVisited);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    });
+                } else {
+                    // Navegador sem geolocalização
+                    renderRecent(validVisited);
+                }
+            })
+            .catch(error => {
+                // Se falhar a validação, renderiza mesmo assim (fallback)
+                console.error('Erro validando profissionais:', error);
+                
+                // Tentar pegar geolocalização
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+                        renderRecent(visited, userLat, userLon);
+                    }, function (error) {
+                        // Se falhar, renderiza sem distância
+                        renderRecent(visited);
+                    }, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    });
+                } else {
+                    // Navegador sem geolocalização
                     renderRecent(visited);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000
-                });
-            } else {
-                // Navegador sem geolocalização
-                renderRecent(visited);
-            }
+                }
+            });
         });
     </script>
 </x-app-layout>
