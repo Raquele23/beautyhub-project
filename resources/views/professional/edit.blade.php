@@ -138,7 +138,7 @@
                             <input type="file"
                                    name="profile_photo"
                                    id="profile_photo_input"
-                                   accept="image/*"
+                                   accept="image/jpeg,image/png,image/webp"
                                    class="hidden"
                                    data-original-src="{{ $professional->profile_photo ? Storage::url($professional->profile_photo) : '' }}">
                     </div>
@@ -260,7 +260,7 @@
                            class="w-full h-28 rounded-xl border-2 border-dashed border-purple-100 cursor-pointer hover:border-purple-300 hover:bg-purple-50/50 transition-all duration-200 flex items-center justify-center text-xs text-purple-400 font-medium overflow-hidden">
                         <span id="banner_upload_text" x-show="!bannerPreview">Clique para selecionar uma foto</span>
                         <img x-show="bannerPreview" :src="bannerPreview" class="w-full h-full rounded-xl object-cover">
-                        <input type="file" name="banner_photo" id="banner_photo_input" accept="image/*" class="sr-only">
+                        <input type="file" name="banner_photo" id="banner_photo_input" accept="image/jpeg,image/png,image/webp" class="sr-only">
                     </label>
                     <div class="flex items-center gap-3">
                         <button type="button"
