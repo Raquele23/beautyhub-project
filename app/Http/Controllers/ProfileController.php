@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProfilePhotoUpdateRequest;
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,12 +42,8 @@ class ProfileController extends Controller
     /**
      * Update the user's profile photo.
      */
-    public function updatePhoto(Request $request): RedirectResponse
+    public function updatePhoto(ProfilePhotoUpdateRequest $request): RedirectResponse
     {
-        $request->validate([
-            'cropped_photo' => ['required', 'string'],
-        ]);
-
         $user = $request->user();
 
         // Remove foto antiga
