@@ -12,8 +12,9 @@ class ClientController extends Controller
 
         $nextAppointment = $user->appointments()
             ->with(['service', 'professional.user'])
-            ->upcoming()
             ->where('status', 'confirmed')
+            ->where('scheduled_at', '>=', now())
+            ->orderBy('scheduled_at')
             ->first();
 
         $pendingAppointmentsCount = $user->appointments()
