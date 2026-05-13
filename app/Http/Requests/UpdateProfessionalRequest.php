@@ -58,7 +58,14 @@ class UpdateProfessionalRequest extends FormRequest
             'description.max' => 'A descrição deve ter no máximo 500 caracteres.',
             'house_number.required' => 'O número da casa é obrigatório.',
             'house_number.max' => 'O número da casa deve ter no máximo 10 caracteres.',
+            'profile_photo.image' => 'O arquivo deve ser uma imagem válida.',
+            'profile_photo.types' => 'A foto de perfil deve ser do tipo PNG, JPG, JPEG ou WEBP.',
+            'profile_photo.max' => 'A foto de perfil deve ter no máximo 5 MB.',
+            'profile_photo.dimensions' => 'A foto de perfil deve ter uma proporção de 1:1.',
             'cropped_profile_photo.regex' => 'A foto de perfil recortada deve ser PNG, JPG, JPEG ou WEBP.',
+            'banner_photo.image' => 'O arquivo deve ser uma imagem válida.',
+            'banner_photo.types' => 'A foto do banner deve ser do tipo PNG, JPG, JPEG ou WEBP.',
+            'banner_photo.max' => 'A foto do banner deve ter no máximo 8 MB.',
             'banner_photo_base64.regex' => 'A foto do banner deve ser PNG, JPG, JPEG ou WEBP.',
         ];
     }

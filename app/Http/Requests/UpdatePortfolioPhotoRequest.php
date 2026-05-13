@@ -39,8 +39,16 @@ class UpdatePortfolioPhotoRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'photo.image' => 'O arquivo deve ser uma imagem válida.',
+            'photo.types' => 'A foto deve ser do tipo PNG, JPG, JPEG ou WEBP.',
+            'photo.max' => 'A foto deve ter no máximo 5 MB.',
+            'photo.dimensions' => 'A foto deve ter uma proporção de 4:5.',
             'cropped_photo.regex' => 'A imagem recortada deve ser PNG, JPG, JPEG ou WEBP.',
+            'original_photo.image' => 'O arquivo deve ser uma imagem válida.',
+            'original_photo.types' => 'A imagem original deve ser do tipo PNG, JPG, JPEG ou WEBP.',
+            'original_photo.max' => 'A imagem original deve ter no máximo 10 MB.',
             'original_photo_base64.regex' => 'A imagem original deve ser PNG, JPG, JPEG ou WEBP.',
+            'description.max' => 'A descrição deve ter no máximo 30 caracteres.',
         ];
     }
 }

@@ -51,6 +51,10 @@ class UpdateServiceRequest extends FormRequest
             'duration.min' => 'A duração mínima do serviço é de 5 minutos.',
             'duration.max' => 'A duração máxima do serviço é de 12 horas.',
             'description.max' => 'A descrição do serviço deve ter no máximo 250 caracteres.',
+            'image.image' => 'O arquivo deve ser uma imagem válida.',
+            'image.types' => 'A imagem deve ser do tipo PNG, JPG, JPEG ou WEBP.',
+            'image.max' => 'A imagem deve ter no máximo 5 MB.',
+            'image.dimensions' => 'A imagem deve ter uma proporção de 4:5.',
             'cropped_image.regex' => 'A imagem recortada deve ser PNG, JPG, JPEG ou WEBP.',
             'original_image_base64.regex' => 'A imagem original deve ser PNG, JPG, JPEG ou WEBP.',
         ];

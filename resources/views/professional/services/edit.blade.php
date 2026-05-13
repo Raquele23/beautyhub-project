@@ -181,6 +181,7 @@
                 <input type="hidden" name="cropped_image" id="service_cropped_image">
                 <input type="hidden" name="original_image_base64" id="service_original_image_base64">
 
+                <p id="service_image_input_error" class="mt-2 text-xs text-red-400" style="display: none;"></p>
                 @error('image')
                     <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
                 @enderror
@@ -235,6 +236,30 @@
             const durationHidden = document.getElementById('duration');
             const durationHours = document.getElementById('duration_hours');
             const durationMinutes = document.getElementById('duration_minutes');
+
+            // ════════════════════════════════════════════
+            // VALIDAÇÃO DE ARQUIVOS DE IMAGEM
+            // ════════════════════════════════════════════
+            function validateImageFile(file, errorElementId) {
+                const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+                const errorElement = document.getElementById(errorElementId);
+                if (!file) {
+                    if (errorElement) errorElement.textContent = '';
+                    return true;
+                }
+                if (!allowedTypes.includes(file.type)) {
+                    if (errorElement) {
+                        errorElement.textContent = 'A imagem deve ser do tipo PNG, JPG, JPEG ou WEBP.';
+                        errorElement.style.display = 'block';
+                    }
+                    return false;
+                }
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+                return true;
+            }
 
             function toDigits(value) {
                 return String(value || '').replace(/\D/g, '');
@@ -375,6 +400,7 @@
             document.querySelectorAll('input[data-crop-target]').forEach(function (input) {
                 input.addEventListener('change', async function (event) {
                     const file = event.target.files && event.target.files[0] ? event.target.files[0] : null;
+                    if (!validateImageFile(file, input.id + '_error')) return;
                     if (file) {
                         selectedFiles.set(input.id, file);
                         try {

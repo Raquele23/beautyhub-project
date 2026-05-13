@@ -84,6 +84,7 @@
 
                     <input type="hidden" name="cropped_profile_photo" id="cropped_profile_photo" value="{{ old('cropped_profile_photo') }}">
 
+                    <p id="profile_photo_error" class="mt-2 text-xs text-red-400" style="display: none;"></p>
                     @error('profile_photo')
                         <p class="mt-2 text-xs text-red-400">{{ $message }}</p>
                     @enderror
@@ -186,6 +187,7 @@
                             </button>
                         </div>
                         <input type="hidden" name="banner_photo_base64" id="banner_photo_base64" value="{{ old('banner_photo_base64') }}">
+                        <p id="banner_photo_error" class="text-xs text-red-400" style="display: none;"></p>
                         @error('banner_photo')
                             <p class="text-xs text-red-400">{{ $message }}</p>
                         @enderror
@@ -455,6 +457,30 @@
             const oldState            = "{{ old('state') }}";
             const oldCity             = "{{ old('city') }}";
 
+            // ════════════════════════════════════════════
+            // VALIDAÇÃO DE ARQUIVOS DE IMAGEM
+            // ════════════════════════════════════════════
+            function validateImageFile(file, errorElementId) {
+                const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+                const errorElement = document.getElementById(errorElementId);
+                if (!file) {
+                    if (errorElement) errorElement.textContent = '';
+                    return true;
+                }
+                if (!allowedTypes.includes(file.type)) {
+                    if (errorElement) {
+                        errorElement.textContent = 'A imagem deve ser do tipo PNG, JPG, JPEG ou WEBP.';
+                        errorElement.style.display = 'block';
+                    }
+                    return false;
+                }
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+                return true;
+            }
+
             let cropper = null;
             let profileRecropSourceBase = oldCroppedProfile || null;
 
@@ -475,6 +501,7 @@
 
             profileInput.addEventListener('change', function () {
                 const file = this.files && this.files[0];
+                if (!validateImageFile(file, 'profile_photo_error')) return;
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onloadend = function () {
@@ -592,6 +619,7 @@
 
             bannerPhotoInput.addEventListener('change', function () {
                 const file = this.files && this.files[0];
+                if (!validateImageFile(file, 'banner_photo_error')) return;
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onloadend = function () {
