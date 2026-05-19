@@ -23,20 +23,24 @@ class ExploreController extends Controller
             ->leftJoin('users', 'users.id', '=', 'professionals.user_id')
             ->select('professionals.*')
             ->when($request->search, function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('city', 'like', "%{$request->search}%")
-                        ->orWhere('establishment_name', 'like', "%{$request->search}%")
-                        ->orWhereHas('user', function ($q2) use ($request) {
-                            $q2->where('name', 'like', "%{$request->search}%");
+                $search = mb_strtolower($request->search);
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(city) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(establishment_name) LIKE ?', ["%{$search}%"])
+                        ->orWhereHas('user', function ($q2) use ($search) {
+                            $q2->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
                         })
-                        ->orWhereHas('services', function ($q2) use ($request) {
-                            $q2->where('name', 'like', "%{$request->search}%");
+                        ->orWhereHas('services', function ($q2) use ($search) {
+                            $q2->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
                         });
                 });
             })
             ->when($request->service, function ($query) use ($request) {
-                $query->whereHas('services', function ($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->service}%");
+                $service = mb_strtolower($request->service);
+
+                $query->whereHas('services', function ($q) use ($service) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$service}%"]);
                 });
             })
             ->when($request->category && in_array($request->category, $validCategories, true), function ($query) use ($request) {
