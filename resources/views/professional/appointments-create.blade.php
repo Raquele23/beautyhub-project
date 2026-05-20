@@ -3,7 +3,7 @@
          x-data="professionalAppointmentForm()"
          x-init="init()">
 
-        <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-2 flex items-center justify-between gap-3 bg-[#EDE4F8]/95 backdrop-blur border-b border-purple-100">
+        <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-2 flex items-center justify-between gap-3 bg-[#EDE4F8]">
             <div>
                 <p class="text-xs font-bold tracking-widest uppercase text-purple-400">Beauty Hub</p>
                 <h1 class="text-2xl font-bold text-purple-800 mt-0.5">Novo agendamento</h1>
