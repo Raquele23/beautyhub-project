@@ -234,7 +234,8 @@
                                             @csrf @method('DELETE')
                                             <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold leading-none text-red-400 hover:text-red-700 transition-colors">
                                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12m-10 0V5a1 1 0 011-1h4a1 1 0 011 1v2m-6 0h6m-7 0h8l-1 11a1 1 0 01-1 1H8a1 1 0 01-1-1L6 7zm3 4v4m4-4v4" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M9 4h6l1 3H8l1-3zM6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 11v6M14 11v6"/>
                                                 </svg>
                                                 Excluir
                                             </button>
